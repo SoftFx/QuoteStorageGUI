@@ -24,19 +24,22 @@ namespace QuoteHistoryGUI
         }
 
         #endregion
-
-
+        public bool Loaded = false;
+        public Folder()
+        {
+            this.HasChild = false;
+        }
         public Folder(string name)
         {
             this.Name = name;
-            this.Folders = new List<Folder>();
+            this.Folders = new ObservableCollection<Folder>() { new LoadingFolder()};
             this.HasChild = false;
         }
 
         public Folder(Folder parent)
         {
             this.Name = string.Empty;
-            this.Folders = new List<Folder>();
+            this.Folders = new ObservableCollection<Folder>();
             this.HasChild = false;
             this.Parent = parent;
         }
@@ -45,8 +48,8 @@ namespace QuoteHistoryGUI
 
         public string Name { get; set; }
 
-        private List<Folder> _folders;
-        public List<Folder> Folders {
+        private ObservableCollection<Folder> _folders;
+        public ObservableCollection<Folder> Folders {
             get { return _folders; }
             set
             {
@@ -57,18 +60,19 @@ namespace QuoteHistoryGUI
         }
 
         public Folder Parent { get; set; }
+    }
 
-        public Folder IfItemExists(string name)
+    public class LoadingFolder: Folder
+    {
+        public LoadingFolder(string name) : base()
         {
-            foreach (Folder folder in Folders)
-            {
-                if (folder.Name == name)
-                {
-                    return folder;
-                }
-            }
-
-            return null;
+            Name = name;
         }
+
+        public LoadingFolder(): base()
+        {
+            Name = "Loading";
+        }
+
     }
 }

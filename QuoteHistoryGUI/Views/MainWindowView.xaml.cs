@@ -20,7 +20,7 @@ namespace QuoteHistoryGUI.Views
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindowView : Window
+    public partial class MainWindowView 
     {
 
         private readonly MainWindowModel _model;
@@ -40,9 +40,14 @@ namespace QuoteHistoryGUI.Views
                 Owner = Application.Current.MainWindow
             };
             dlg.ShowDialog();
-
+            if(dlg.StoragePath.Text!="")
             _model.StoragePath = dlg.StoragePath.Text;
 
+        }
+
+        private void treeView_Expanded(object sender, RoutedEventArgs e)
+        {
+            _model.Expand(sender, e);
         }
     }
 }

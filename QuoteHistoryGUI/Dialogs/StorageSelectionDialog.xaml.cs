@@ -60,7 +60,11 @@ namespace QuoteHistoryGUI.Dialogs
             _pathCount++;
             for (int i = 0; i < _pathCount; i++)
             {
-                _pathList.Add(config.AppSettings.Settings["path_" + i].Value);
+                if (config.AppSettings.Settings["path_" + i] == null)
+                    config.AppSettings.Settings.Add(new KeyValueConfigurationElement("path_" + i, _pathList[i]));
+                else
+                    config.AppSettings.Settings["path_" + i].Value = _pathList[i];
+
             }
             config.AppSettings.Settings["path_count"].Value = _pathCount.ToString();
             config.Save();
@@ -69,5 +73,10 @@ namespace QuoteHistoryGUI.Dialogs
             this.Close();
         }
 
+
+        private void PathBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            StoragePath.Text = (string)e.AddedItems[0];
+        }
     }
 }

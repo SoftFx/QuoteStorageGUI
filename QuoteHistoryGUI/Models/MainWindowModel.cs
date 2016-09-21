@@ -7,10 +7,12 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
-
+using System.Windows.Threading;
 
 namespace QuoteHistoryGUI.Models
 {
@@ -29,8 +31,8 @@ namespace QuoteHistoryGUI.Models
         }
 
         #endregion
-        private List<Folder> _folders;
-        public List<Folder> Folders {
+        private ObservableCollection<Folder> _folders;
+        public ObservableCollection<Folder> Folders {
             get { return _folders; }
             set
             {
@@ -41,10 +43,23 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
+        private int _foldersCnt;
+        public int FoldersCnt
+        {
+            get { return _foldersCnt; }
+            set
+            {
+                if (_foldersCnt == value)
+                    return;
+                _foldersCnt = value;
+                NotifyPropertyChanged("Folders");
+            }
+        }
+
         public MainWindowModel() {
-            Folders = new List<Folder> { new Folder("1"), new Folder("2") };
-            Folders[0].Folders = new List<Folder> { new Folder("1"), new Folder("2") };
-            Folders[0].Folders[0].Folders = new List<Folder> { new Folder("1"), new Folder("2") };
+            Folders = new ObservableCollection<Folder> { new Folder("1"), new Folder("2") };
+            Folders[0].Folders = new ObservableCollection<Folder> { new Folder("1"), new LoadingFolder() };
+            Folders[0].Folders[0].Folders = new ObservableCollection<Folder> { new Folder("1"), new LoadingFolder() };
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
         }
 
@@ -57,17 +72,28 @@ namespace QuoteHistoryGUI.Models
                 if (_storagePath == value)
                     return;
                 _storagePath = value;
-                NotifyPropertyChanged("StoragePath");
-                if(value.Length!=0)
-                OpenBase(value);
+                OpenBase(_storagePath);
+
+            }
+        }
+        public void Expand(object sender, RoutedEventArgs e)
+        {
+            var it = (TreeViewItem)(e.OriginalSource);
+            Folder f = it.Header as Folder;
+            if (!f.Loaded)
+            {
+                f.Loaded = true;
+                var ha = new HistoryLoader(Application.Current.Dispatcher, _historyStoreDB, Folders);
+                ha.ReadDateTimes(f);
             }
         }
 
-
+        DB _historyStoreDB;
         public ICommand OpenBtnClick { get; private set; }
         private bool OpenBaseDelegate(object o, bool isCheckOnly)
         {
-            if(isCheckOnly)
+
+            if (isCheckOnly)
                 return true;
             else
             {
@@ -77,18 +103,24 @@ namespace QuoteHistoryGUI.Models
                 };
                 dlg.ShowDialog();
                 StoragePath = dlg.StoragePath.Text;
+                int t = Folders.Count;
+               
+
                 return true;
             }
         }
 
         private void OpenBase(string path)
         {
-            Folders = new List<Folder>();
-            var _historyStoreDB = new DB(path + "\\HistoryDB",
+            Folders = new ObservableCollection<Folder>();
+            _historyStoreDB = new DB(path + "\\HistoryDB",
                     new Options() { BloomFilter = new BloomFilterPolicy(10) });
             SortedSet<string> s = new SortedSet<string>();
             Dictionary<string, Folder> d = new Dictionary<string, Folder>();
-            foreach(var entry in _historyStoreDB)
+            HistoryLoader hl = new HistoryLoader(Application.Current.Dispatcher, _historyStoreDB, Folders);
+            hl.ReadSymbols(); 
+            /*
+                foreach (var entry in _historyStoreDB)
             {
                 int i = 0;
                 while (entry.Key[i] > 2)
@@ -126,8 +158,11 @@ namespace QuoteHistoryGUI.Models
                 found = false;
                 foreach(var f in curFold.Folders)
                 {
-                    if (f.Name == year.ToString()) found = true;
-                    curFold = f;
+                    if (f.Name == year.ToString())
+                    {
+                        found = true;
+                        curFold = f;
+                    }
                 }
                 if(!found)
                 {
@@ -139,8 +174,11 @@ namespace QuoteHistoryGUI.Models
                 found = false;
                 foreach (var f in curFold.Folders)
                 {
-                    if (f.Name == month.ToString()) found = true;
-                    curFold = f;
+                    if (f.Name == month.ToString())
+                    {
+                        found = true;
+                        curFold = f;
+                    }
                 }
                 if (!found)
                 {
@@ -152,8 +190,11 @@ namespace QuoteHistoryGUI.Models
                 found = false;
                 foreach (var f in curFold.Folders)
                 {
-                    if (f.Name == day.ToString()) found = true;
-                    curFold = f;
+                    if (f.Name == day.ToString())
+                    {
+                        found = true;
+                        curFold = f;
+                    }
                 }
                 if (!found)
                 {
@@ -164,8 +205,11 @@ namespace QuoteHistoryGUI.Models
                 found = false;
                 foreach (var f in curFold.Folders)
                 {
-                    if (f.Name == hour.ToString()) found = true;
-                    curFold = f;
+                    if (f.Name == hour.ToString())
+                    {
+                        found = true;
+                        curFold = f;
+                    }
                 }
                 if (!found)
                 {
@@ -176,11 +220,50 @@ namespace QuoteHistoryGUI.Models
 
 
             }
-            List<Folder> a = new List<Folder>();
+            ObservableCollection<Folder> a = new ObservableCollection<Folder>();
             foreach(var folder in d) { a.Add(folder.Value); }
             Folders = a;
-            
+            */
 
+        }
+        public event EventHandler ProgressUpdate;
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = sender as BackgroundWorker;
+
+
+            Folders = new ObservableCollection<Folder>();
+            //Folders.Add(new LoadingFolder());
+
+            Application.Current.Dispatcher.Invoke((Action)delegate () {  });
+            for (int i = 0; i < 30; i++)
+            {
+                if (ProgressUpdate != null)
+                    ProgressUpdate(this, e);
+                Thread.Sleep(200);
+                Application.Current.Dispatcher.Invoke((Action)delegate () { Folders.Insert(Folders.Count-1, new Folder(i.ToString())); });
+                
+                FoldersCnt++;
+
+            }
+
+            Application.Current.Dispatcher.Invoke((Action)delegate () { Folders.RemoveAt( Folders.Count-1); });
+            Application.Current.Dispatcher.Invoke((Action)delegate () { Folders[0].Folders.Insert(0, new LoadingFolder()); });
+            for (int i = 0; i < 30; i++)
+            {
+                if (ProgressUpdate != null)
+                    ProgressUpdate(this, e);
+                Thread.Sleep(500);
+                Application.Current.Dispatcher.Invoke((Action)delegate () { Folders[0].Folders.Insert(Folders[0].Folders.Count - 1, new Folder(i.ToString())); });
+
+                FoldersCnt++;
+
+            }
+            Application.Current.Dispatcher.Invoke((Action)delegate () { Folders[0].Folders.RemoveAt(Folders[0].Folders.Count - 1); });
+        }
+
+        void TestInit()
+        {
         }
 
     }

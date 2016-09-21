@@ -37,7 +37,7 @@
                     <ColumnDefinition MinWidth="30" />
                 </Grid.ColumnDefinitions>
                 <GroupBox Grid.Column="0" Header=" Storage Tree" Margin="2" Grid.ColumnSpan="2" >
-                    <TreeView Name="treeView" ItemsSource="{Binding Folders}" Margin="2" Background="White" VirtualizingStackPanel.IsVirtualizing="True" >
+                    <TreeView Name="treeView" TreeViewItem.Expanded="treeView_Expanded" ItemsSource="{Binding Path=Folders, Mode=TwoWay,NotifyOnSourceUpdated=True, UpdateSourceTrigger=PropertyChanged}" Margin="2" Background="White" VirtualizingStackPanel.IsVirtualizing="True" >
                         <TreeView.Resources>
                             <Style x:Key="ExpandingFolderStyle" TargetType="{x:Type Image}">
                                 <Setter Property="Source" Value="../Icons/closeFolder.png"/>
@@ -48,7 +48,14 @@
                                 </Style.Triggers>
                             </Style>
 
-
+                            <DataTemplate DataType="{x:Type vs:LoadingFolder}">
+                                <StackPanel Orientation="Horizontal" >
+                                    <Image Source="../Icons/loading.png" Height="12" Width="12">
+                                    </Image>
+                                    <TextBlock Text="  " VerticalAlignment="Center"></TextBlock>
+                                    <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center"></TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
                             <HierarchicalDataTemplate ItemsSource="{Binding Path=Folders}" DataType="{x:Type vs:Folder}">
                                 <StackPanel Orientation="Horizontal" >
 
@@ -56,8 +63,12 @@
                                     </Image>
                                     <TextBlock Text="  " VerticalAlignment="Center"></TextBlock>
                                     <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center"></TextBlock>
+                                    <TextBlock Text="  " VerticalAlignment="Center"></TextBlock>
                                 </StackPanel>
                             </HierarchicalDataTemplate>
+
+
+
                         </TreeView.Resources>
 
                     </TreeView >
