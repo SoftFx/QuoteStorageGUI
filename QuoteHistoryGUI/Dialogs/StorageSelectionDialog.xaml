@@ -22,8 +22,8 @@
         </Grid.ColumnDefinitions>
 
         <TextBox Name="StoragePath" Margin="5" Grid.ColumnSpan="2" Grid.Row="0"></TextBox>
-        <Button Content="Browse" Foreground="Black" Grid.Row="0" Grid.Column="2" Margin="5" Click="Browse"></Button>
-        <ListBox Name="PathBox" SelectionChanged="PathBox_SelectionChanged"  Grid.Row="1" Margin="5" Grid.ColumnSpan="3"></ListBox>
-        <Button Content="Open" Click="Open" Grid.Row="2" Grid.Column="2" Margin="5" ></Button>
+        <Button Content="Browse" Background="#F2F0ED" BorderBrush="#7F6E53" Foreground="Black" Grid.Row="0" Grid.Column="2" Margin="5" Click="Browse"></Button>
+        <ListBox Name="PathBox" KeyDown="PathBox_KeyDown" SelectionChanged="PathBox_SelectionChanged" MouseDoubleClick="PathBox_MouseDoubleClick"  Grid.Row="1" Margin="5" Grid.ColumnSpan="3"></ListBox>
+        <Button Content="Open" Background="#F2F0ED"  BorderBrush="#7F6E53" Click="Open" Grid.Row="2" Grid.Column="2" Margin="5" ></Button>
     </Grid>
 </Window>

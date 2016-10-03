@@ -25,6 +25,7 @@ namespace QuoteHistoryGUI
 
         #endregion
         public bool Loaded = false;
+        public bool Selected = false;
         public Folder()
         {
             this.HasChild = false;
@@ -73,6 +74,45 @@ namespace QuoteHistoryGUI
         {
             Name = "Loading";
         }
+
+    }
+
+    public class HistoryFile : Folder
+    {
+        public int Part;
+        public string Period;
+        public HistoryFile(string name, string period, int part = 0) : base()
+        {
+            Name = name;
+            Part = part;
+            Period = period;
+        }
+
+        public HistoryFile() : base()
+        {
+            Name = "Loading";
+            Part = 0;
+            Period = "";
+        }
+
+    }
+
+    public class ChunkFile : HistoryFile
+    {
+        public ChunkFile(string name, string period, int part = 0) : base(name, period, part)
+        {}
+
+        public ChunkFile() : base()
+        {}
+    }
+
+    public class MetaFile : HistoryFile
+    {
+        public MetaFile(string name, string period, int part = 0) : base(name, period, part)
+        {}
+
+        public MetaFile() : base()
+        {}
 
     }
 }
