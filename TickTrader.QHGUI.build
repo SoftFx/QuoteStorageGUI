@@ -1,7 +1,7 @@
 <project name="QHGUI" default="help">
-  <include buildfile="./TickTrader.QHSender.properties" />
+  <include buildfile="TickTrader.QHGUI.properties" />
     
-  <target name="BuildQHSender">
+  <target name="BuildQHGUI">
 	<property name="MSBuild.Configuration" value="Release" />
     <property name="MSBuild.Platform" value="Any CPU" />
 	<property name="MSBuild.Target" value="Rebuild"/>
