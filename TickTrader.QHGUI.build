@@ -1,0 +1,75 @@
+<project name="QHGUI" default="help">
+  <include buildfile="./TickTrader.QHSender.properties" />
+    
+  <target name="BuildQHSender">
+	<property name="MSBuild.Configuration" value="Release" />
+    <property name="MSBuild.Platform" value="Any CPU" />
+	<property name="MSBuild.Target" value="Rebuild"/>
+	<property name="MSBuild.SourcesDir" value=".\"/>
+	<property name="SrcDir" value=".\" />
+	<call target="CleanPattern" />
+	<property name="Delete.Dir" value="${SrcDir}\tools\"/>
+	<property name="Delete.File" value="QHGUI*.zip"/>
+	<call target="DeleteFiles" />
+	<call target="BuildQH" />
+  </target>
+	
+  <target name="BuildQH">
+	<property name="MSBuild.SolutionFile" value="${SrcDir}\QuoteHistoryGUI\QuoteHistoryGUI.sln"/>
+	<property name="MSBuild.Output" value=".\TickTrader.QHGUI.build-${MSBuild.Configuration}-${MSBuild.Platform}.log"/>
+	<call target="RunMSBuild" />
+	<property name="ZipName" value="${SrcDir}\QuoteHistoryGUI\QHGUI ${Build}.zip"/>
+	<property name="FilesToArchive" value="${SrcDir}\QuoteHistoryGUI\bin\${MSBuild.Configuration}"/>
+	<call target="ZipArchivator"/>
+  </target>
+  
+  <target name="ZipArchivator">
+	<zip zipfile="${ZipName}">
+	  <fileset basedir="${FilesToArchive}">
+		<include name="**/*"/>
+		<exclude name="*.pdb" />
+	  </fileset>
+	</zip>
+	<call target="CleanPattern" />
+  </target>
+  
+  <target name = "CleanPattern">
+	<property name="Pattern1" value="cleanit"/>
+	<property name="Pattern2" value="cleanit"/>
+	<property name="Pattern3" value="cleanit"/>
+	<property name="Pattern4" value="cleanit"/>
+	<property name="Pattern5" value="cleanit"/>
+  </target>
+  
+  <target name="DeleteFiles">
+	<delete>
+      <fileset basedir="${Delete.Dir}">
+        <include name="${Delete.File}" />
+      </fileset>
+    </delete>
+  </target>
+    
+  <target name="BuildSolution" >
+    <exec program="${VS2012Dir}\devenv.com">
+      <arg line="${MSBuild.SolutionFile}" />
+      <arg line="/Rebuild ${MSBuild.Configuration}|${MSBuild.Platform}" />
+    </exec>
+  </target>
+  
+  <target name="RunMSBuild">
+    <exec program="${MSBuildDir}msbuild.exe" >
+      <arg value="/target:${MSBuild.Target}" />
+      <arg value="/maxcpucount" />
+      <arg value="/fl" />
+      <arg value="/flp:Verbosity=Normal;LogFile=${MSBuild.Output}" />
+      <arg value="/clp:NoItemAndPropertyList" />
+      <arg value="/verbosity:n" />
+      <arg value="/nologo" />
+      <arg value="/p:Configuration=${MSBuild.Configuration}" />
+      <arg value="/p:Platform=${MSBuild.Platform}" />
+      <arg value="/p:SolutionDir=${MSBuild.SourcesDir}" />
+      <arg value="${MSBuild.SolutionFile}" />
+    </exec>
+  </target>
+  
+</project>

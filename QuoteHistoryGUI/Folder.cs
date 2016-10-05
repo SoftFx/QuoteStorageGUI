@@ -24,6 +24,11 @@ namespace QuoteHistoryGUI
         }
 
         #endregion
+        public bool IsExpanded
+        {
+            get { return Loaded; }
+            set { Loaded = value; }
+        }
         public bool Loaded = false;
         public bool Selected = false;
         public Folder()
