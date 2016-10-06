@@ -8,7 +8,7 @@
 	<property name="MSBuild.SourcesDir" value=".\"/>
 	<property name="SrcDir" value=".\" />
 	<call target="CleanPattern" />
-	<property name="Delete.Dir" value="${SrcDir}\tools\"/>
+	<property name="Delete.Dir" value="${SrcDir}\QuoteHistoryGUI\"/>
 	<property name="Delete.File" value="QHGUI*.zip"/>
 	<call target="DeleteFiles" />
 	<call target="BuildQH" />
