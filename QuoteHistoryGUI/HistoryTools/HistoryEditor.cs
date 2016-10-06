@@ -122,7 +122,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 value = outputMemStream.ToArray(); 
             }
             _dbase.Put(key, value);
-            
+            RebuildMeta(f);
         }
 
 
@@ -173,9 +173,9 @@ namespace QuoteHistoryGUI.HistoryTools
                         pathStr += (path_part.Name + "/");
                     }
                     pathStr += (file.Name + " (" + file.Part + ")");
-                    MetaCorruptionMessage = "Meta for file " + pathStr + "was corrupted (invalid hash or file type).\n Meta was recalculated";
+                    MetaCorruptionMessage = "Meta for file " + pathStr + " was corrupted (invalid hash or file type).\n Meta was recalculated";
                     byte[] GettedEntry = new byte[5];
-                    BitConverter.GetBytes(hash.Value).CopyTo(GettedEntry,0);
+                    BitConverter.GetBytes((UInt32)(hash.Value)).CopyTo(GettedEntry,0);
                     if (Type == "Zip")
                         GettedEntry[4] = 1;
                     if (Type == "Text")
