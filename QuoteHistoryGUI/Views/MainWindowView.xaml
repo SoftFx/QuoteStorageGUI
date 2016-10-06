@@ -14,21 +14,21 @@
         HorizontalAlignment="Center"
         >
 
-    <Grid Background="#E6E6E6">
+    <Grid Background="#E6E6E6 ">
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
             <RowDefinition Height="4" />
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Rectangle Grid.Row="1" Fill="#D9D9D9 "/>
+        <Rectangle Grid.Row="1" Fill="#DBDBDB"/>
             <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100"/>
                 <ColumnDefinition Width="148"/>
 
             </Grid.ColumnDefinitions>
-              
-                <Button Name="OpenButton" Content="Open"  Width="60"  Margin="5" Command="{Binding OpenBtnClick}" Background="Transparent" HorizontalAlignment="Left"  />
+
+            <Button Name="OpenButton" Content="Open"  Width="60"  Margin="5" Command="{Binding OpenBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />
 
             <TextBlock Text="{Binding StoragePath}" Grid.Column="1"/>
         </Grid>
@@ -80,7 +80,7 @@
                         </ColumnDefinition.Style>
                     </ColumnDefinition>
                 </Grid.ColumnDefinitions>
-                <Expander Name="left_expander" ExpandDirection="Right" IsExpanded="True">
+                <Expander Name="left_expander" Background="Transparent" ExpandDirection="Right" IsExpanded="True">
                     <TabControl Name="left_control" Background="Transparent" Margin="2 0 0 0" ItemsSource="{Binding StorageTabs}"  SelectedIndex="0" VirtualizingPanel.IsVirtualizing="False">
                         <!--<TabControl.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,8">
@@ -93,7 +93,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text = "{Binding Path=FilePath}" />
                                     <TextBlock Text = " " />
-                                    <Button Name="CloseTabButton" Height="13" Width="13"  VerticalAlignment="Center" >
+                                    <Button Name="CloseTabButton" Height="13" Width="13"  VerticalAlignment="Center" Click="CloseTabButton_Click" >
                                         <Image Source="../Icons/Close.png" Height="6" Width="6" Margin="0" VerticalAlignment="Top"/>
                                     </Button>
                                 </StackPanel>
@@ -108,8 +108,8 @@
                     </TabControl>
                 </Expander>
                 <!--<GridSplitter Width="3" HorizontalAlignment="Right" ResizeBehavior="CurrentAndNext" Grid.Column="0"/>-->
-                <Expander Name="right_expander" Background="Transparent" ExpandDirection="Left" Grid.Column="2" IsExpanded="False" Grid.ColumnSpan="2">
-                    <TabControl Name="right_control" ItemsSource="{Binding StorageTabs}" SelectedIndex="0">
+                <Expander Name="right_expander"  Background="Transparent" ExpandDirection="Left" Grid.Column="2" IsExpanded="False" Grid.ColumnSpan="2">
+                    <TabControl Name="right_control" Background="Transparent" ItemsSource="{Binding StorageTabs}" SelectedIndex="0">
                         <TabControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">

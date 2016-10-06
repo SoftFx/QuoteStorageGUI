@@ -73,5 +73,15 @@ namespace QuoteHistoryGUI.Views
             _loadingDlg.Hide();
             this.IsEnabled = true;
         }
+
+        private void CloseTabButton_Click(object sender, RoutedEventArgs e)
+        {
+            var button = sender as Button;
+            if(button!= null)
+            {
+                var inst = button.DataContext as StorageInstance;
+                inst.Close();
+            }
+        }
     }
 }

@@ -240,5 +240,13 @@ namespace QuoteHistoryGUI.Models
                 return true;
             }
         }
+
+        public void Close()
+        {
+            var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
+            MainModel.StorageTabs.Remove(this);
+            _historyStoreDB.Dispose();
+        }
+
     }
 }

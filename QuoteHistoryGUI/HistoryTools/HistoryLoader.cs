@@ -116,6 +116,7 @@ namespace QuoteHistoryGUI
                     nextKey.Add(255);
                 it.Seek(nextKey.ToArray());
             }
+            it.Dispose();
             _dispatcher.Invoke((Action)delegate () { _folders.RemoveAt(_folders.Count - 1); });
         }
         bool ValidateKeyByKey(byte[] key1, byte[] key2, bool validateSymbol = true, int validationDateLevel = 1, bool validateType = false, bool validatePeriod = false, bool validatePart = false)
@@ -224,6 +225,7 @@ namespace QuoteHistoryGUI
                         catch (Exception) { }
 
                     }
+                    it.Dispose();
                 }
             }
         }
@@ -299,6 +301,7 @@ namespace QuoteHistoryGUI
                         catch (Exception) { }
  
                 }
+                it.Dispose();
             }
         }
         private void ReadFoldersAndFiles(object sender, DoWorkEventArgs e)

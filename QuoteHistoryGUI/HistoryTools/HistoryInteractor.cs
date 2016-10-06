@@ -96,6 +96,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 }
             }
+            it.Dispose();
         }
 
         public void Delete()
@@ -127,6 +128,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                 }
             }
+            it.Dispose();
         }
 
 

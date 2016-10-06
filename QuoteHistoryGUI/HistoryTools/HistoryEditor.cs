@@ -183,7 +183,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     _dbase.Put(metaKey, GettedEntry);
                 }
             }
-
+            it.Dispose();
             if (MetaCorruptionMessage != "")
             {
                 MessageBox.Show(MetaCorruptionMessage, "Meta rebuild",MessageBoxButton.OK,MessageBoxImage.Asterisk);
