@@ -132,7 +132,7 @@ namespace QuoteHistoryGUI.Models
             {
                 f.Loaded = true;
                 var ha = new HistoryLoader(Application.Current.Dispatcher, HistoryStoreDB, f.Folders, f);
-                ha.ReadDateTimes(f);
+                ha.ReadDateTimes(f, _historyReader);
             }
         }
         public void Refresh()
@@ -148,7 +148,7 @@ namespace QuoteHistoryGUI.Models
             var wind = Application.Current.MainWindow as MainWindowView;
             wind.ShowLoading();
             _currentFile = f;
-            var content = _historyReader.ReadFromDB(_currentFile);
+            var content = (_historyReader.ReadFromDB(_currentFile)).Value;
             FileContent = content;
             string path = f.Name;
             var par = f.Parent;
@@ -165,7 +165,7 @@ namespace QuoteHistoryGUI.Models
         {
             var wind = Application.Current.MainWindow as MainWindowView;
             _currentFile = f;
-            var content = _historyReader.ReadFromDB(_currentFile);
+            var content = _historyReader.ReadFromDB(_currentFile).Value;
             FileContent = content;
             string path = f.Name;
             var par = f.Parent;
@@ -183,7 +183,9 @@ namespace QuoteHistoryGUI.Models
         {
             var wind = Application.Current.MainWindow as MainWindowView;
             wind.ShowLoading();
-            _historyReader.SaveToDB(FileContent, _currentFile);
+            if (_currentFile as ChunkFile != null)
+                _historyReader.SaveToDB(FileContent, _currentFile as ChunkFile);
+            else MessageBox.Show("Meta file editing is not possible!", "hmm...",MessageBoxButton.OK,MessageBoxImage.Asterisk);
             wind.HideLoading();
         }
 

@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows;
+using QuoteHistoryGUI.HistoryTools;
 
 namespace QuoteHistoryGUI
 {
@@ -79,6 +80,7 @@ namespace QuoteHistoryGUI
         ObservableCollection<Folder> _folders;
         Folder parent;
         List<Folder> path;
+        HistoryEditor _editor;
 
         public HistoryLoader(Dispatcher dispatcher, DB dbase, ObservableCollection<Folder> folders, Folder par = null)
         {
@@ -155,8 +157,9 @@ namespace QuoteHistoryGUI
                 return false;
             return true;
         }
-        public void ReadDateTimes(Folder folder)
+        public void ReadDateTimes(Folder folder, HistoryEditor editor = null)
         {
+            _editor = editor;
             path = new List<Folder>();
             path.Add(folder);
             while (path.Last().Parent != null)
@@ -224,7 +227,7 @@ namespace QuoteHistoryGUI
                 }
             }
         }
-        private void LoadFiles()
+        private void LoadFiles(HistoryEditor editor = null)
         {
             if (path.Count >=4)
             {
@@ -240,23 +243,23 @@ namespace QuoteHistoryGUI
                     {
                         case 4:
                             {
-                                names = new string[]{ "M1 bid", "M1 ask", "M1 bid", "M1 ask" };
+                                names = new string[]{ "M1 bid", "M1 bid", "M1 ask", "M1 ask" };
                                 keys = new List<byte[]> {
-                                    SerealizeKey(path[0].Name,"Meta","M1 bid",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Meta","M1 ask",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
                                     SerealizeKey(path[0].Name,"Chunk","M1 bid",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    SerealizeKey(path[0].Name,"Meta","M1 bid",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
                                     SerealizeKey(path[0].Name,"Chunk","M1 ask",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    SerealizeKey(path[0].Name,"Meta","M1 ask",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
                                 };
                                 break;
                             }
                         case 5:
                             {
-                                names = new string[] { "ticks", "ticks level2", "ticks", "ticks level2" };
+                                names = new string[] { "ticks", "ticks", "ticks level2", "ticks level2" };
                                 keys = new List<byte[]> {
-                                    SerealizeKey(path[0].Name,"Meta","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Meta","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
                                     SerealizeKey(path[0].Name,"Chunk","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Chunk","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0)
+                                    SerealizeKey(path[0].Name,"Meta","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    SerealizeKey(path[0].Name,"Chunk","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    SerealizeKey(path[0].Name,"Meta","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0)
                                 };
                                 break;
                             }
@@ -276,10 +279,12 @@ namespace QuoteHistoryGUI
                                 if (ValidateKeyByKey(getedKey, keys[i], true, path.Count - 1, true, true) && it.IsValid())
                                 {
                                    
-                                    if (i > 1)
+                                    if (i==0 || i ==2)
                                     {
-                                        _dispatcher.Invoke((Action)delegate () { _folders.Add(new ChunkFile(names[i]+" file" +(getedKey.Last() > 0?("("+ getedKey.Last() + ")") :""), names[i], getedKey.Last())); _folders[_folders.Count - 1].Parent = parent; });
-                                        
+                                        var chunk = new ChunkFile(names[i] + " file" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last());
+                                        chunk.Parent = parent;
+                                        _dispatcher.Invoke((Action)delegate () { _folders.Add(chunk);});
+                                        editor.RebuildMeta(chunk);
                                     }
                                     else _dispatcher.Invoke((Action)delegate () { _folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last())); _folders[_folders.Count - 1].Parent = parent; });
                                     it.Next();
@@ -299,7 +304,7 @@ namespace QuoteHistoryGUI
         private void ReadFoldersAndFiles(object sender, DoWorkEventArgs e)
         {
             LoadFolders();
-            LoadFiles();
+            LoadFiles(_editor);
             _dispatcher.Invoke((Action)delegate () { _folders.RemoveAt(0); });
         }
 

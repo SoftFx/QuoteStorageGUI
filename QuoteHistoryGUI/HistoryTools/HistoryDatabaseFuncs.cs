@@ -120,5 +120,16 @@ namespace QuoteHistoryGUI.HistoryTools
             path.Reverse();
             return path;
         }
+
+        public static int[] GetFolderStartTime(List<Folder> path)
+        {
+            int[] dateTime = { 2000, 1, 1, 0 };
+            for (int i = 1; i < path.Count - 1; i++)
+            {
+                dateTime[i - 1] = int.Parse(path[i].Name);
+            }
+            return dateTime;
+        }
+
     }
 }

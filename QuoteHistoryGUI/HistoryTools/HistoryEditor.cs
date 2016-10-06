@@ -9,73 +9,68 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Windows;
 
 namespace QuoteHistoryGUI.HistoryTools
 {
     public class HistoryEditor
     {
+        
 
         private DB _dbase;
         public HistoryEditor(DB db)
         {
             _dbase = db;
         }
-        public string ReadFromDB(HistoryFile f) {
-            List<string> path = new List<string>();
-            Folder curFolder = f;
-            while (true)
-            {
-                path.Add(curFolder.Name);
-                curFolder = curFolder.Parent;
-                if (curFolder == null)
-                    break;
-            }
-            path.Reverse();
-            int[] dateTime = { 2000, 1, 1, 0 };
-            for (int i = 1; i < path.Count-1; i++)
-            {
-                dateTime[i - 1] = int.Parse(path[i]);
-            }
-            string period = f.Period;
-            byte[] content = { };
-            if (f as ChunkFile != null)
-            {
-                var meta = _dbase.Get(HistoryLoader.SerealizeKey(path[0], "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
-                bool isZip = false;
-                
-                if (meta == null)
-                {
-                    var cnt = _dbase.Get(HistoryLoader.SerealizeKey(path[0], "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
-                    if (cnt[0] == 'P' && cnt[1] == 'K')
-                        isZip = true;
-                }
-                if (meta != null && meta[4] == 2)
-                    content = _dbase.Get(HistoryLoader.SerealizeKey(path[0], "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
-                if ((meta != null && meta[4] == 1) || isZip == true)
-                {
-                    var zipContent = _dbase.Get(HistoryLoader.SerealizeKey(path[0], "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
-                    MemoryStream data = new MemoryStream(zipContent);
-                    ZipFile zip = new ZipFile(data);
 
-                    foreach (ZipEntry zipEntry in zip)
+        public string GetText(byte[] content)
+        {
+            bool isZip = false;
+            if (content[0] == 'P' && content[1] == 'K')
+                isZip = true;
+            if (!isZip)
+                return ASCIIEncoding.ASCII.GetString(content);
+            else
+            {
+                MemoryStream data = new MemoryStream(content);
+                ZipFile zip = new ZipFile(data);
+
+                foreach (ZipEntry zipEntry in zip)
+                {
+                    Stream zipStream = zip.GetInputStream(zipEntry);
+                    byte[] buffer = new byte[4 * 1024];
+                    using (MemoryStream ms = new MemoryStream())
                     {
-                        Stream zipStream = zip.GetInputStream(zipEntry);
-                        byte[] buffer = new byte[4 * 1024];
-                        using (MemoryStream ms = new MemoryStream())
+                        int read;
+                        while ((read = zipStream.Read(buffer, 0, buffer.Length)) > 0)
                         {
-                            int read;
-                            while ((read = zipStream.Read(buffer, 0, buffer.Length)) > 0)
-                            {
-                                ms.Write(buffer, 0, read);
-                            }
-                            content = ms.ToArray();
+                            ms.Write(buffer, 0, read);
                         }
+                        content = ms.ToArray();
                     }
                 }
+                return ASCIIEncoding.ASCII.GetString(content);
+            }
+        }
+        public KeyValuePair<string,string> ReadFromDB(HistoryFile f) {
+
+            var path = HistoryDatabaseFuncs.GetPath(f);
+            int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
+
+            string period = f.Period;
+            byte[] content = { };
+            bool isZip = false;
+            if (f as ChunkFile != null)
+            {
+                var cnt = _dbase.Get(HistoryLoader.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
+                if (cnt[0] == 'P' && cnt[1] == 'K')
+                    isZip = true;
+                var Text = GetText(cnt);
+                return new KeyValuePair<string, string>(isZip ? "Zip" : "Text", Text);
             }
             else
             {
-                var meta = _dbase.Get(HistoryLoader.SerealizeKey(path[0], "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
+                var meta = _dbase.Get(HistoryLoader.SerealizeKey(path[0].Name, "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
                 // (BitConverter.ToUInt32(dbVal, 0));
                 Crc32 hash = new Crc32();
                 hash.Value = (BitConverter.ToUInt32(meta, 0));
@@ -85,33 +80,20 @@ namespace QuoteHistoryGUI.HistoryTools
                     contStr += "Zip";
                 if (meta[4] == 2)
                     contStr += "Text";
-                content = ASCIIEncoding.ASCII.GetBytes(contStr);
+                return new KeyValuePair<string, string>("Meta", contStr);
 
             }
-            return ASCIIEncoding.ASCII.GetString(content);
+            
         }
 
-        public void SaveToDB(string content, HistoryFile f)
+        public void SaveToDB(string content, ChunkFile f)
         {
-            List<string> path = new List<string>();
-            Folder curFolder = f;
-            while (true)
-            {
-                path.Add(curFolder.Name);
-                curFolder = curFolder.Parent;
-                if (curFolder == null)
-                    break;
-            }
-            path.Reverse();
-            int[] dateTime = { 2000, 1, 1, 0 };
-            for (int i = 1; i < path.Count - 1; i++)
-            {
-                dateTime[i - 1] = int.Parse(path[i]);
-            }
+            var path = HistoryDatabaseFuncs.GetPath(f);
+            int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
             string period = f.Period;
-            var meta = _dbase.Get(HistoryLoader.SerealizeKey(path[0], "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
+            var meta = _dbase.Get(HistoryLoader.SerealizeKey(path[0].Name, "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
 
-            var key = HistoryLoader.SerealizeKey(path[0], "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part);
+            var key = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part);
             byte[] value = { };
             if (meta[4] == 2)
             {
@@ -140,6 +122,74 @@ namespace QuoteHistoryGUI.HistoryTools
                 value = outputMemStream.ToArray(); 
             }
             _dbase.Put(key, value);
+            
         }
+
+
+        public void RebuildMeta(ChunkFile file)
+        {
+            var path = HistoryDatabaseFuncs.GetPath(file);
+            int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
+            string MetaCorruptionMessage = "";
+            var TypeAndtext = ReadFromDB(file);
+            var Type = TypeAndtext.Key;
+            var text = TypeAndtext.Value;
+            Crc32 hash = new Crc32();
+            hash.Update(ASCIIEncoding.ASCII.GetBytes(text));
+            var metaKey = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", file.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], file.Part);
+            var it = _dbase.CreateIterator();
+            it.Seek(metaKey);
+            if(!it.IsValid() || (!HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), metaKey, true, 4, true, true, true)))
+            {
+                string pathStr = "";
+                foreach(var path_part in path)
+                {
+                    pathStr += (path_part.Name + "/");
+                }
+                pathStr += (file.Name + " (" + file.Part + ")");
+
+                MetaCorruptionMessage = "Meta for file " + pathStr + "was not found.\n Meta was recalculated";
+            }
+            else
+            {
+                var metaEntry = it.GetValue();
+                Crc32 hashFromDB = new Crc32();
+                hashFromDB.Value = (BitConverter.ToUInt32(metaEntry, 0));
+                var metaStr = hashFromDB.Value.ToString("X8", CultureInfo.InvariantCulture);
+                metaStr += '\t';
+                if (metaEntry[4] == 1)
+                    metaStr += "Zip";
+                if (metaEntry[4] == 2)
+                    metaStr += "Text";
+
+
+                var contStr = hash.Value.ToString("X8", CultureInfo.InvariantCulture);
+                contStr += ('\t'+Type);
+                if(metaStr != contStr)
+                {
+                    string pathStr = "";
+                    foreach (var path_part in path)
+                    {
+                        pathStr += (path_part.Name + "/");
+                    }
+                    pathStr += (file.Name + " (" + file.Part + ")");
+                    MetaCorruptionMessage = "Meta for file " + pathStr + "was corrupted (invalid hash or file type).\n Meta was recalculated";
+                    byte[] GettedEntry = new byte[5];
+                    BitConverter.GetBytes(hash.Value).CopyTo(GettedEntry,0);
+                    if (Type == "Zip")
+                        GettedEntry[4] = 1;
+                    if (Type == "Text")
+                        GettedEntry[4] = 2;
+                    _dbase.Put(metaKey, GettedEntry);
+                }
+            }
+
+            if (MetaCorruptionMessage != "")
+            {
+                MessageBox.Show(MetaCorruptionMessage, "Meta rebuild",MessageBoxButton.OK,MessageBoxImage.Asterisk);
+            }
+
+        }
+
     }
 }
