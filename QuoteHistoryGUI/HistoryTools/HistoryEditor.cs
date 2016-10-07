@@ -139,7 +139,15 @@ namespace QuoteHistoryGUI.HistoryTools
             var metaKey = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", file.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], file.Part);
             var it = _dbase.CreateIterator();
             it.Seek(metaKey);
-            if(!it.IsValid() || (!HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), metaKey, true, 4, true, true, true)))
+
+            byte[] GettedEntry = new byte[5];
+            BitConverter.GetBytes((UInt32)(hash.Value)).CopyTo(GettedEntry, 0);
+            if (Type == "Zip")
+                GettedEntry[4] = 1;
+            if (Type == "Text")
+                GettedEntry[4] = 2;
+
+            if (!it.IsValid() || (!HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), metaKey, true, 4, true, true, true)))
             {
                 string pathStr = "";
                 foreach(var path_part in path)
@@ -149,6 +157,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 pathStr += (file.Name + " (" + file.Part + ")");
 
                 MetaCorruptionMessage = "Meta for file " + pathStr + "was not found.\n Meta was recalculated";
+                _dbase.Put(metaKey, GettedEntry);
             }
             else
             {
@@ -174,19 +183,16 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                     pathStr += (file.Name + " (" + file.Part + ")");
                     MetaCorruptionMessage = "Meta for file " + pathStr + " was corrupted (invalid hash or file type).\n Meta was recalculated";
-                    byte[] GettedEntry = new byte[5];
-                    BitConverter.GetBytes((UInt32)(hash.Value)).CopyTo(GettedEntry,0);
-                    if (Type == "Zip")
-                        GettedEntry[4] = 1;
-                    if (Type == "Text")
-                        GettedEntry[4] = 2;
-                    _dbase.Put(metaKey, GettedEntry);
+                    
+                    
                 }
             }
+            _dbase.Put(metaKey, GettedEntry);
             it.Dispose();
             if (MetaCorruptionMessage != "")
             {
                 MessageBox.Show(MetaCorruptionMessage, "Meta rebuild",MessageBoxButton.OK,MessageBoxImage.Asterisk);
+                
             }
 
         }

@@ -1,5 +1,6 @@
 ﻿using QuoteHistoryGUI.HistoryTools;
 using QuoteHistoryGUI.Models;
+using QuoteHistoryGUI.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -27,16 +28,26 @@ namespace QuoteHistoryGUI.Dialogs
         ObservableCollection<StorageInstance> _tabs;
         BackgroundWorker CopyWorker;
         bool IsCopying = false;
-
+        StorageInstance _source;
         public CopyDialog(StorageInstance source, ObservableCollection<StorageInstance> tabs, HistoryInteractor interactor)
         {
             InitializeComponent();
-            Source.ItemsSource = tabs.Select(t=>t.StoragePath);
-            Source.SelectedIndex = tabs.IndexOf(source) ;
+            Source.Text = source.StoragePath;
             Destination.ItemsSource = tabs.Select(t => t.StoragePath);
-            Destination.SelectedIndex = 0;
+            var win = Application.Current.MainWindow as MainWindowView;
+            var leftStorage = win.left_control.SelectedContent as StorageInstance;
+            var rightStorage = win.right_control.SelectedContent as StorageInstance;
+
+            if (source == leftStorage)
+            {
+                Destination.SelectedIndex = tabs.IndexOf(rightStorage);
+            }
+            else Destination.SelectedIndex = tabs.IndexOf(leftStorage);
+
+
             _interactor = interactor;
             _tabs = tabs;
+            _source = source;
         }
 
         public CopyDialog()
@@ -47,7 +58,7 @@ namespace QuoteHistoryGUI.Dialogs
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             CopyWorker = new BackgroundWorker();
-            _interactor.Source = _tabs[Source.SelectedIndex];
+            _interactor.Source = _source;
             _interactor.Destination = _tabs[Destination.SelectedIndex];
             IsCopying = true;
             CopyButton.IsEnabled = false;

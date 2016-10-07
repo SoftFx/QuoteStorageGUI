@@ -72,11 +72,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 {
                     byte[] key = new byte[] { } ;
                     var path = HistoryDatabaseFuncs.GetPath(fold);
-                    int[] dateTime = { 2000, 1, 1, 0};
-                    for (int i = 1; i < path.Count-1; i++)
-                    {
-                        dateTime[i - 1] = int.Parse(path[i].Name);
-                    }
+                    int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
                     if(fold as ChunkFile != null)
                     {
                         ChunkFile chunk = fold as ChunkFile;
@@ -126,6 +122,29 @@ namespace QuoteHistoryGUI.HistoryTools
                             }
                         }
                     }
+                }
+                else
+                {
+                    byte[] key = new byte[] { };
+                    var path = HistoryDatabaseFuncs.GetPath(fold);
+                    int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
+                    if (fold as ChunkFile != null)
+                    {
+                        ChunkFile chunk = fold as ChunkFile;
+                        key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", chunk.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], chunk.Part);
+                        it.Seek(key);
+                    }
+                    if (fold as MetaFile != null)
+                    {
+                        MetaFile metaFile = fold as MetaFile;
+                        key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
+                        it.Seek(key);
+                    }
+                    if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                    {
+                        Source.HistoryStoreDB.Delete(it.GetKey());
+                    }
+
                 }
             }
             it.Dispose();

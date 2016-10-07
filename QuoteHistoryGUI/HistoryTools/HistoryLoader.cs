@@ -256,12 +256,13 @@ namespace QuoteHistoryGUI
                             }
                         case 5:
                             {
-                                names = new string[] { "ticks", "ticks", "ticks level2", "ticks level2" };
+                                names = new string[] { "ticks level2", "ticks level2", "ticks", "ticks",  };
                                 keys = new List<byte[]> {
+                                    SerealizeKey(path[0].Name,"Chunk","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    SerealizeKey(path[0].Name,"Meta","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
                                     SerealizeKey(path[0].Name,"Chunk","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
                                     SerealizeKey(path[0].Name,"Meta","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Chunk","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Meta","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0)
+
                                 };
                                 break;
                             }
@@ -287,7 +288,8 @@ namespace QuoteHistoryGUI
                                         chunk.Parent = parent;
                                         _dispatcher.Invoke((Action)delegate () { _folders.Add(chunk);});
                                         editor.RebuildMeta(chunk);
-                                    }
+                                        _dispatcher.Invoke((Action)delegate () { Application.Current.MainWindow.Focus(); });
+                                }
                                     else _dispatcher.Invoke((Action)delegate () { _folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last())); _folders[_folders.Count - 1].Parent = parent; });
                                     it.Next();
                                     if (it.IsValid())
