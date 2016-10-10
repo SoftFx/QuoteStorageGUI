@@ -212,7 +212,7 @@ namespace QuoteHistoryGUI
                     {
                         it.Seek(key);
                         if (!it.IsValid())
-                            continue;
+                            break;
                         var getedKey = it.GetKey();
                         try
                         {
