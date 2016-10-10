@@ -72,8 +72,11 @@
     <Compile Include="Dialogs\CopyDialog.xaml.cs">
       <DependentUpon>CopyDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="HistoryTools\HistoryParams.cs" />
+    <Compile Include="HistoryTools\HistorySerializer.cs" />
     <Compile Include="HistoryTools\HistoryDatabaseFuncs.cs" />
     <Compile Include="HistoryTools\HistoryInteractor.cs" />
+    <Compile Include="HistoryTools\KeyValuePair.cs" />
     <Compile Include="Models\StorageExplorerModel.cs" />
     <Compile Include="Views\StorageExplorerView.xaml.cs">
       <DependentUpon>StorageExplorerView.xaml</DependentUpon>

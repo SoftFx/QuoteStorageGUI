@@ -88,6 +88,17 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public void SaveToDB(string content, ChunkFile f)
         {
+            try
+            {
+                HistorySerializer.Deserialize(f.Period, ASCIIEncoding.ASCII.GetBytes(content));
+            }
+            catch
+            {
+                MessageBox.Show("There is a syntax error! Unable to save.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Application.Current.MainWindow.Activate();
+                return;
+            }
+
             var path = HistoryDatabaseFuncs.GetPath(f);
             int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
             string period = f.Period;
@@ -121,6 +132,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 outputMemStream.Position = 0;
                 value = outputMemStream.ToArray(); 
             }
+
             _dbase.Put(key, value);
             RebuildMeta(f);
         }
@@ -192,9 +204,8 @@ namespace QuoteHistoryGUI.HistoryTools
             if (MetaCorruptionMessage != "")
             {
                 MessageBox.Show(MetaCorruptionMessage, "Meta rebuild",MessageBoxButton.OK,MessageBoxImage.Asterisk);
-                
             }
-
+            Application.Current.MainWindow.Activate();
         }
 
     }
