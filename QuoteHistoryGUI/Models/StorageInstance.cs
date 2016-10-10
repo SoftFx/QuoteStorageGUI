@@ -31,7 +31,7 @@ namespace QuoteHistoryGUI.Models
 
         #endregion
         public string Status = "";
-        HistoryEditor _historyReader;
+        public HistoryEditor Editor;
         public StorageInstance(string path, HistoryInteractor inter = null)
         {
             StoragePath = path;
@@ -113,7 +113,7 @@ namespace QuoteHistoryGUI.Models
                     throw new Exception("Cant't find a history database folder (HistoryDB) in folder: " + path);
                 _historyStoreDB = new DB(path + "\\HistoryDB",
                         new Options() { BloomFilter = new BloomFilterPolicy(10) });
-                _historyReader = new HistoryEditor(_historyStoreDB);
+                Editor = new HistoryEditor(_historyStoreDB);
                 HistoryLoader hl = new HistoryLoader(Application.Current.Dispatcher, _historyStoreDB, Folders);
                 hl.ReadSymbols(); }
             catch (Exception ex)
@@ -132,7 +132,7 @@ namespace QuoteHistoryGUI.Models
             {
                 f.Loaded = true;
                 var ha = new HistoryLoader(Application.Current.Dispatcher, HistoryStoreDB, f.Folders, f);
-                ha.ReadDateTimes(f, _historyReader);
+                ha.ReadDateTimes(f, Editor);
             }
         }
         public void Refresh()
@@ -148,7 +148,7 @@ namespace QuoteHistoryGUI.Models
             var wind = Application.Current.MainWindow as MainWindowView;
             wind.ShowLoading();
             _currentFile = f;
-            var content = (_historyReader.ReadFromDB(_currentFile)).Value;
+            var content = (Editor.ReadFromDB(_currentFile)).Value;
             FileContent = content;
             string path = f.Name;
             var par = f.Parent;
@@ -165,7 +165,7 @@ namespace QuoteHistoryGUI.Models
         {
             var wind = Application.Current.MainWindow as MainWindowView;
             _currentFile = f;
-            var content = _historyReader.ReadFromDB(_currentFile).Value;
+            var content = Editor.ReadFromDB(_currentFile).Value;
             FileContent = content;
             string path = f.Name;
             var par = f.Parent;
@@ -184,7 +184,7 @@ namespace QuoteHistoryGUI.Models
             var wind = Application.Current.MainWindow as MainWindowView;
             wind.ShowLoading();
             if (_currentFile as ChunkFile != null)
-                _historyReader.SaveToDB(FileContent, _currentFile as ChunkFile);
+                Editor.SaveToDB(FileContent, _currentFile as ChunkFile);
             else MessageBox.Show("Meta file editing is not possible!", "hmm...",MessageBoxButton.OK,MessageBoxImage.Asterisk);
             wind.HideLoading();
         }
@@ -225,7 +225,7 @@ namespace QuoteHistoryGUI.Models
                 var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
                 MainModel.Interactor.Source = this;
                 MainModel.Interactor.Delete();
-                Refresh();
+                //Refresh();
                 return true;
             }
         }

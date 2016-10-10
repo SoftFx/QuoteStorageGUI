@@ -169,7 +169,6 @@ namespace QuoteHistoryGUI.HistoryTools
                 pathStr += (file.Name + " (" + file.Part + ")");
 
                 MetaCorruptionMessage = "Meta for file " + pathStr + "was not found.\n Meta was recalculated";
-                _dbase.Put(metaKey, GettedEntry);
             }
             else
             {
@@ -195,8 +194,6 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                     pathStr += (file.Name + " (" + file.Part + ")");
                     MetaCorruptionMessage = "Meta for file " + pathStr + " was corrupted (invalid hash or file type).\n Meta was recalculated";
-                    
-                    
                 }
             }
             _dbase.Put(metaKey, GettedEntry);
@@ -205,7 +202,8 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 MessageBox.Show(MetaCorruptionMessage, "Meta rebuild",MessageBoxButton.OK,MessageBoxImage.Asterisk);
             }
-            Application.Current.MainWindow.Activate();
+            
+            
         }
 
     }

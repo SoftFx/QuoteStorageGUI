@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace QuoteHistoryGUI.HistoryTools
 {
@@ -98,7 +99,9 @@ namespace QuoteHistoryGUI.HistoryTools
         public void Delete()
         {
             var it = Source.HistoryStoreDB.CreateIterator();
-            foreach (var fold in Selection)
+            var sel = Selection.ToArray();
+            HistoryEditor editor = new HistoryEditor(Source.HistoryStoreDB);
+            foreach (var fold in sel)
             {
                 if (fold as ChunkFile == null && fold as MetaFile == null)
                 {
@@ -117,7 +120,12 @@ namespace QuoteHistoryGUI.HistoryTools
 
                             while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1,true,true))
                             {
+                                fold.Parent.Folders.Remove(fold);
                                 Source.HistoryStoreDB.Delete(it.GetKey());
+                                fold.Parent.Folders.Clear();
+                                fold.Parent.Folders.Add(new LoadingFolder());
+                                var ha = new HistoryLoader(Application.Current.Dispatcher, Source.HistoryStoreDB, fold.Parent.Folders, fold.Parent);
+                                ha.ReadDateTimes(fold.Parent, Source.Editor);
                                 it.Next();
                             }
                         }
@@ -142,7 +150,12 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                     if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
                     {
+                        fold.Parent.Folders.Remove(fold);
                         Source.HistoryStoreDB.Delete(it.GetKey());
+                        fold.Parent.Folders.Clear();
+                        fold.Parent.Folders.Add(new LoadingFolder());
+                        var ha = new HistoryLoader(Application.Current.Dispatcher, Source.HistoryStoreDB, fold.Parent.Folders, fold.Parent);
+                        ha.ReadDateTimes(fold.Parent, Source.Editor);
                     }
 
                 }

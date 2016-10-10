@@ -229,7 +229,7 @@ namespace QuoteHistoryGUI
                 }
             }
         }
-        private void LoadFiles(HistoryEditor editor = null)
+        private void LoadFiles()
         {
             if (path.Count >=4)
             {
@@ -278,7 +278,6 @@ namespace QuoteHistoryGUI
                         {
                             while (true)
                             {
-
                                 if (ValidateKeyByKey(getedKey, keys[i], true, path.Count - 1, true, true) && it.IsValid())
                                 {
                                    
@@ -287,9 +286,12 @@ namespace QuoteHistoryGUI
                                         var chunk = new ChunkFile(names[i] + " file" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last());
                                         chunk.Parent = parent;
                                         _dispatcher.Invoke((Action)delegate () { _folders.Add(chunk);});
+                                        var editor = new HistoryEditor(_dbase); 
                                         editor.RebuildMeta(chunk);
-                                        _dispatcher.Invoke((Action)delegate () { Application.Current.MainWindow.Focus(); });
-                                }
+                                        it = _dbase.CreateIterator();
+                                        it.Seek(keys[i]);
+                                        _dispatcher.Invoke((Action)delegate () { Application.Current.MainWindow.Activate(); });
+                                    }
                                     else _dispatcher.Invoke((Action)delegate () { _folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last())); _folders[_folders.Count - 1].Parent = parent; });
                                     it.Next();
                                     if (it.IsValid())
@@ -309,8 +311,8 @@ namespace QuoteHistoryGUI
         private void ReadFoldersAndFiles(object sender, DoWorkEventArgs e)
         {
             LoadFolders();
-            LoadFiles(_editor);
-            _dispatcher.Invoke((Action)delegate () { _folders.RemoveAt(0); });
+            LoadFiles();
+            _dispatcher.Invoke((Action)delegate () {  _folders.RemoveAt(0); });
         }
 
         private void Refresh(object sender, DoWorkEventArgs e)
