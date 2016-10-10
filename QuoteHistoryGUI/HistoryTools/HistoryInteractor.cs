@@ -103,7 +103,12 @@ namespace QuoteHistoryGUI.HistoryTools
             HistoryEditor editor = new HistoryEditor(Source.HistoryStoreDB);
             foreach (var fold in sel)
             {
-                                                fold.Parent.Folders.Remove(fold);
+                if (fold.Parent != null)
+                    fold.Parent.Folders.Remove(fold);
+                else
+                {
+                    Source.Folders.Remove(fold);
+                }
                 if (fold as ChunkFile == null && fold as MetaFile == null)
                 {
                     var path = HistoryDatabaseFuncs.GetPath(fold);
@@ -122,10 +127,6 @@ namespace QuoteHistoryGUI.HistoryTools
                             while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1,true,true))
                             {
                                 Source.HistoryStoreDB.Delete(it.GetKey());
-                                fold.Parent.Folders.Remove(fold);
-                                //fold.Parent.Folders.Add(new LoadingFolder());
-                                //var ha = new HistoryLoader(Application.Current.Dispatcher, Source.HistoryStoreDB, fold.Parent.Folders, fold.Parent);
-                                //ha.ReadDateTimes(fold.Parent, Source.Editor);
                                 it.Next();
                             }
                         }

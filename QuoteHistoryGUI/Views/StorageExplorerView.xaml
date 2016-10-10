@@ -60,6 +60,7 @@
                             <TextBlock.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="Copy" Click="Copy_Click"/>
+                                    <MenuItem Header="Upstream update" Click="UpStream_Click"/>
                                     <Separator/>
                                     <MenuItem Header="Delete" Click="Delete_Click"/>
                                     <MenuItem Header="Refresh" Click="Refresh_Click"/>
