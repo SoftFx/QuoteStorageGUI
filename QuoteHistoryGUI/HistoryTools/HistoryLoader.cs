@@ -289,7 +289,7 @@ namespace QuoteHistoryGUI
                                         var editor = new HistoryEditor(_dbase); 
                                         editor.RebuildMeta(chunk);
                                         it = _dbase.CreateIterator();
-                                        it.Seek(keys[i]);
+                                        it.Seek(getedKey);
                                         _dispatcher.Invoke((Action)delegate () { Application.Current.MainWindow.Activate(); });
                                     }
                                     else _dispatcher.Invoke((Action)delegate () { _folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last())); _folders[_folders.Count - 1].Parent = parent; });
