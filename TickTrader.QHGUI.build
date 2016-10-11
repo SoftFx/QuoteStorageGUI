@@ -18,6 +18,7 @@
 	<property name="MSBuild.SolutionFile" value="${SrcDir}\QuoteHistoryGUI\QuoteHistoryGUI.sln"/>
 	<property name="MSBuild.Output" value=".\TickTrader.QHGUI.build-${MSBuild.Configuration}-${MSBuild.Platform}.log"/>
 	<call target="RunMSBuild" />
+	<echo file="${SrcDir}\QuoteHistoryGUI\bin\${MSBuild.Configuration}\version.txt">${Build}</echo>
 	<property name="ZipName" value="${SrcDir}\QuoteHistoryGUI\QHGUI ${Build}.zip"/>
 	<property name="FilesToArchive" value="${SrcDir}\QuoteHistoryGUI\bin\${MSBuild.Configuration}"/>
 	<call target="ZipArchivator"/>
