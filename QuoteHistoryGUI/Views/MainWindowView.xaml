@@ -9,7 +9,7 @@
         xmlns:vs="clr-namespace:QuoteHistoryGUI"
         mc:Ignorable="d"
         ContentRendered ="Window_ContentRendered"
-        Title="QuoteStorageGUI" Height="500" Width="700" Background="#F2F0ED" 
+        Title="{Binding Version}" Height="500" Width="700" Background="#F2F0ED" 
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Center"
         >

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -23,6 +24,18 @@ namespace QuoteHistoryGUI.Models
         #region INotifyPropertyChanged
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private string _version;
+        public string Version {
+            get { return _version; }
+            set
+            {
+                if (_version == value)
+                    return;
+                _version = value;
+                NotifyPropertyChanged("Version");
+            }
+        }
 
         protected void NotifyPropertyChanged(string propertyName)
         {
@@ -54,6 +67,12 @@ namespace QuoteHistoryGUI.Models
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
             StorageTabs = new ObservableCollection<StorageInstance>();
             CopyContextBtnClick = new SingleDelegateCommand(CopyContextDelegate);
+            try {
+                StreamReader r = File.OpenText("version.txt");
+                Version = "QuoteStorageGUI build: " + r.ReadLine();
+            }
+            catch { }
+            
         }
 
        
