@@ -102,15 +102,18 @@ namespace QuoteHistoryGUI.HistoryTools
             var sel = Selection.ToArray();
             HistoryEditor editor = new HistoryEditor(Source.HistoryStoreDB);
             foreach (var fold in sel)
-            {
-                if (fold.Parent != null)
-                    fold.Parent.Folders.Remove(fold);
-                else
-                {
-                    Source.Folders.Remove(fold);
-                }
+            {  
                 if (fold as ChunkFile == null && fold as MetaFile == null)
                 {
+                    if (fold.Parent == null)
+                    {
+                        Source.Folders.Remove(fold);
+                    }
+                    else
+                    {
+                        fold.Parent.Folders.Remove(fold);
+                    }
+
                     var path = HistoryDatabaseFuncs.GetPath(fold);
                     int[] dateTime = { 2000, 1, 1, 0 };
                     for (int i = 1; i < path.Count; i++)
@@ -142,21 +145,57 @@ namespace QuoteHistoryGUI.HistoryTools
                         ChunkFile chunk = fold as ChunkFile;
                         key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", chunk.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], chunk.Part);
                         it.Seek(key);
+                        if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                        {
+                            fold.Parent.Folders.Remove(fold);
+                            Source.HistoryStoreDB.Delete(it.GetKey());
+                        }
+
+                        key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", chunk.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], chunk.Part);
+                        it.Seek(key);
+                        if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                        {
+                            foreach (var f in fold.Parent.Folders)
+                            {
+                                if (f as MetaFile != null)
+                                {
+                                    var meta = f as MetaFile;
+                                    var delChunk = fold as ChunkFile;
+                                    if (meta.Period == delChunk.Period && meta.Part == delChunk.Part)
+                                    {
+                                        fold.Parent.Folders.Remove(meta);
+                                        Source.HistoryStoreDB.Delete(it.GetKey());
+                                        break;
+                                    }
+                                }
+                            }
+                            Source.HistoryStoreDB.Delete(it.GetKey());
+                        }
+
                     }
                     if (fold as MetaFile != null)
                     {
                         MetaFile metaFile = fold as MetaFile;
-                        key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
+
+                        key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
                         it.Seek(key);
-                    }
-                    if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
-                    {
-                        fold.Parent.Folders.Remove(fold);
-                        Source.HistoryStoreDB.Delete(it.GetKey());
-                        fold.Parent.Folders.Clear();
-                        fold.Parent.Folders.Add(new LoadingFolder());
-                        var ha = new HistoryLoader(Application.Current.Dispatcher, Source.HistoryStoreDB, fold.Parent.Folders, fold.Parent);
-                        ha.ReadDateTimes(fold.Parent, Source.Editor);
+                        if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                        {
+                            if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                            {
+                                MessageBox.Show("Unable to delete Meta when Chunk file exists. Delete Chunk File and Meta will be deleted too.", "Delete error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
+                        }
+                        else
+                        {
+                            key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
+                            it.Seek(key);
+                            if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                            {
+                                fold.Parent.Folders.Remove(metaFile);
+                                Source.HistoryStoreDB.Delete(it.GetKey());
+                            }
+                        }
                     }
 
                 }
