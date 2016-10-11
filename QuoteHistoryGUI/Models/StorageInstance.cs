@@ -154,9 +154,10 @@ namespace QuoteHistoryGUI.Models
             var par = f.Parent;
             while (par.Parent != null)
             {
-                par = par.Parent;
                 path = par.Name + "/" + path;
+                par = par.Parent;
             }
+            path = par.Name + "/" + path;
             FilePath = path;   
 
         }
@@ -171,9 +172,10 @@ namespace QuoteHistoryGUI.Models
             var par = f.Parent;
             while (par.Parent != null)
             {
-                par = par.Parent;
                 path = par.Name + "/" + path;
+                par = par.Parent;
             }
+            path = par.Name + "/" + path;
             FilePath = path;
 
         }
