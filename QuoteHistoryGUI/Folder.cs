@@ -86,11 +86,12 @@ namespace QuoteHistoryGUI
     {
         public int Part;
         public string Period;
-        public HistoryFile(string name, string period, int part = 0) : base()
+        public HistoryFile(string name, string period, int part = 0, Folder parent = null) : base()
         {
             Name = name;
             Part = part;
             Period = period;
+            Parent = parent;
         }
 
         public HistoryFile() : base()
@@ -104,7 +105,7 @@ namespace QuoteHistoryGUI
 
     public class ChunkFile : HistoryFile
     {
-        public ChunkFile(string name, string period, int part = 0) : base(name, period, part)
+        public ChunkFile(string name, string period, int part = 0, Folder parent = null) : base(name, period, part, parent)
         {}
 
         public ChunkFile() : base()
@@ -113,7 +114,7 @@ namespace QuoteHistoryGUI
 
     public class MetaFile : HistoryFile
     {
-        public MetaFile(string name, string period, int part = 0) : base(name, period, part)
+        public MetaFile(string name, string period, int part = 0, Folder parent = null) : base(name, period, part, parent)
         {}
 
         public MetaFile() : base()

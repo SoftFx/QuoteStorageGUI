@@ -202,7 +202,8 @@ namespace QuoteHistoryGUI.Views
         private void UpStream_Click(object sender, RoutedEventArgs e)
         {
             var inst = this.DataContext as StorageInstance;
-            inst.Refresh();
+            var wind = Application.Current.MainWindow as MainWindowView;
+
         }
     }
 }

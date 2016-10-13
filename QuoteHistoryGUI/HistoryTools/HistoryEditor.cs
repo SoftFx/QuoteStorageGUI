@@ -25,7 +25,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public string GetText(byte[] content)
         {
-            if (content == null) return "";
+            if (content == null || content.Count() == 0) return "";
             bool isZip = false;
             if (content[0] == 'P' && content[1] == 'K')
                 isZip = true;
@@ -107,11 +107,11 @@ namespace QuoteHistoryGUI.HistoryTools
 
             var key = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part);
             byte[] value = { };
-            if (meta[4] == 2)
+            if (meta!=null && meta[4] == 2)
             {
                 value = ASCIIEncoding.ASCII.GetBytes(content.ToArray());   
             }
-            if (meta[4] == 1)
+            else
             {
                 MemoryStream contentMemStream = new MemoryStream(ASCIIEncoding.ASCII.GetBytes(content.ToArray()));
                 MemoryStream outputMemStream = new MemoryStream();
@@ -138,19 +138,8 @@ namespace QuoteHistoryGUI.HistoryTools
 
             if(f.Period == "ticks")
             {
-                key = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", "M1 bid", dateTime[0], dateTime[1], dateTime[2], 0, 0);
-                var serBarBid = GetText(_dbase.Get(key));
-                key = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", "M1 ask", dateTime[0], dateTime[1], dateTime[2], 0, 0);
-                var serBarAsk = GetText(_dbase.Get(key));
-                var bids = HistorySerializer.Deserialize("M1 bid", ASCIIEncoding.ASCII.GetBytes(serBarBid)) as IEnumerable<QHBar>;
-                if (bids == null) bids = new List<QHBar>();
-                var asks = HistorySerializer.Deserialize("M1 ask", ASCIIEncoding.ASCII.GetBytes(serBarAsk)) as IEnumerable<QHBar>;
-                if (asks == null) asks = new List<QHBar>();
-                HistoryRecalculateUpdater.RecalculateTickToM1((IEnumerable<QHTick>)HistorySerializer.Deserialize("ticks", ASCIIEncoding.ASCII.GetBytes(content)),
-                    ref bids, ref asks);
+                tickToM1Upstream(f, content);
             }
-
-
             RebuildMeta(f);
         }
 
@@ -218,10 +207,57 @@ namespace QuoteHistoryGUI.HistoryTools
             if (MetaCorruptionMessage != "")
             {
                 MessageBox.Show(MetaCorruptionMessage, "Meta rebuild",MessageBoxButton.OK,MessageBoxImage.Asterisk);
-            }
-            
-            
+            } 
         }
 
+        void tickToM1Upstream(ChunkFile tickFile, string content)
+        {
+            var path = HistoryDatabaseFuncs.GetPath(tickFile);
+            var dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
+            var bidKey = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", "M1 bid", dateTime[0], dateTime[1], dateTime[2], 0, 0);
+            var serBarBid = GetText(_dbase.Get(bidKey));
+            var askKey = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", "M1 ask", dateTime[0], dateTime[1], dateTime[2], 0, 0);
+            var serBarAsk = GetText(_dbase.Get(askKey));
+            var bids = HistorySerializer.Deserialize("M1 bid", ASCIIEncoding.ASCII.GetBytes(serBarBid)) as IEnumerable<QHBar>;
+            if (bids == null) bids = new List<QHBar>();
+            var asks = HistorySerializer.Deserialize("M1 ask", ASCIIEncoding.ASCII.GetBytes(serBarAsk)) as IEnumerable<QHBar>;
+            if (asks == null) asks = new List<QHBar>();
+
+            HistoryRecalculateUpdater.RecalculateTickToM1((IEnumerable<QHTick>)HistorySerializer.Deserialize("ticks", ASCIIEncoding.ASCII.GetBytes(content)),
+                ref bids, ref asks);
+
+            var M1folder = tickFile.Parent.Parent;
+
+            DeleteChunksAndMetaFromFolders(M1folder.Folders);
+    
+            SvCntToFld(ASCIIEncoding.ASCII.GetString(HistorySerializer.SerializeBars(bids)), "M1 bid", 0, M1folder);
+            SvCntToFld(ASCIIEncoding.ASCII.GetString(HistorySerializer.SerializeBars(bids)), "M1 ask", 0, M1folder);
+        }
+
+        void DeleteChunksAndMetaFromFolders(IList<Folder> Folders)
+        {
+            var toDel = new List<Folder>();
+
+            foreach (var file in Folders)
+            {
+                if (file as ChunkFile != null || file as MetaFile != null)
+                {
+                    toDel.Add(file);
+                }
+            }
+
+            toDel.ForEach(t => { Folders.Remove(t); });
+        }
+
+        void SvCntToFld(string content, string period, int part, Folder parent)
+        {
+            var chunk = new ChunkFile(period+" file", period, 0, parent);
+            var meta = new MetaFile(period + " chunk", period, 0, parent);
+            parent.Folders.Add(chunk);
+            parent.Folders.Add(meta);
+            SaveToDB(content, chunk);
+            RebuildMeta(chunk);
+        }
     }
+   
 }

@@ -139,5 +139,29 @@ namespace QuoteHistoryGUI.HistoryTools
         }
 
 
+        public static byte[] SerializeBars(IEnumerable<QHBar> bars)
+        {
+            MemoryStream stream = new MemoryStream();
+            List<string> res = new List<string>(); 
+                        foreach(var bar in bars)
+            {
+                string barStr = "";
+                barStr += bar.Time.ToString(CultureInfo.InvariantCulture);
+                barStr += "\t";
+                barStr += bar.Open.ToString(CultureInfo.InvariantCulture);
+                barStr += "\t";
+                barStr += bar.High.ToString(CultureInfo.InvariantCulture);
+                barStr += "\t";
+                barStr += bar.Low.ToString(CultureInfo.InvariantCulture);
+                barStr += "\t";
+                barStr += bar.Close.ToString(CultureInfo.InvariantCulture);
+                barStr += "\t";
+                barStr += bar.Volume.ToString(CultureInfo.InvariantCulture);
+                barStr += "\n";
+                res.Add(barStr);
+            }
+            return ASCIIEncoding.ASCII.GetBytes(string.Concat(res));
+        }
+
     }
 }
