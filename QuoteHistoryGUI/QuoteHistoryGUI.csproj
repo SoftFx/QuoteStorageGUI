@@ -72,6 +72,7 @@
     <Compile Include="Dialogs\CopyDialog.xaml.cs">
       <DependentUpon>CopyDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="HistoryTools\HistoryRecalculateUpdater.cs" />
     <Compile Include="HistoryTools\HistoryParams.cs" />
     <Compile Include="HistoryTools\HistorySerializer.cs" />
     <Compile Include="HistoryTools\HistoryDatabaseFuncs.cs" />

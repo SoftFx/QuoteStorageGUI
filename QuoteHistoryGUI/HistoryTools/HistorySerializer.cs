@@ -20,6 +20,7 @@ namespace QuoteHistoryGUI.HistoryTools
         public decimal High;
         public decimal Low;
         public decimal Close;
+        public decimal Volume;
     }
     class QHTick : QHItem
     {
@@ -41,6 +42,8 @@ namespace QuoteHistoryGUI.HistoryTools
     {
         public static IEnumerable<QHItem> Deserialize(string period, byte[] content)
         {
+            if (content == null)
+                return new List<QHItem>();
             if(period == "ticks")
             {
                 return DeserializeTicks(content);

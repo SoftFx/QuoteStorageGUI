@@ -25,6 +25,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public string GetText(byte[] content)
         {
+            if (content == null) return "";
             bool isZip = false;
             if (content[0] == 'P' && content[1] == 'K')
                 isZip = true;
@@ -134,6 +135,22 @@ namespace QuoteHistoryGUI.HistoryTools
             }
 
             _dbase.Put(key, value);
+
+            if(f.Period == "ticks")
+            {
+                key = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", "M1 bid", dateTime[0], dateTime[1], dateTime[2], 0, 0);
+                var serBarBid = GetText(_dbase.Get(key));
+                key = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", "M1 ask", dateTime[0], dateTime[1], dateTime[2], 0, 0);
+                var serBarAsk = GetText(_dbase.Get(key));
+                var bids = HistorySerializer.Deserialize("M1 bid", ASCIIEncoding.ASCII.GetBytes(serBarBid)) as IEnumerable<QHBar>;
+                if (bids == null) bids = new List<QHBar>();
+                var asks = HistorySerializer.Deserialize("M1 ask", ASCIIEncoding.ASCII.GetBytes(serBarAsk)) as IEnumerable<QHBar>;
+                if (asks == null) asks = new List<QHBar>();
+                HistoryRecalculateUpdater.RecalculateTickToM1((IEnumerable<QHTick>)HistorySerializer.Deserialize("ticks", ASCIIEncoding.ASCII.GetBytes(content)),
+                    ref bids, ref asks);
+            }
+
+
             RebuildMeta(f);
         }
 

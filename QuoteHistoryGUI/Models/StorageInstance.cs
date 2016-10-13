@@ -189,6 +189,7 @@ namespace QuoteHistoryGUI.Models
                 Editor.SaveToDB(FileContent, _currentFile as ChunkFile);
             else MessageBox.Show("Meta file editing is not possible!", "hmm...",MessageBoxButton.OK,MessageBoxImage.Asterisk);
             wind.HideLoading();
+            Application.Current.MainWindow.Activate();
         }
 
         private bool SaveDelegate(object o, bool isCheckOnly)
