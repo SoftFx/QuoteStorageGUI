@@ -55,8 +55,81 @@ namespace QuoteHistoryGUI.Models
                     return;
                 _storageTabs = value;
                 NotifyPropertyChanged("StorageTabs");
+                
             }
         }
+
+        public int SelMasterIndex
+        {
+            get { return MasterStorage.Count!=0?0:-1; }
+            set { }
+        }
+        public int SelSlaveIndex
+        {
+            get { return SlaveStorage.Count != 0 ? 0 : -1; }
+            set { }
+        }
+
+
+        public void TryToAddStorage(StorageInstance st)
+        {
+            if (StorageTabs.Count > 1)
+            {
+                MessageBox.Show("Can't open more than 2 storages!", "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
+            }
+            else
+            {
+                StorageTabs.Add(st);
+                if (StorageTabs.Count == 1)
+                    MasterStorage.Add(st);
+                if (StorageTabs.Count == 2)
+                    SlaveStorage.Add(st);
+            }
+            NotifyPropertyChanged("SelMasterIndex");
+            NotifyPropertyChanged("SelSlaveIndex");
+        }
+
+        public void TryToRemoveStorage(StorageInstance st)
+        {
+            StorageTabs.Remove(st);
+            MasterStorage.Remove(st);
+            SlaveStorage.Remove(st);
+            
+            if(SlaveStorage.Count==1 && MasterStorage.Count == 0)
+            {
+                MasterStorage.Add(SlaveStorage[0]);
+                SlaveStorage.Clear();
+            }
+            NotifyPropertyChanged("SelMasterIndex");
+            NotifyPropertyChanged("SelSlaveIndex");
+        }
+
+        private ObservableCollection<StorageInstance> _masterStorage;
+        public ObservableCollection<StorageInstance> MasterStorage
+        {
+            get { return _masterStorage; }
+            set
+            {
+                if (_masterStorage == value)
+                    return;
+                _masterStorage = value;
+                NotifyPropertyChanged("MasterStorage");
+            }
+        }
+
+        private ObservableCollection<StorageInstance> _slaveStorage;
+        public ObservableCollection<StorageInstance> SlaveStorage
+        {
+            get { return _slaveStorage; }
+            set
+            {
+                if (_slaveStorage == value)
+                    return;
+                _slaveStorage = value;
+                NotifyPropertyChanged("SlaveStorage");
+            }
+        }
+
 
 
 
@@ -67,6 +140,8 @@ namespace QuoteHistoryGUI.Models
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
             ImportBtnClick = new SingleDelegateCommand(ImportDelegate);
             StorageTabs = new ObservableCollection<StorageInstance>();
+            MasterStorage = new ObservableCollection<StorageInstance>();
+            SlaveStorage = new ObservableCollection<StorageInstance>();
             CopyContextBtnClick = new SingleDelegateCommand(CopyContextDelegate);
             try {
                 StreamReader r = File.OpenText("version.txt");
@@ -82,7 +157,6 @@ namespace QuoteHistoryGUI.Models
 
         public ICommand OpenBtnClick { get; private set; }
         public ICommand ImportBtnClick { get; private set; }
-
         public ICommand CopyContextBtnClick { get; private set; }
         private bool OpenBaseDelegate(object o, bool isCheckOnly)
         {
@@ -100,7 +174,7 @@ namespace QuoteHistoryGUI.Models
                 {
                     var tab = new StorageInstance(dlg.StoragePath.Text, Interactor);
                     if (tab.Status == "Ok")
-                        _storageTabs.Add(tab);
+                        TryToAddStorage(tab);
                     else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
                 }
                 return true;

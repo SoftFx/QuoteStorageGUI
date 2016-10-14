@@ -49,7 +49,7 @@ namespace QuoteHistoryGUI.Views
                 {
                     var tab = new StorageInstance(dlg.StoragePath.Text, _model.Interactor);
                     if (tab.Status == "Ok")
-                        _model.StorageTabs.Add(tab);
+                        _model.TryToAddStorage(tab);
                     else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
                 }
             }
@@ -74,14 +74,5 @@ namespace QuoteHistoryGUI.Views
             this.IsEnabled = true;
         }
 
-        private void CloseTabButton_Click(object sender, RoutedEventArgs e)
-        {
-            var button = sender as Button;
-            if(button!= null)
-            {
-                var inst = button.DataContext as StorageInstance;
-                inst.Close();
-            }
-        }
     }
 }

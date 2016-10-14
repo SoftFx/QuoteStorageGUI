@@ -41,6 +41,7 @@ namespace QuoteHistoryGUI.Models
             CopyBtnClick = new SingleDelegateCommand(CopyDelegate);
             DeleteBtnClick = new SingleDelegateCommand(DeleteDelegate);
             RefreshBtnClick = new SingleDelegateCommand(RefreshDelegate);
+            CloseBtnClick = new SingleDelegateCommand(CloseDelegate);
         }
 
         private DB _historyStoreDB;
@@ -52,6 +53,7 @@ namespace QuoteHistoryGUI.Models
         public ICommand CopyBtnClick { get; private set; }
         public ICommand DeleteBtnClick { get; private set; }
         public ICommand RefreshBtnClick { get; private set; }
+        public ICommand CloseBtnClick { get; private set; }
         public ObservableCollection<Folder> Folders
         {
             get { return _folders; }
@@ -63,7 +65,21 @@ namespace QuoteHistoryGUI.Models
                 NotifyPropertyChanged("Folders");
             }
         }
-        public string StoragePath;
+        private string _storagePath;
+        public string StoragePath
+        {
+            get
+            {
+                return _storagePath;
+            }
+            set
+            {
+                if (_storagePath == value)
+                    return;
+                _storagePath = value;
+                NotifyPropertyChanged("StoragePath");
+            }
+        }
         private string _fileContent;
         public string FileContent
         {
@@ -244,12 +260,17 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
-        public void Close()
+        private bool CloseDelegate(object o, bool isCheckOnly)
         {
-            var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
-            MainModel.StorageTabs.Remove(this);
-            _historyStoreDB.Dispose();
+            if (isCheckOnly)
+                return true;
+            else
+            {
+                var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
+                MainModel.TryToRemoveStorage(this);
+                _historyStoreDB.Dispose();
+                return true;
+            }
         }
-
     }
 }
