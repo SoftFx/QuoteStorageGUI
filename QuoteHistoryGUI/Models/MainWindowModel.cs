@@ -65,6 +65,7 @@ namespace QuoteHistoryGUI.Models
         public MainWindowModel() {
             Interactor = new HistoryInteractor();
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
+            ImportBtnClick = new SingleDelegateCommand(ImportDelegate);
             StorageTabs = new ObservableCollection<StorageInstance>();
             CopyContextBtnClick = new SingleDelegateCommand(CopyContextDelegate);
             try {
@@ -80,6 +81,8 @@ namespace QuoteHistoryGUI.Models
 
 
         public ICommand OpenBtnClick { get; private set; }
+        public ICommand ImportBtnClick { get; private set; }
+
         public ICommand CopyContextBtnClick { get; private set; }
         private bool OpenBaseDelegate(object o, bool isCheckOnly)
         {
@@ -100,6 +103,22 @@ namespace QuoteHistoryGUI.Models
                         _storageTabs.Add(tab);
                     else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
                 }
+                return true;
+            }
+        }
+
+        private bool ImportDelegate(object o, bool isCheckOnly)
+        {
+
+            if (isCheckOnly)
+                return true;
+            else
+            {
+                var dlg = new ImportDialog()
+                {
+                    Owner = Application.Current.MainWindow
+                };
+                dlg.ShowDialog();
                 return true;
             }
         }

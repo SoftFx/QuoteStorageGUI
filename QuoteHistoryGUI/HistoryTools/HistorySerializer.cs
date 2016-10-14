@@ -157,7 +157,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 barStr += bar.Close.ToString(CultureInfo.InvariantCulture);
                 barStr += "\t";
                 barStr += bar.Volume.ToString(CultureInfo.InvariantCulture);
-                barStr += "\n";
+                barStr += "\r\n";
                 res.Add(barStr);
             }
             return ASCIIEncoding.ASCII.GetBytes(string.Concat(res));
