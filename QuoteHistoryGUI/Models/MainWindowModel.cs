@@ -188,7 +188,7 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-                var dlg = new ImportDialog()
+                var dlg = new ImportDialog(MasterStorage.Count>0? MasterStorage[0]:null, SlaveStorage.Count > 0 ? SlaveStorage[0] : null)
                 {
                     Owner = Application.Current.MainWindow
                 };

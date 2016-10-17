@@ -42,7 +42,18 @@
                 </Grid.Background>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition>
+                        <ColumnDefinition.Style>
+                            <Style TargetType="{x:Type ColumnDefinition}">
+                                <Setter Property="Width" Value="auto" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=right_control, Path=SelectedIndex}" Value="0">
+                                        <Setter Property="Width" Value="*" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ColumnDefinition.Style>
+                    </ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <TabControl Name="left_control" Background="Transparent" Margin="2 0 0 0" ItemsSource="{Binding MasterStorage}"  SelectedIndex="{Binding SelMasterIndex}" VirtualizingPanel.IsVirtualizing="False">
                     <TabControl.ItemTemplate>

@@ -22,6 +22,34 @@ namespace QuoteHistoryGUI.HistoryTools
             {"Chunk",1 },
         };
 
+        public struct DBEntry
+        {
+            public string Symbol;
+            public DateTime Time;
+            public string Period;
+            public string Type;
+            public int Part;
+        }
+
+        public static DBEntry DeserealizeKey(byte[] key)
+        {
+            DBEntry entry = new DBEntry();
+            List<byte> symList = new List<byte>();
+            int i = 0;
+            for (i = 0; i < key.Length; i++)
+            {
+                if (key[i] > 1)
+                    symList.Add(key[i]);
+                else break;
+            }
+            entry.Symbol = ASCIIEncoding.ASCII.GetString(symList.ToArray());
+            entry.Type = key[i] == 0 ? "Meta" : "Chunk";
+            i++;
+            entry.Period = periodicityDict.FirstOrDefault(x => x.Value == key[i]).Key;
+            i++;
+            
+            return entry;
+        }
         public static byte[] SerealizeKey(string sym, string type, string period, int year, int month, int day, int hour, int partNum = 0)
         {
             var _prefix = new byte[sym.Length + 2];

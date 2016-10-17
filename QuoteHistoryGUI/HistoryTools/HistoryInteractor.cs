@@ -204,6 +204,33 @@ namespace QuoteHistoryGUI.HistoryTools
         }
 
 
+        public void Import(bool replace = true, BackgroundWorker worker = null)
+        {
+            var sourceIter = Source.HistoryStoreDB.CreateIterator();
+            sourceIter.SeekToFirst();
+            DateTime ReportTime = DateTime.Now;
+            while (sourceIter.IsValid())
+            {
+                if (replace)
+                {
+                    Destination.HistoryStoreDB.Put(sourceIter.GetKey(), sourceIter.GetValue());
+                }
+                else
+                {
+                    if (Destination.HistoryStoreDB.Get(sourceIter.GetKey()) == null)
+                    {
+                        Destination.HistoryStoreDB.Put(sourceIter.GetKey(), sourceIter.GetValue());
+                    }
+                }
+
+                if(worker!=null && (DateTime.Now - ReportTime).Seconds > 1)
+                {
+                    worker.ReportProgress(1, sourceIter.GetKey());
+                }
+
+                sourceIter.Next();
+            }
+        }
 
     }
 }
