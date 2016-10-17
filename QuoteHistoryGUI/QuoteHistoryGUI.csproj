@@ -21,7 +21,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;/main</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -30,12 +30,15 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;/main</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>QuoteHistoryGUI.Startup</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ICSharpCode.SharpZipLib">
@@ -81,6 +84,7 @@
     <Compile Include="HistoryTools\HistoryDatabaseFuncs.cs" />
     <Compile Include="HistoryTools\HistoryInteractor.cs" />
     <Compile Include="Models\StorageExplorerModel.cs" />
+    <Compile Include="Startup.cs" />
     <Compile Include="Views\StorageExplorerView.xaml.cs">
       <DependentUpon>StorageExplorerView.xaml</DependentUpon>
     </Compile>

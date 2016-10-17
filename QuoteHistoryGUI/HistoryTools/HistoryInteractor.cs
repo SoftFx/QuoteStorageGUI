@@ -226,6 +226,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 if(worker!=null && (DateTime.Now - ReportTime).Seconds > 1)
                 {
                     worker.ReportProgress(1, sourceIter.GetKey());
+                    ReportTime = DateTime.Now;
                 }
 
                 sourceIter.Next();

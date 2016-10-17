@@ -47,7 +47,20 @@ namespace QuoteHistoryGUI.HistoryTools
             i++;
             entry.Period = periodicityDict.FirstOrDefault(x => x.Value == key[i]).Key;
             i++;
-            
+            byte[] dateByte = new byte[4];
+            dateByte[0] = key[i + 3];
+            dateByte[1] = key[i + 2];
+            dateByte[2] = key[i + 1];
+            dateByte[3] = key[i];
+            UInt32 date = BitConverter.ToUInt32(dateByte, 0);
+            var hour = date % 100;
+            date /= 100;
+            var day = date % 100;
+            date /= 100;
+            var month = date % 100;
+            date /= 100;
+            var year = date;
+            entry.Time = new DateTime((int)year, (int)month, (int)day, (int)hour, 0, 0);
             return entry;
         }
         public static byte[] SerealizeKey(string sym, string type, string period, int year, int month, int day, int hour, int partNum = 0)

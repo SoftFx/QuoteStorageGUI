@@ -242,8 +242,12 @@ namespace QuoteHistoryGUI.Models
             else
             {
                 var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
+                var MainView = Application.Current.MainWindow as MainWindowView;
                 MainModel.Interactor.Source = this;
+                MainView.ShowLoading();
                 MainModel.Interactor.Delete();
+                MainView.HideLoading();
+
                 //Refresh();
                 return true;
             }

@@ -55,16 +55,31 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void SourceBut_Click(object sender, RoutedEventArgs e)
         {
+            var dlg = new System.Windows.Forms.FolderBrowserDialog
+            { };
 
+            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                SourcePath.Text = dlg.SelectedPath;
+                Interactor.Source = new StorageInstance(dlg.SelectedPath, Interactor);
+            }
         }
 
         private void DestinationBut_Click(object sender, RoutedEventArgs e)
         {
+            var dlg = new System.Windows.Forms.FolderBrowserDialog
+            { };
 
+            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                DestinationPath.Text = dlg.SelectedPath;
+                Interactor.Destination = new StorageInstance(dlg.SelectedPath, Interactor);
+            }
         }
 
         private void ImportBtn_Click(object sender, RoutedEventArgs e)
         {
+            ReportBlock.Text = "Import starting...";
             ImportBtn.IsEnabled = false;
             if(Interactor.Source!=null && Interactor.Destination != null)
             {
@@ -88,6 +103,7 @@ namespace QuoteHistoryGUI.Dialogs
         {
             
             Interactor.Import(Replace, Worker);
+            Interactor.Destination.Refresh();
         }
 
         private void ImportCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -99,7 +115,7 @@ namespace QuoteHistoryGUI.Dialogs
         {
             var key = e.UserState as byte[];
             var entry = HistoryDatabaseFuncs.DeserealizeKey(key);
-            ReportBlock.Text = entry.Symbol;
+            ReportBlock.Text = entry.Symbol + " "+entry.Time.ToString();
         }
     }
 }

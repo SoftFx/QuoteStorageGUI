@@ -26,7 +26,8 @@ namespace QuoteHistoryGUI.Views
 
         private readonly MainWindowModel _model;
         public MainWindowView()
-        {           
+        {
+            //throw (new Exception("123"));        
             DataContext = _model = new MainWindowModel();
             InitializeComponent();
 
