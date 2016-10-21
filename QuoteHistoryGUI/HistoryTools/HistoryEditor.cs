@@ -63,7 +63,7 @@ namespace QuoteHistoryGUI.HistoryTools
             bool isZip = false;
             if (f as ChunkFile != null)
             {
-                var cnt = _dbase.Get(HistoryLoader.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
+                var cnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
                 if (cnt[0] == 'P' && cnt[1] == 'K')
                     isZip = true;
                 var Text = GetText(cnt);
@@ -71,7 +71,7 @@ namespace QuoteHistoryGUI.HistoryTools
             }
             else
             {
-                var meta = _dbase.Get(HistoryLoader.SerealizeKey(path[0].Name, "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
+                var meta = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
                 // (BitConverter.ToUInt32(dbVal, 0));
                 Crc32 hash = new Crc32();
                 hash.Value = (BitConverter.ToUInt32(meta, 0));
@@ -103,9 +103,9 @@ namespace QuoteHistoryGUI.HistoryTools
             var path = HistoryDatabaseFuncs.GetPath(f);
             int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
             string period = f.Period;
-            var meta = _dbase.Get(HistoryLoader.SerealizeKey(path[0].Name, "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
+            var meta = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
 
-            var key = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part);
+            var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part);
             byte[] value = { };
             if (meta!=null && meta[4] == 2)
             {
@@ -144,7 +144,7 @@ namespace QuoteHistoryGUI.HistoryTools
         }
 
 
-        public void RebuildMeta(ChunkFile file)
+        public void RebuildMeta(ChunkFile file, bool showMessages = true)
         {
             var path = HistoryDatabaseFuncs.GetPath(file);
             int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
@@ -204,7 +204,7 @@ namespace QuoteHistoryGUI.HistoryTools
             }
             _dbase.Put(metaKey, GettedEntry);
             it.Dispose();
-            if (MetaCorruptionMessage != "")
+            if (MetaCorruptionMessage != "" && showMessages)
             {
                 MessageBox.Show(MetaCorruptionMessage, "Meta rebuild",MessageBoxButton.OK,MessageBoxImage.Asterisk);
             } 
@@ -214,9 +214,9 @@ namespace QuoteHistoryGUI.HistoryTools
         {
             var path = HistoryDatabaseFuncs.GetPath(tickFile);
             var dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
-            var bidKey = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", "M1 bid", dateTime[0], dateTime[1], dateTime[2], 0, 0);
+            var bidKey = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "M1 bid", dateTime[0], dateTime[1], dateTime[2], 0, 0);
             var serBarBid = GetText(_dbase.Get(bidKey));
-            var askKey = HistoryLoader.SerealizeKey(path[0].Name, "Chunk", "M1 ask", dateTime[0], dateTime[1], dateTime[2], 0, 0);
+            var askKey = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "M1 ask", dateTime[0], dateTime[1], dateTime[2], 0, 0);
             var serBarAsk = GetText(_dbase.Get(askKey));
             var bids = HistorySerializer.Deserialize("M1 bid", ASCIIEncoding.ASCII.GetBytes(serBarBid)) as IEnumerable<QHBar>;
             if (bids == null) bids = new List<QHBar>();

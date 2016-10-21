@@ -28,6 +28,7 @@ namespace QuoteHistoryGUI.Views
         public StorageExplorerView()
         {
             InitializeComponent();
+            var a = this.DataContext;
         }
         private void treeView_Expanded(object sender, RoutedEventArgs e)
         {
@@ -97,10 +98,6 @@ namespace QuoteHistoryGUI.Views
 
         List<TreeViewItem> selectedItems = new List<TreeViewItem>();
         object selectedItemLock = new object();
-        private void treeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            var source = e.OriginalSource;
-        }
 
         private void treeView_Selected(object sender, RoutedEventArgs e)
         {
@@ -127,9 +124,6 @@ namespace QuoteHistoryGUI.Views
                             HandleSelection = true;
                             treeItem.IsSelected = true;
                             selectedItems.Add(treeItem);
-                            var wind = Application.Current.MainWindow as MainWindowView;
-                            var model = wind.DataContext as MainWindowModel;
-                            model.Interactor.AddToSelection(treeItem.DataContext as Folder);
                             HandleSelection = false;
                         }
                     }
@@ -156,13 +150,11 @@ namespace QuoteHistoryGUI.Views
                         HandleSelection = false;
                     }
                     selectedItems.Clear();
-                    var wind = Application.Current.MainWindow as MainWindowView;
-                    var model = wind.DataContext as MainWindowModel;
-                    model.Interactor.DiscardSelection();
                     selectedItems.Add(treeItem);
-                    model.Interactor.AddToSelection(treeItem.DataContext as Folder);
                 }
             }
+            (this.DataContext as StorageInstance).Selection = new List<Folder>(selectedItems.Select(t => { return t.DataContext as Folder; }));
+
         }
 
         bool HandleSelection = false;
@@ -181,24 +173,17 @@ namespace QuoteHistoryGUI.Views
             }
         }
 
-        private void Copy_Click(object sender, RoutedEventArgs e)
-        {
-            var inst = this.DataContext as StorageInstance;
-            inst.CopyBtnClick.Execute(new object());
-        }
+       
 
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
             var inst = this.DataContext as StorageInstance;
+            var interactor = inst.Interactor;
+            interactor.DiscardSelection();
+            selectedItems.ForEach(t => { interactor.AddToSelection(t.DataContext as Folder); });
+            selectedItems.Clear();
             inst.DeleteBtnClick.Execute(new object());
         }
-
-        private void Refresh_Click(object sender, RoutedEventArgs e)
-        {
-            var inst = this.DataContext as StorageInstance;
-            inst.Refresh();
-        }
-
         private void UpStream_Click(object sender, RoutedEventArgs e)
         {
             var inst = this.DataContext as StorageInstance;

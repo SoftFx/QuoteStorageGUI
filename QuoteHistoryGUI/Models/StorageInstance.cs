@@ -37,6 +37,7 @@ namespace QuoteHistoryGUI.Models
             StoragePath = path;
             OpenBase(path);
             Interactor = inter;
+            Selection = new List<Folder>();
             SaveBtnClick = new SingleDelegateCommand(SaveDelegate);
             CopyBtnClick = new SingleDelegateCommand(CopyDelegate);
             DeleteBtnClick = new SingleDelegateCommand(DeleteDelegate);
@@ -45,9 +46,12 @@ namespace QuoteHistoryGUI.Models
         }
 
         private DB _historyStoreDB;
-        public DB HistoryStoreDB { get { return _historyStoreDB; } }
+        
         private HistoryFile _currentFile;
         private ObservableCollection<Folder> _folders;
+
+        public DB HistoryStoreDB { get { return _historyStoreDB; } }
+        public List<Folder> Selection;
         public HistoryInteractor Interactor;
         public ICommand SaveBtnClick { get; private set; }
         public ICommand CopyBtnClick { get; private set; }
@@ -130,8 +134,8 @@ namespace QuoteHistoryGUI.Models
                 _historyStoreDB = new DB(path + "\\HistoryDB",
                         new Options() { BloomFilter = new BloomFilterPolicy(10) });
                 Editor = new HistoryEditor(_historyStoreDB);
-                HistoryLoader hl = new HistoryLoader(Application.Current.Dispatcher, _historyStoreDB, Folders);
-                hl.ReadSymbols(); }
+                HistoryLoader hl = new HistoryLoader(Application.Current.Dispatcher, _historyStoreDB);
+                hl.ReadSymbols(Folders); }
             catch (Exception ex)
             {
                 Status = ex.Message;
@@ -147,16 +151,14 @@ namespace QuoteHistoryGUI.Models
             if (!f.Loaded)
             {
                 f.Loaded = true;
-                var ha = new HistoryLoader(Application.Current.Dispatcher, HistoryStoreDB, f.Folders, f);
-                ha.ReadDateTimes(f, Editor);
+                var ha = new HistoryLoader(Application.Current.Dispatcher, HistoryStoreDB);
+                ha.ReadDateTimesAsync(f, Editor);
             }
         }
         public void Refresh()
         {
-
-            HistoryLoader hl = new HistoryLoader(Application.Current.Dispatcher, _historyStoreDB, Folders);
-            hl.Refresh();
-
+            HistoryLoader hl = new HistoryLoader(Application.Current.Dispatcher, _historyStoreDB);
+            hl.Refresh(Folders);
         }
 
         public void OpenChunk(ChunkFile f)
@@ -225,8 +227,12 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
+                Interactor.DiscardSelection();
+                Selection.ForEach(t => { Interactor.AddToSelection(t); });
+
                 var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
-                var dlg = new CopyDialog(this, MainModel.StorageTabs, MainModel.Interactor)
+
+                var dlg = new CopyDialog(this, MainModel.StorageTabs, Interactor)
                 {
                     Owner = Application.Current.MainWindow
                 };
@@ -243,9 +249,14 @@ namespace QuoteHistoryGUI.Models
             {
                 var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
                 var MainView = Application.Current.MainWindow as MainWindowView;
-                MainModel.Interactor.Source = this;
+
+                Interactor.DiscardSelection();
+                Selection.ForEach(t => { Interactor.AddToSelection(t); });
+                Selection.Clear();
+
+                Interactor.Source = this;
                 MainView.ShowLoading();
-                MainModel.Interactor.Delete();
+                Interactor.Delete();
                 MainView.HideLoading();
 
                 //Refresh();

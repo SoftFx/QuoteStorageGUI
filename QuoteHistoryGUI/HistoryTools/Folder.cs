@@ -24,11 +24,7 @@ namespace QuoteHistoryGUI
         }
 
         #endregion
-        public bool IsExpanded
-        {
-            get { return Loaded; }
-            set { Loaded = value; }
-        }
+
         public bool Loaded = false;
         public bool Selected = false;
         public Folder()
@@ -66,6 +62,12 @@ namespace QuoteHistoryGUI
         }
 
         public Folder Parent { get; set; }
+
+        public override string ToString()
+        {
+            return this.GetType().ToString() +": Name "+this.Name;
+        }
+
     }
 
     public class LoadingFolder: Folder

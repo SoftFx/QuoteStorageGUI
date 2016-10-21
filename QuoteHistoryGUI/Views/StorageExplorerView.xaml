@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:QuoteHistoryGUI.Views"
+             xmlns:md="clr-namespace:QuoteHistoryGUI.Models"
              xmlns:vs="clr-namespace:QuoteHistoryGUI"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
@@ -56,14 +57,14 @@
                         <Image Source="../Icons/chunkFile.png" Height="12" Width="12">
                         </Image>
                         <TextBlock Text="  " VerticalAlignment="Center"></TextBlock>
-                        <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center" Tag="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                             <TextBlock.ContextMenu>
                                 <ContextMenu>
-                                    <MenuItem Header="Copy" Click="Copy_Click"/>
+                                    <MenuItem Header="Copy" Command="{Binding Path=PlacementTarget.Tag.CopyBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <MenuItem Header="Upstream update" Click="UpStream_Click"/>
                                     <Separator/>
-                                    <MenuItem Header="Delete" Click="Delete_Click"/>
-                                    <MenuItem Header="Refresh" Click="Refresh_Click"/>
+                                    <MenuItem Header="Delete" Command="{Binding Path=PlacementTarget.Tag.DeleteBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Refresh" Command="{Binding Path=PlacementTarget.Tag.RefreshBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 </ContextMenu>
                             </TextBlock.ContextMenu>
                         </TextBlock>
@@ -74,13 +75,13 @@
                         <Image Source="../Icons/metaFile.png" Height="12" Width="12">
                         </Image>
                         <TextBlock Text="  " VerticalAlignment="Center"></TextBlock>
-                        <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center" Tag="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                             <TextBlock.ContextMenu>
                                 <ContextMenu>
-                                    <MenuItem Header="Copy" Click="Copy_Click"/>
+                                    <MenuItem Header="Copy" Command="{Binding Path=PlacementTarget.Tag.CopyBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <Separator/>
-                                    <MenuItem Header="Delete" Click="Delete_Click"/>
-                                    <MenuItem Header="Refresh" Click="Refresh_Click"/>
+                                    <MenuItem Header="Delete" Command="{Binding Path=PlacementTarget.Tag.DeleteBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Refresh" Command="{Binding Path=PlacementTarget.Tag.RefreshBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 </ContextMenu>
                             </TextBlock.ContextMenu>
                         </TextBlock>
@@ -91,13 +92,13 @@
                         <Image Style="{StaticResource ExpandingFolderStyle}" Height="12" Width="12">
                         </Image>
                         <TextBlock Text="  " VerticalAlignment="Center"></TextBlock>
-                        <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center" Tag="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                             <TextBlock.ContextMenu>
                                 <ContextMenu>
-                                    <MenuItem Header="Copy" Click="Copy_Click"/>
+                                    <MenuItem Header="Copy" Command="{Binding Path=PlacementTarget.Tag.CopyBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <Separator/>
-                                    <MenuItem Header="Delete" Click="Delete_Click"/>
-                                    <MenuItem Header="Refresh" Click="Refresh_Click"/>
+                                    <MenuItem Header="Delete" Command="{Binding Path=PlacementTarget.Tag.DeleteBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Refresh" Command="{Binding Path=PlacementTarget.Tag.RefreshBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 </ContextMenu>
                             </TextBlock.ContextMenu>
                         </TextBlock>

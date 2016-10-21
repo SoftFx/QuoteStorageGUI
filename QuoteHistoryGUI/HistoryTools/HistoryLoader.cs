@@ -14,83 +14,28 @@ namespace QuoteHistoryGUI
 {
     class HistoryLoader
     {
-        public static byte[] SerealizeKey(string sym, string type, string period, int year, int month, int day, int hour, int partNum = 0)
-        {
-            var _prefix = new byte[sym.Length+2];
-            ASCIIEncoding.ASCII.GetBytes(sym).CopyTo(_prefix, 0);
-            _prefix[sym.Length] = (byte)(type == "Chunk" ? 1 : 0);
-            _prefix[sym.Length + 1] = periodicityDict[period];
-            var prefOffset = _prefix.Length;
-            byte[] resKey = new byte[prefOffset + 5];
-            _prefix.CopyTo(resKey, 0);
-            UInt32 date = (uint)year;
-            date = date * 100 + (uint)month;
-            date = date * 100 + (uint)day;
-            date = date * 100 + (uint)hour;
-            var bd = BitConverter.GetBytes(date);
-            resKey[prefOffset] = bd[3];
-            resKey[prefOffset + 1] = bd[2];
-            resKey[prefOffset + 2] = bd[1];
-            resKey[prefOffset + 3] = bd[0];
-            resKey[prefOffset + 4] = (byte)partNum;
-            return resKey;
-        }
 
-        public KeyValuePair<DateTime, int> GetDateAndPart(byte[] dbKey)
-        {
-            int i = 0;
-            while (dbKey[i] > 1)
-                i++;
-            i += 2;
-            byte part = (byte)(dbKey[i + 4]);
-            byte[] dateByte = new byte[4];
-            dateByte[0] = dbKey[i + 3];
-            dateByte[1] = dbKey[i + 2];
-            dateByte[2] = dbKey[i + 1];
-            dateByte[3] = dbKey[i];
-            UInt32 date = BitConverter.ToUInt32(dateByte, 0);
-            int hour = (int)(date % 100);
-            date = date / 100;
-            int day = (int)(date % 100);
-            date = date / 100;
-            int month = (int)(date % 100);
-            date = date / 100;
-            int year = (int)date;
-
-            return new KeyValuePair<DateTime, int>(new DateTime(year, month, day, hour, 0, 0), part);
-        }
-
-
-        static public readonly Dictionary<string, byte> periodicityDict = new Dictionary<string, byte>()
-        {
-            {"ticks",0 },
-            {"ticks level2",1 },
-            {"M1 ask",2 },
-            {"M1 bid",3 },
-        };
-        private static List<string> StoredPeriodicities = new List<string>() {"ticks", "ticks level2", "M1 bid", "M1 ask" };
-        private static List<KeyValuePair<int, int>> MinMaxDateTime = new List<KeyValuePair<int, int>> { new KeyValuePair<int, int>(2000, 2030),
+        public static List<KeyValuePair<int, int>> MinMaxDateTime = new List<KeyValuePair<int, int>> { new KeyValuePair<int, int>(2000, 2030),
             new KeyValuePair<int, int>(1, 12),
             new KeyValuePair<int, int>(1, 31),
             new KeyValuePair<int, int>(0, 23),
-        new KeyValuePair<int, int>(0, 0)};
+            new KeyValuePair<int, int>(0, 0)};
 
         Dispatcher _dispatcher;
         DB _dbase;
         ObservableCollection<Folder> _folders;
-        Folder parent;
-        List<Folder> path;
+        Folder _folder;
         HistoryEditor _editor;
 
-        public HistoryLoader(Dispatcher dispatcher, DB dbase, ObservableCollection<Folder> folders, Folder par = null)
+        public HistoryLoader(Dispatcher dispatcher, DB dbase)
         {
             _dispatcher = dispatcher;
             _dbase = dbase;
-            _folders = folders;
-            parent = par;
         }
-        public void ReadSymbols()
+
+        public void ReadSymbols(ObservableCollection<Folder> folders)
         {
+            _folders = folders;
             var w = new BackgroundWorker();
             w.DoWork += ReadSymbolsWork;
             w.RunWorkerAsync();
@@ -119,67 +64,37 @@ namespace QuoteHistoryGUI
             it.Dispose();
             _dispatcher.Invoke((Action)delegate () { _folders.RemoveAt(_folders.Count - 1); });
         }
-        bool ValidateKeyByKey(byte[] key1, byte[] key2, bool validateSymbol = true, int validationDateLevel = 1, bool validateType = false, bool validatePeriod = false, bool validatePart = false)
-        {
-            List<byte> sym1Bytes = new List<byte>();
-            for (int i = 0; i < key1.Length; i++)
-            {
-                if (key1[i] > 1)
-                    sym1Bytes.Add(key1[i]);
-                else break;
-            }
-            List<byte> sym2Bytes = new List<byte>();
-            for (int i = 0; i < key2.Length; i++)
-            {
-                if (key2[i] > 1)
-                    sym2Bytes.Add(key2[i]);
-                else break;
-            }
-            string sym1 = ASCIIEncoding.ASCII.GetString(sym1Bytes.ToArray());
-            string sym2 = ASCIIEncoding.ASCII.GetString(sym2Bytes.ToArray());
-            if (sym1 != sym2 && validateSymbol)
-                return false;
-            var dp1 = GetDateAndPart(key1);
-            var dp2 = GetDateAndPart(key2);
 
-            if (dp1.Key.Year != dp2.Key.Year && validationDateLevel > 0)
-                return false;
-            if (dp1.Key.Month != dp2.Key.Month && validationDateLevel > 1)
-                return false;
-            if (dp1.Key.Day != dp2.Key.Day && validationDateLevel > 2)
-                return false;
-            if (dp1.Key.Hour != dp2.Key.Hour && validationDateLevel > 3)
-                return false;
-            if (dp1.Value != dp2.Value && validatePart)
-                return false;
-            if (key1[sym1.Length] != key2[sym2.Length] && validateType)
-                return false;
-            if (key1[sym1.Length+1] != key2[sym2.Length+1] && validatePeriod)
-                return false;
-            return true;
-        }
-        public void ReadDateTimes(Folder folder, HistoryEditor editor = null)
+        public void ReadDateTimesAsync(Folder folder, HistoryEditor editor = null)
         {
             _editor = editor;
-            path = new List<Folder>();
-            path.Add(folder);
-            while (path.Last().Parent != null)
-            {
-                path.Add(path.Last().Parent);
-            }
-            path.Reverse();
+            _folder = folder;
             var w = new BackgroundWorker();
             w.DoWork += ReadFoldersAndFiles;
             w.RunWorkerAsync();
         }
-        public void Refresh()
+
+        public void ReadDateTimes(Folder folder, HistoryEditor editor = null)
         {
+            _editor = editor;
+            _folder = folder;
+
+            var w = new BackgroundWorker();
+            
+            LoadFolders();
+            LoadFiles();
+            _dispatcher.Invoke((Action)delegate () { _folder.Folders.RemoveAt(0); });
+        }
+        public void Refresh(ObservableCollection<Folder> folders)
+        {
+            _folders = folders;
             var w = new BackgroundWorker();
             w.DoWork += Refresh;
             w.RunWorkerAsync();
         }
         private void LoadFolders()
         {
+            var path = HistoryDatabaseFuncs.GetPath(_folder);
             if (path.Count < 5)
             {
                 int[] dateTime = { 2000, 1, 1, 0 };
@@ -194,18 +109,18 @@ namespace QuoteHistoryGUI
                 {
                     dateTime[curDateInd] = DT;
                     List<byte[]> keys = new List<byte[]> {
-                            SerealizeKey(path[0].Name,"Meta","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                            SerealizeKey(path[0].Name,"Meta","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                            SerealizeKey(path[0].Name,"Chunk","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                            SerealizeKey(path[0].Name,"Chunk","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                            HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Meta","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                            HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Meta","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                            HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Chunk","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                            HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Chunk","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
 
                         };
                     if (path.Count < 4)
                     {
-                        keys.Add(SerealizeKey(path[0].Name, "Meta", "M1 bid", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
-                        keys.Add(SerealizeKey(path[0].Name, "Meta", "M1 ask", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
-                        keys.Add(SerealizeKey(path[0].Name, "Chunk", "M1 bid", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
-                        keys.Add(SerealizeKey(path[0].Name, "Chunk", "M1 ask", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
+                        keys.Add(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", "M1 bid", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
+                        keys.Add(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", "M1 ask", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
+                        keys.Add(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "M1 bid", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
+                        keys.Add(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "M1 ask", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
                     }
                     var it = _dbase.CreateIterator();
                     foreach (var key in keys)
@@ -216,21 +131,21 @@ namespace QuoteHistoryGUI
                         var getedKey = it.GetKey();
                         try
                         {
-                            if (ValidateKeyByKey(getedKey, key, true, path.Count, false, true))
+                            if (HistoryDatabaseFuncs.ValidateKeyByKey(getedKey, key, true, path.Count, false, true))
                             {
-                                _dispatcher.Invoke((Action)delegate () { _folders.Add(new Folder(DT.ToString())); _folders[_folders.Count - 1].Parent = parent; });
+                                _dispatcher.Invoke((Action)delegate () { _folder.Folders.Add(new Folder(DT.ToString())); _folder.Folders[_folder.Folders.Count - 1].Parent = _folder; });
                                 break;
                             }
                         }
                         catch (Exception) { }
-
                     }
                     it.Dispose();
                 }
             }
         }
-        private void LoadFiles()
+        private void LoadFiles(bool ShowMessages = true)
         {
+            var path = HistoryDatabaseFuncs.GetPath(_folder);
             if (path.Count >=4)
             {
                 int[] dateTime = { 2000, 1, 1, 0, 0};
@@ -247,10 +162,10 @@ namespace QuoteHistoryGUI
                             {
                                 names = new string[]{ "M1 bid", "M1 bid", "M1 ask", "M1 ask" };
                                 keys = new List<byte[]> {
-                                    SerealizeKey(path[0].Name,"Chunk","M1 bid",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Meta","M1 bid",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Chunk","M1 ask",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Meta","M1 ask",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Chunk","M1 bid",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Meta","M1 bid",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Chunk","M1 ask",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Meta","M1 ask",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
                                 };
                                 break;
                             }
@@ -258,11 +173,10 @@ namespace QuoteHistoryGUI
                             {
                                 names = new string[] { "ticks level2", "ticks level2", "ticks", "ticks",  };
                                 keys = new List<byte[]> {
-                                    SerealizeKey(path[0].Name,"Chunk","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Meta","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Chunk","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-                                    SerealizeKey(path[0].Name,"Meta","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
-
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Chunk","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Meta","ticks level2",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Chunk","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Meta","ticks",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
                                 };
                                 break;
                             }
@@ -278,21 +192,23 @@ namespace QuoteHistoryGUI
                         {
                             while (true)
                             {
-                                if (ValidateKeyByKey(getedKey, keys[i], true, path.Count - 1, true, true) && it.IsValid())
+                                if (HistoryDatabaseFuncs.ValidateKeyByKey(getedKey, keys[i], true, path.Count - 1, true, true) && it.IsValid())
                                 {
                                    
                                     if (i==0 || i ==2)
                                     {
                                         var chunk = new ChunkFile(names[i] + " file" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last());
-                                        chunk.Parent = parent;
-                                        _dispatcher.Invoke((Action)delegate () { _folders.Add(chunk);});
-                                        var editor = new HistoryEditor(_dbase); 
-                                        editor.RebuildMeta(chunk);
+                                        chunk.Parent = _folder;
+                                        _dispatcher.Invoke((Action)delegate () { _folder.Folders.Add(chunk);});
+                                  
+                                        if(_editor!=null)
+                                            _editor.RebuildMeta(chunk);
+                                    
                                         it = _dbase.CreateIterator();
                                         it.Seek(getedKey);
                                         _dispatcher.Invoke((Action)delegate () { Application.Current.MainWindow.Activate(); });
                                     }
-                                    else _dispatcher.Invoke((Action)delegate () { _folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last())); _folders[_folders.Count - 1].Parent = parent; });
+                                    else _dispatcher.Invoke((Action)delegate () { _folder.Folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last())); _folder.Folders[_folder.Folders.Count - 1].Parent = _folder; });
                                     it.Next();
                                     if (it.IsValid())
                                     {
@@ -312,7 +228,7 @@ namespace QuoteHistoryGUI
         {
             LoadFolders();
             LoadFiles();
-            _dispatcher.Invoke((Action)delegate () {  _folders.RemoveAt(0); });
+            _dispatcher.Invoke((Action)delegate () { _folder.Folders.RemoveAt(0); });
         }
 
         private void Refresh(object sender, DoWorkEventArgs e)
@@ -320,7 +236,10 @@ namespace QuoteHistoryGUI
             Folder[] oldFolders = new Folder[_folders.Count()];
             _folders.CopyTo(oldFolders, 0);
             _dispatcher.Invoke((Action)delegate () { _folders.Clear(); });
-            ReadSymbols();
+            if (oldFolders.Count() == 0) return;
+            if (oldFolders[0].Parent == null)
+                ReadSymbols(_folders);
+            else ReadDateTimes(oldFolders[0].Parent);
         }
 
         private void RefreshRecursiveExpand(Folder oldExpandedFolder, Folder newFolder, ObservableCollection<Folder> newFolderCollection)

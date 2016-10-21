@@ -62,7 +62,7 @@
                                 <TextBlock Text = "{Binding Path=StoragePath}" />
                                 <TextBlock Text = " " />
                                 <Button Name="CloseTabButton" Height="13" Width="13"  VerticalAlignment="Center" Command="{Binding CloseBtnClick}" >
-                                    <Image Source="../Icons/Close.png" Height="6" Width="6" Margin="0" VerticalAlignment="Top"/>
+                                    <Image Source="../Icons/Close.png" Height="7" Width="7" Margin="0" VerticalAlignment="Top"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

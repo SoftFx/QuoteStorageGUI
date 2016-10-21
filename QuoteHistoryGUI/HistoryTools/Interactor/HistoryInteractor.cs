@@ -21,10 +21,10 @@ namespace QuoteHistoryGUI.HistoryTools
             Folder current = fold.Parent;
             while (current != null)
             {
-                if (current.Selected == true) return;
+                if (Selection.Contains(current)) return;
                 current = current.Parent;
             }
-            if (!Selection.Contains(fold)) Selection.Add(fold);
+            if (!Selection.Contains(fold)) {  Selection.Add(fold); }
         }
 
         public void DiscardSelection()
@@ -37,7 +37,7 @@ namespace QuoteHistoryGUI.HistoryTools
             int copiedCnt = 0;
             foreach (var fold in Selection)
             {
-                
+                copiedCnt++;
                 if (fold as ChunkFile == null && fold as MetaFile == null)
                 {
 
@@ -58,11 +58,9 @@ namespace QuoteHistoryGUI.HistoryTools
 
                             while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1,true,true))
                             {
-                                copiedCnt++;
-                                if (copiedCnt % 20 == 0)
-                                {
-                                    worker.ReportProgress(1);
-                                }
+                                if(worker != null)    
+                                    worker.ReportProgress(1, "Copying "+ copiedCnt+"/"+Selection.Count+" match");
+                                
                                 Destination.HistoryStoreDB.Put(it.GetKey(), it.GetValue());
                                 it.Next();
                             }
