@@ -51,18 +51,31 @@ namespace QuoteHistoryGUI.Dialogs
                 SourcePath.Text = Source.StoragePath;
                 SourceBut.IsEnabled = false;
             }
+
+            if (Interactor.Source != null && Interactor.Destination != null)
+                ImportBtn.IsEnabled = true;
+            else ImportBtn.IsEnabled = false;
+
         }
 
         private void SourceBut_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new System.Windows.Forms.FolderBrowserDialog
             { };
-
+            
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 SourcePath.Text = dlg.SelectedPath;
                 Interactor.Source = new StorageInstance(dlg.SelectedPath, Interactor);
             }
+            if (Interactor.Source.Status != "Ok")
+            {
+                MessageBox.Show(Interactor.Source.Status, "Open Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                this.Close();
+            }
+            if (Interactor.Source != null && Interactor.Destination != null)
+                ImportBtn.IsEnabled = true;
+            else ImportBtn.IsEnabled = false;
         }
 
         private void DestinationBut_Click(object sender, RoutedEventArgs e)
@@ -75,6 +88,14 @@ namespace QuoteHistoryGUI.Dialogs
                 DestinationPath.Text = dlg.SelectedPath;
                 Interactor.Destination = new StorageInstance(dlg.SelectedPath, Interactor);
             }
+            if (Interactor.Destination.Status != "Ok")
+            {
+                MessageBox.Show(Interactor.Destination.Status, "Open Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                this.Close();
+            }
+            if (Interactor.Source != null && Interactor.Destination != null)
+                ImportBtn.IsEnabled = true;
+            else ImportBtn.IsEnabled = false;
         }
 
         private void ImportBtn_Click(object sender, RoutedEventArgs e)
@@ -108,6 +129,8 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void ImportCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            ReportBlock.Text = "Import Completed!";
+            MessageBox.Show("Import Completed!", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
             this.Close();
         }
 

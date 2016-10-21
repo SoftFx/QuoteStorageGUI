@@ -250,6 +250,9 @@ namespace QuoteHistoryGUI.Models
                 var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
                 var MainView = Application.Current.MainWindow as MainWindowView;
 
+                var result = MessageBox.Show("Are you sure?", "Delete", MessageBoxButton.YesNo);
+                if (result == MessageBoxResult.No) return true;
+
                 Interactor.DiscardSelection();
                 Selection.ForEach(t => { Interactor.AddToSelection(t); });
                 Selection.Clear();
@@ -259,7 +262,7 @@ namespace QuoteHistoryGUI.Models
                 Interactor.Delete();
                 MainView.HideLoading();
 
-                //Refresh();
+                MessageBox.Show("Deletion completed!", "Delete",MessageBoxButton.OK,MessageBoxImage.Information);
                 return true;
             }
         }
