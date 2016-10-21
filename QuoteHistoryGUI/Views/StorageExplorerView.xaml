@@ -10,7 +10,7 @@
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid Visibility="Visible" Grid.Column="0">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto" MinWidth="50"/>
+            <ColumnDefinition Name="treeColumn" Width="auto" MinWidth="50"/>
             <ColumnDefinition MinWidth="100" />
         </Grid.ColumnDefinitions>
         <TreeView Grid.Column="0" BorderBrush="White"  TreeViewItem.Selected="treeView_Selected" TreeViewItem.Unselected="treeView_Selected"  Name="treeView" TreeViewItem.Expanded="treeView_Expanded" MouseDoubleClick="OnDoubleClick" KeyDown="OnKey"  ItemsSource="{Binding Path=Folders, Mode=TwoWay,NotifyOnSourceUpdated=True, UpdateSourceTrigger=PropertyChanged}"  Background="White" VirtualizingStackPanel.IsVirtualizing="True" >

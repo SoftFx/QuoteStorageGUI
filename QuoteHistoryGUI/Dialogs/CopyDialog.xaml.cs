@@ -30,22 +30,19 @@ namespace QuoteHistoryGUI.Dialogs
         BackgroundWorker CopyWorker;
         bool IsCopying = false;
         StorageInstance _source;
+        StorageInstance _destination;
         SelectTemplateWorker temW;
         string templateText;
         public CopyDialog(StorageInstance source, ObservableCollection<StorageInstance> tabs, HistoryInteractor interactor)
         {
             InitializeComponent();
             Source.Text = source.StoragePath;
-            Destination.ItemsSource = tabs.Select(t => t.StoragePath);
-            var win = Application.Current.MainWindow as MainWindowView;
-            var leftStorage = win.left_control.SelectedContent as StorageInstance;
-            var rightStorage = win.right_control.SelectedContent as StorageInstance;
-
-            if (source == leftStorage)
+            foreach(var tab in tabs)
             {
-                Destination.SelectedIndex = tabs.IndexOf(rightStorage);
+                if (tab != source) _destination = tab; 
             }
-            else Destination.SelectedIndex = tabs.IndexOf(leftStorage);
+            Destination.Text = _destination.StoragePath;
+            var win = Application.Current.MainWindow as MainWindowView;
             
             _interactor = interactor;
             
@@ -80,8 +77,13 @@ namespace QuoteHistoryGUI.Dialogs
         {
             CopyWorker = new BackgroundWorker();
             _interactor.Source = _source;
-            _interactor.Destination = _tabs[Destination.SelectedIndex];
+            _interactor.Destination = _destination;
 
+            if (_interactor.Destination.openMode == StorageInstance.OpenMode.ReadOnly)
+            {
+                MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
 
             temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
             templateText = TemplatesBox.Text;
@@ -122,6 +124,7 @@ namespace QuoteHistoryGUI.Dialogs
         {
             IsCopying = false;
             MessageBox.Show("Copied!","Copy Result",MessageBoxButton.OK,MessageBoxImage.Asterisk);
+            Close();
             CopyButton.IsEnabled = true;
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

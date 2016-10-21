@@ -54,7 +54,7 @@ namespace QuoteHistoryGUI.Models
 
 
 
-        OpenMode openMode;
+        public OpenMode openMode;
         private DB _historyStoreDB;
         
         private HistoryFile _currentFile;
@@ -211,6 +211,11 @@ namespace QuoteHistoryGUI.Models
 
         public void SaveChunk()
         {
+            if(openMode == OpenMode.ReadOnly)
+            {
+                MessageBox.Show("Unable to save in readonly mode", "Save", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
             var wind = Application.Current.MainWindow as MainWindowView;
             wind.ShowLoading();
             if (_currentFile as ChunkFile != null)
@@ -233,15 +238,17 @@ namespace QuoteHistoryGUI.Models
 
         private bool CopyDelegate(object o, bool isCheckOnly)
         {
+            var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
+
             if (isCheckOnly)
-                return true;
+                return MainModel.StorageTabs.Count > 1;
             else
             {
+
                 Interactor.DiscardSelection();
                 Selection.ForEach(t => { Interactor.AddToSelection(t); });
 
-                var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
-
+                
                 var dlg = new CopyDialog(this, MainModel.StorageTabs, Interactor)
                 {
                     Owner = Application.Current.MainWindow
@@ -257,6 +264,13 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
+
+                if (openMode == OpenMode.ReadOnly)
+                {
+                    MessageBox.Show("Unable to delete in readonly mode", "Delete", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    return true;
+                }
+
                 var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
                 var MainView = Application.Current.MainWindow as MainWindowView;
 

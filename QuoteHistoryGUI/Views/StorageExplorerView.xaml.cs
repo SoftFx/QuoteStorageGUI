@@ -32,6 +32,7 @@ namespace QuoteHistoryGUI.Views
         }
         private void treeView_Expanded(object sender, RoutedEventArgs e)
         {
+            treeColumn.Width = new GridLength(1, GridUnitType.Auto);
             var tree = sender as TreeView;
             var tab = tree.DataContext as StorageInstance;
             var treeItem = e.OriginalSource as TreeViewItem;
@@ -159,31 +160,8 @@ namespace QuoteHistoryGUI.Views
 
         bool HandleSelection = false;
 
-
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
-        {
-            var tree = sender as TreeView;
-            if (tree != null)
-            {
-                var tab = tree.DataContext as StorageInstance;
-                var wind = Application.Current.MainWindow as MainWindowView;
-                wind.ShowLoading();
-                tab.SaveChunk();
-                wind.HideLoading();
-            }
-        }
-
        
 
-        private void Delete_Click(object sender, RoutedEventArgs e)
-        {
-            var inst = this.DataContext as StorageInstance;
-            var interactor = inst.Interactor;
-            interactor.DiscardSelection();
-            selectedItems.ForEach(t => { interactor.AddToSelection(t.DataContext as Folder); });
-            selectedItems.Clear();
-            inst.DeleteBtnClick.Execute(new object());
-        }
         private void UpStream_Click(object sender, RoutedEventArgs e)
         {
             var inst = this.DataContext as StorageInstance;

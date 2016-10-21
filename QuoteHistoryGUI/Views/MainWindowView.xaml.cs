@@ -48,7 +48,7 @@ namespace QuoteHistoryGUI.Views
             {
                 if (dlg.StoragePath.Text != "")
                 {
-                    var tab = new StorageInstance(dlg.StoragePath.Text, _model.Interactor);
+                    var tab = new StorageInstance(dlg.StoragePath.Text, _model.Interactor, (bool)dlg.ReadOnlyBox.IsChecked?StorageInstance.OpenMode.ReadOnly:StorageInstance.OpenMode.ReadWrite);
                     if (tab.Status == "Ok")
                         _model.TryToAddStorage(tab);
                     else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
