@@ -25,5 +25,6 @@
         <Button Content="Browse" Background="#F2F0ED" BorderBrush="#7F6E53" Foreground="Black" Grid.Row="0" Grid.Column="2" Margin="5" Click="Browse"></Button>
         <ListBox Name="PathBox" KeyDown="PathBox_KeyDown" SelectionChanged="PathBox_SelectionChanged" MouseDoubleClick="PathBox_MouseDoubleClick"  Grid.Row="1" Margin="5" Grid.ColumnSpan="3"></ListBox>
         <Button Content="Open" Background="#F2F0ED"  BorderBrush="#7F6E53" Click="Open" Grid.Row="2" Grid.Column="2" Margin="5" ></Button>
+        <CheckBox Name="ReadOnlyBox" Content="Readonly mode  "  Background="#F2F0ED"  HorizontalAlignment="Right" BorderBrush="#7F6E53" Click="Open" Grid.Row="2" Grid.Column="1" Margin="5" ></CheckBox>
     </Grid>
 </Window>

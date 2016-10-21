@@ -252,7 +252,7 @@ namespace QuoteHistoryGUI.HistoryTools
         void SvCntToFld(string content, string period, int part, Folder parent)
         {
             var chunk = new ChunkFile(period+" file", period, 0, parent);
-            var meta = new MetaFile(period + " chunk", period, 0, parent);
+            var meta = new MetaFile(period + " meta", period, 0, parent);
             parent.Folders.Add(chunk);
             parent.Folders.Add(meta);
             SaveToDB(content, chunk);

@@ -113,5 +113,6 @@ namespace QuoteHistoryGUI.Dialogs
                 this.Close();
             }
         }
+
     }
 }

@@ -18,6 +18,11 @@ namespace QuoteHistoryGUI.Models
 {
     public class StorageInstance : INotifyPropertyChanged
     {
+        public enum OpenMode
+        {
+            ReadWrite,
+            ReadOnly
+        }
         #region INotifyPropertyChanged
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -32,8 +37,10 @@ namespace QuoteHistoryGUI.Models
         #endregion
         public string Status = "";
         public HistoryEditor Editor;
-        public StorageInstance(string path, HistoryInteractor inter = null)
+        
+        public StorageInstance(string path, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite)
         {
+            openMode = mode;
             StoragePath = path;
             OpenBase(path);
             Interactor = inter;
@@ -45,6 +52,9 @@ namespace QuoteHistoryGUI.Models
             CloseBtnClick = new SingleDelegateCommand(CloseDelegate);
         }
 
+
+
+        OpenMode openMode;
         private DB _historyStoreDB;
         
         private HistoryFile _currentFile;
