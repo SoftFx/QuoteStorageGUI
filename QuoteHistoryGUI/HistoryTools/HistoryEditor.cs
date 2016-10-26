@@ -15,7 +15,8 @@ namespace QuoteHistoryGUI.HistoryTools
 {
     public class HistoryEditor
     {
-        
+
+        public static int MaxCountPerChunk = 131072;
 
         private DB _dbase;
         public HistoryEditor(DB db)
@@ -23,14 +24,14 @@ namespace QuoteHistoryGUI.HistoryTools
             _dbase = db;
         }
 
-        public string GetText(byte[] content)
+        public byte[] GetOrUnzip(byte[] content)
         {
-            if (content == null || content.Count() == 0) return "";
+            if (content == null || content.Count() == 0) return new byte[] { };
             bool isZip = false;
             if (content[0] == 'P' && content[1] == 'K')
                 isZip = true;
             if (!isZip)
-                return ASCIIEncoding.ASCII.GetString(content);
+                return content;
             else
             {
                 MemoryStream data = new MemoryStream(content);
@@ -50,10 +51,10 @@ namespace QuoteHistoryGUI.HistoryTools
                         content = ms.ToArray();
                     }
                 }
-                return ASCIIEncoding.ASCII.GetString(content);
+                return content;
             }
         }
-        public KeyValuePair<string,string> ReadFromDB(HistoryFile f) {
+        public KeyValuePair<string,byte[]> ReadFromDB(HistoryFile f) {
 
             var path = HistoryDatabaseFuncs.GetPath(f);
             int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
@@ -66,8 +67,8 @@ namespace QuoteHistoryGUI.HistoryTools
                 var cnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
                 if (cnt[0] == 'P' && cnt[1] == 'K')
                     isZip = true;
-                var Text = GetText(cnt);
-                return new KeyValuePair<string, string>(isZip ? "Zip" : "Text", Text);
+                var Text = GetOrUnzip(cnt);
+                return new KeyValuePair<string, byte[]>(isZip ? "Zip" : "Text", Text);
             }
             else
             {
@@ -81,17 +82,38 @@ namespace QuoteHistoryGUI.HistoryTools
                     contStr += "Zip";
                 if (meta[4] == 2)
                     contStr += "Text";
-                return new KeyValuePair<string, string>("Meta", contStr);
+                return new KeyValuePair<string, byte[]>("Meta", ASCIIEncoding.ASCII.GetBytes(contStr));
 
             }
             
         }
 
-        public void SaveToDB(string content, ChunkFile f)
+        public void SaveToDBParted(IEnumerable<QHItem> items, ChunkFile file)
+        {
+            ChunkFile f = new ChunkFile(file.Name,file.Period, 0, file.Parent);
+            int part = 0;
+            List<QHItem> chunk = new List<QHItem>();
+            foreach(var item in items)
+            {
+                if (chunk.Count == MaxCountPerChunk)
+                {
+                    f.Part = part;
+                    part++;
+                    SaveToDB(HistorySerializer.Serialize(chunk), f);
+                    chunk = new List<QHItem>();
+                }
+                chunk.Add(item);
+            }
+            if(chunk.Count!=0) SaveToDB(HistorySerializer.Serialize(chunk), f);
+        }
+
+
+
+        public void SaveToDB(byte[] content, ChunkFile f)
         {
             try
             {
-                HistorySerializer.Deserialize(f.Period, ASCIIEncoding.ASCII.GetBytes(content));
+                HistorySerializer.Deserialize(f.Period, content);
             }
             catch
             {
@@ -109,11 +131,11 @@ namespace QuoteHistoryGUI.HistoryTools
             byte[] value = { };
             if (meta!=null && meta[4] == 2)
             {
-                value = ASCIIEncoding.ASCII.GetBytes(content.ToArray());   
+                value = content;   
             }
             else
             {
-                MemoryStream contentMemStream = new MemoryStream(ASCIIEncoding.ASCII.GetBytes(content.ToArray()));
+                MemoryStream contentMemStream = new MemoryStream(content);
                 MemoryStream outputMemStream = new MemoryStream();
                 ZipOutputStream zipStream = new ZipOutputStream(outputMemStream);
 
@@ -138,7 +160,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
             if(f.Period == "ticks")
             {
-                tickToM1Upstream(f, content);
+//                tickToM1Upstream(f, content);
             }
             RebuildMeta(f);
         }
@@ -151,9 +173,9 @@ namespace QuoteHistoryGUI.HistoryTools
             string MetaCorruptionMessage = "";
             var TypeAndtext = ReadFromDB(file);
             var Type = TypeAndtext.Key;
-            var text = TypeAndtext.Value;
+            var content = TypeAndtext.Value;
             Crc32 hash = new Crc32();
-            hash.Update(ASCIIEncoding.ASCII.GetBytes(text));
+            hash.Update(content);
             var metaKey = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", file.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], file.Part);
             var it = _dbase.CreateIterator();
             it.Seek(metaKey);
@@ -215,12 +237,12 @@ namespace QuoteHistoryGUI.HistoryTools
             var path = HistoryDatabaseFuncs.GetPath(tickFile);
             var dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
             var bidKey = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "M1 bid", dateTime[0], dateTime[1], dateTime[2], 0, 0);
-            var serBarBid = GetText(_dbase.Get(bidKey));
+            var serBarBid = GetOrUnzip(_dbase.Get(bidKey));
             var askKey = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "M1 ask", dateTime[0], dateTime[1], dateTime[2], 0, 0);
-            var serBarAsk = GetText(_dbase.Get(askKey));
-            var bids = HistorySerializer.Deserialize("M1 bid", ASCIIEncoding.ASCII.GetBytes(serBarBid)) as IEnumerable<QHBar>;
+            var serBarAsk = GetOrUnzip(_dbase.Get(askKey));
+            var bids = HistorySerializer.Deserialize("M1 bid", serBarBid) as IEnumerable<QHBar>;
             if (bids == null) bids = new List<QHBar>();
-            var asks = HistorySerializer.Deserialize("M1 ask", ASCIIEncoding.ASCII.GetBytes(serBarAsk)) as IEnumerable<QHBar>;
+            var asks = HistorySerializer.Deserialize("M1 ask", serBarAsk) as IEnumerable<QHBar>;
             if (asks == null) asks = new List<QHBar>();
 
             HistoryRecalculateUpdater.RecalculateTickToM1((IEnumerable<QHTick>)HistorySerializer.Deserialize("ticks", ASCIIEncoding.ASCII.GetBytes(content)),
@@ -230,8 +252,8 @@ namespace QuoteHistoryGUI.HistoryTools
 
             DeleteChunksAndMetaFromFolders(M1folder.Folders);
     
-            SvCntToFld(ASCIIEncoding.ASCII.GetString(HistorySerializer.SerializeBars(bids)), "M1 bid", 0, M1folder);
-            SvCntToFld(ASCIIEncoding.ASCII.GetString(HistorySerializer.SerializeBars(bids)), "M1 ask", 0, M1folder);
+            //SvCntToFld(ASCIIEncoding.ASCII.GetString(HistorySerializer.SerializeBars(bids)), "M1 bid", 0, M1folder);
+            //SvCntToFld(ASCIIEncoding.ASCII.GetString(HistorySerializer.SerializeBars(bids)), "M1 ask", 0, M1folder);
         }
 
         void DeleteChunksAndMetaFromFolders(IList<Folder> Folders)
@@ -255,7 +277,7 @@ namespace QuoteHistoryGUI.HistoryTools
             var meta = new MetaFile(period + " meta", period, 0, parent);
             parent.Folders.Add(chunk);
             parent.Folders.Add(meta);
-            SaveToDB(content, chunk);
+            //SaveToDB(content, chunk);
             RebuildMeta(chunk);
         }
     }

@@ -172,5 +172,12 @@ namespace QuoteHistoryGUI.HistoryTools
             return dateTime;
         }
 
+        public static byte[] GetAllPartContent()
+        {
+            List<byte> result = new List<byte>();
+
+            return result.ToArray();
+        }
+
     }
 }

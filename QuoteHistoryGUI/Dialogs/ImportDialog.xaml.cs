@@ -100,8 +100,14 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void ImportBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (Interactor.Destination.openMode == StorageInstance.OpenMode.ReadOnly)
+            {
+                MessageBox.Show("Unable to import to storage opened in readonly mode", "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
             ReportBlock.Text = "Import starting...";
             ImportBtn.IsEnabled = false;
+            
             if(Interactor.Source!=null && Interactor.Destination != null)
             {
                 

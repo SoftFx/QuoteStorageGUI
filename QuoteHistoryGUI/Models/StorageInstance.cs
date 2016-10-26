@@ -177,7 +177,7 @@ namespace QuoteHistoryGUI.Models
             wind.ShowLoading();
             _currentFile = f;
             var content = (Editor.ReadFromDB(_currentFile)).Value;
-            FileContent = content;
+            FileContent = ASCIIEncoding.ASCII.GetString(content);
             string path = f.Name;
             var par = f.Parent;
             while (par.Parent != null)
@@ -195,7 +195,7 @@ namespace QuoteHistoryGUI.Models
             var wind = Application.Current.MainWindow as MainWindowView;
             _currentFile = f;
             var content = Editor.ReadFromDB(_currentFile).Value;
-            FileContent = content;
+            FileContent = ASCIIEncoding.ASCII.GetString(content);
             string path = f.Name;
             var par = f.Parent;
             while (par.Parent != null)
@@ -219,7 +219,7 @@ namespace QuoteHistoryGUI.Models
             var wind = Application.Current.MainWindow as MainWindowView;
             wind.ShowLoading();
             if (_currentFile as ChunkFile != null)
-                Editor.SaveToDB(FileContent, _currentFile as ChunkFile);
+                Editor.SaveToDB(ASCIIEncoding.ASCII.GetBytes(FileContent), _currentFile as ChunkFile);
             else MessageBox.Show("Meta file editing is not possible!", "hmm...",MessageBoxButton.OK,MessageBoxImage.Asterisk);
             wind.HideLoading();
             Application.Current.MainWindow.Activate();

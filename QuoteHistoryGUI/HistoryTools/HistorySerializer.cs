@@ -10,9 +10,10 @@ namespace QuoteHistoryGUI.HistoryTools
 {
 
 
-    class QHItem
+    public abstract class QHItem
     {
         public DateTime Time;
+        public abstract byte[] Serialize();
     }
     class QHBar: QHItem
     {
@@ -21,6 +22,25 @@ namespace QuoteHistoryGUI.HistoryTools
         public decimal Low;
         public decimal Close;
         public decimal Volume;
+
+        public override byte[] Serialize()
+        {
+            string barStr = "";
+            barStr += Time.ToString(CultureInfo.InvariantCulture);
+            barStr += "\t";
+            barStr += Open.ToString(CultureInfo.InvariantCulture);
+            barStr += "\t";
+            barStr += High.ToString(CultureInfo.InvariantCulture);
+            barStr += "\t";
+            barStr += Low.ToString(CultureInfo.InvariantCulture);
+            barStr += "\t";
+            barStr += Close.ToString(CultureInfo.InvariantCulture);
+            barStr += "\t";
+            barStr += Volume.ToString(CultureInfo.InvariantCulture);
+            barStr += "\r\n";
+            return ASCIIEncoding.ASCII.GetBytes(barStr);
+        }
+
     }
     class QHTick : QHItem
     {
@@ -28,6 +48,22 @@ namespace QuoteHistoryGUI.HistoryTools
         public decimal BidVolume;
         public decimal Ask;
         public decimal AskVolume;
+        public override byte[] Serialize()
+        {
+            string tickStr = "";
+            tickStr += Time.ToString(CultureInfo.InvariantCulture);
+            tickStr += "\t";
+            tickStr += Bid.ToString(CultureInfo.InvariantCulture);
+            tickStr += "\t";
+            tickStr += BidVolume.ToString(CultureInfo.InvariantCulture);
+            tickStr += "\t";
+            tickStr += Ask.ToString(CultureInfo.InvariantCulture);
+            tickStr += "\t";
+            tickStr += AskVolume.ToString(CultureInfo.InvariantCulture);
+            tickStr += "\r\n";
+            return ASCIIEncoding.ASCII.GetBytes(tickStr);
+        }
+
     }
 
     class QHTickLevel2 : QHItem
@@ -35,7 +71,12 @@ namespace QuoteHistoryGUI.HistoryTools
         public KeyValuePair<decimal,decimal>[] Bids;
         public KeyValuePair<decimal, decimal>[] Asks;
         public KeyValuePair<decimal, decimal> BestBid { get { return Bids.Count()>0?Bids.Last():new KeyValuePair<decimal, decimal>(); } }
-        public KeyValuePair<decimal, decimal> BestAsk { get { return Asks.Count() > 0 ? Asks.Last() : new KeyValuePair<decimal, decimal>();} }
+        public KeyValuePair<decimal, decimal> BestAsk { get { return Asks.Count() > 0 ? Asks.First() : new KeyValuePair<decimal, decimal>();} }
+
+        public override byte[] Serialize()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     class HistorySerializer
@@ -138,8 +179,17 @@ namespace QuoteHistoryGUI.HistoryTools
             return res;
         }
 
+        internal static byte[] Serialize(List<QHItem> chunk)
+        {
+            List<byte> res = new List<byte>();
+            foreach(var it in chunk)
+            {
+                res.AddRange(it.Serialize());
+            }
+            return res.ToArray();
+        }
 
-        public static byte[] SerializeBars(IEnumerable<QHBar> bars)
+        public static byte[] Serialize(IEnumerable<QHBar> bars)
         {
             MemoryStream stream = new MemoryStream();
             List<string> res = new List<string>(); 
@@ -162,6 +212,26 @@ namespace QuoteHistoryGUI.HistoryTools
             }
             return ASCIIEncoding.ASCII.GetBytes(string.Concat(res));
         }
-
+        public static byte[] Serialize(IEnumerable<QHTick> ticks)
+        {
+            MemoryStream stream = new MemoryStream();
+            List<string> res = new List<string>();
+            foreach (var tick in ticks)
+            {
+                string tickStr = "";
+                tickStr += tick.Time.ToString(CultureInfo.InvariantCulture);
+                tickStr += "\t";
+                tickStr += tick.Bid.ToString(CultureInfo.InvariantCulture);
+                tickStr += "\t";
+                tickStr += tick.BidVolume.ToString(CultureInfo.InvariantCulture);
+                tickStr += "\t";
+                tickStr += tick.Ask.ToString(CultureInfo.InvariantCulture);
+                tickStr += "\t";
+                tickStr += tick.AskVolume.ToString(CultureInfo.InvariantCulture);
+                tickStr += "\r\n";
+                res.Add(tickStr);
+            }
+            return ASCIIEncoding.ASCII.GetBytes(string.Concat(res));
+        }
     }
 }
