@@ -50,6 +50,7 @@ namespace QuoteHistoryGUI.Models
             DeleteBtnClick = new SingleDelegateCommand(DeleteDelegate);
             RefreshBtnClick = new SingleDelegateCommand(RefreshDelegate);
             CloseBtnClick = new SingleDelegateCommand(CloseDelegate);
+            UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
         }
 
 
@@ -68,6 +69,8 @@ namespace QuoteHistoryGUI.Models
         public ICommand DeleteBtnClick { get; private set; }
         public ICommand RefreshBtnClick { get; private set; }
         public ICommand CloseBtnClick { get; private set; }
+        public ICommand UpdateBtnClick { get; private set; }
+
         public ObservableCollection<Folder> Folders
         {
             get { return _folders; }
@@ -298,6 +301,52 @@ namespace QuoteHistoryGUI.Models
             else
             {
                 Refresh();
+                return true;
+            }
+        }
+
+        private bool UpdateDelegate(object o, bool isCheckOnly)
+        {
+            if (isCheckOnly)
+                return true;
+            else
+            {
+                foreach(var sel in Selection)
+                {
+                    var chunk = sel as ChunkFile;
+                    if (chunk != null)
+                    {
+                        var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.all);
+                        var items = HistorySerializer.Deserialize(chunk.Period, content);
+                        if(chunk.Period == "ticks")
+                        {
+                            var itemsList = new List<QHItem>();
+                            for(int i = 0; i < 24; i++)
+                            {
+                                var curChunk = new ChunkFile(chunk.Name,chunk.Period);
+                            }
+
+                            var ticks = items as IEnumerable<QHTick>;
+                            var bars = Editor.GetM1FromTicks(ticks);
+                            var parent = chunk.Parent.Parent;
+                            List<Folder> deleteList = new List<Folder>();
+                            foreach (var f in parent.Folders) if (f.Name.Length>=2 && f.Name.Substring(0, 2) == "M1") deleteList.Add(f);
+                            deleteList.ForEach(t => parent.Folders.Remove(t));
+                            var bidChunk = new ChunkFile() { Name = "M1 bid file", Period = "M1 bid", Parent = parent };
+                            parent.Folders.Add(bidChunk);
+                            var bidMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
+                            parent.Folders.Add(bidMeta);
+                            Editor.SaveToDBParted(bars.Key, bidChunk);
+                            var askChunk = new ChunkFile() { Name = "M1 ask file", Period = "M1 ask", Parent = parent };
+                            parent.Folders.Add(askChunk);
+                            var askMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
+                            parent.Folders.Add(askMeta);
+                            Editor.SaveToDBParted(bars.Key, askChunk);
+
+                        }
+                    }
+                }
+
                 return true;
             }
         }

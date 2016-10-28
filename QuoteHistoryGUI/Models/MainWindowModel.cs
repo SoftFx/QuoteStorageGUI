@@ -158,6 +158,7 @@ namespace QuoteHistoryGUI.Models
         public ICommand OpenBtnClick { get; private set; }
         public ICommand ImportBtnClick { get; private set; }
         public ICommand CopyContextBtnClick { get; private set; }
+        public ICommand UpdateBtnClick { get; private set; }
         private bool OpenBaseDelegate(object o, bool isCheckOnly)
         {
 
@@ -213,5 +214,6 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
+       
     }
 }

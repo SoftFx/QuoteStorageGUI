@@ -15,7 +15,7 @@ namespace QuoteHistoryGUI.HistoryTools
         public DateTime Time;
         public abstract byte[] Serialize();
     }
-    class QHBar: QHItem
+    public class QHBar: QHItem
     {
         public decimal Open;
         public decimal High;
@@ -42,7 +42,7 @@ namespace QuoteHistoryGUI.HistoryTools
         }
 
     }
-    class QHTick : QHItem
+    public class QHTick : QHItem
     {
         public decimal Bid;
         public decimal BidVolume;
@@ -66,7 +66,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
     }
 
-    class QHTickLevel2 : QHItem
+    public class QHTickLevel2 : QHItem
     {
         public KeyValuePair<decimal,decimal>[] Bids;
         public KeyValuePair<decimal, decimal>[] Asks;

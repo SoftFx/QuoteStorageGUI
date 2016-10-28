@@ -87,8 +87,45 @@ namespace QuoteHistoryGUI.HistoryTools
             }
             
         }
+        public enum hourReadMode
+        {
+            all,
+            one
+        }
+        
 
-        public void SaveToDBParted(IEnumerable<QHItem> items, ChunkFile file)
+        public byte[] ReadAllPart(HistoryFile f, hourReadMode hm = hourReadMode.one)
+        {
+
+            var path = HistoryDatabaseFuncs.GetPath(f);
+            int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
+
+            List<byte> result = new List<byte>();
+            int hstart;
+            int hend;
+            if(hm == hourReadMode.one)
+            {
+                hstart = dateTime[3];
+                hend = dateTime[3] + 1;
+            }
+            else
+            {
+                hstart = 0;
+                hend = 24;
+            }
+            for (int hour = hstart; hour < hend; hour++)
+            {
+                for (int i = 0; i < 30; i++)
+                {
+                    var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", f.Period, dateTime[0], dateTime[1], dateTime[2], hour, i));
+                    if (cntnt != null)
+                        result.AddRange(GetOrUnzip(cntnt));
+                }
+            }
+            return result.ToArray();
+        }
+
+        public int SaveToDBParted(IEnumerable<QHItem> items, ChunkFile file, bool rebuildMeta = true)
         {
             ChunkFile f = new ChunkFile(file.Name,file.Period, 0, file.Parent);
             int part = 0;
@@ -104,7 +141,8 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
                 chunk.Add(item);
             }
-            if(chunk.Count!=0) SaveToDB(HistorySerializer.Serialize(chunk), f);
+            if (chunk.Count != 0) SaveToDB(HistorySerializer.Serialize(chunk), f); else part--;
+            return part;
         }
 
 
@@ -158,10 +196,6 @@ namespace QuoteHistoryGUI.HistoryTools
 
             _dbase.Put(key, value);
 
-            if(f.Period == "ticks")
-            {
-//                tickToM1Upstream(f, content);
-            }
             RebuildMeta(f);
         }
 
@@ -232,28 +266,56 @@ namespace QuoteHistoryGUI.HistoryTools
             } 
         }
 
-        void tickToM1Upstream(ChunkFile tickFile, string content)
+
+        public KeyValuePair<QHBar[], QHBar[]> GetM1FromTicks(IEnumerable<QHTick> ticks)
         {
-            var path = HistoryDatabaseFuncs.GetPath(tickFile);
-            var dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
-            var bidKey = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "M1 bid", dateTime[0], dateTime[1], dateTime[2], 0, 0);
-            var serBarBid = GetOrUnzip(_dbase.Get(bidKey));
-            var askKey = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "M1 ask", dateTime[0], dateTime[1], dateTime[2], 0, 0);
-            var serBarAsk = GetOrUnzip(_dbase.Get(askKey));
-            var bids = HistorySerializer.Deserialize("M1 bid", serBarBid) as IEnumerable<QHBar>;
-            if (bids == null) bids = new List<QHBar>();
-            var asks = HistorySerializer.Deserialize("M1 ask", serBarAsk) as IEnumerable<QHBar>;
-            if (asks == null) asks = new List<QHBar>();
+            if (ticks == null || ticks.Count() == 0)
+                return new KeyValuePair<QHBar[], QHBar[]>(null, null);
 
-            HistoryRecalculateUpdater.RecalculateTickToM1((IEnumerable<QHTick>)HistorySerializer.Deserialize("ticks", ASCIIEncoding.ASCII.GetBytes(content)),
-                ref bids, ref asks);
+            List<QHBar> resBid = new List<QHBar>();
+            List<QHBar> resAsk = new List<QHBar>();
 
-            var M1folder = tickFile.Parent.Parent;
+            var curBid = new QHBar();
+            var curAsk = new QHBar();
 
-            DeleteChunksAndMetaFromFolders(M1folder.Folders);
-    
-            //SvCntToFld(ASCIIEncoding.ASCII.GetString(HistorySerializer.SerializeBars(bids)), "M1 bid", 0, M1folder);
-            //SvCntToFld(ASCIIEncoding.ASCII.GetString(HistorySerializer.SerializeBars(bids)), "M1 ask", 0, M1folder);
+            curBid.Time = curAsk.Time = new DateTime(ticks.First().Time.Year, ticks.First().Time.Month, ticks.First().Time.Day, ticks.First().Time.Hour, ticks.First().Time.Minute, 0);
+            curBid.Open = curBid.High = curBid.Low = curBid.Close = ticks.First().Bid;
+            curAsk.Open = curAsk.High = curAsk.Low = curAsk.Close = ticks.First().Ask;
+
+            foreach(var tick in ticks)
+            {
+                var time = new DateTime(tick.Time.Year, tick.Time.Month, tick.Time.Day, tick.Time.Hour, tick.Time.Minute, 0);
+                if (curBid.Time!= time)
+                {
+                    resBid.Add(curBid);
+                    curBid = new QHBar();
+                    curBid.Time = time;
+                    curBid.Open = curBid.High = curBid.Low = curBid.Close = ticks.First().Bid;
+                    curBid.Volume = tick.BidVolume;
+                }
+                if (curAsk.Time != time)
+                {
+                    resAsk.Add(curAsk);
+                    curAsk = new QHBar();
+                    curAsk.Time = time;
+                    curAsk.Open = curAsk.High = curAsk.Low = curAsk.Close = ticks.First().Ask;
+                    curAsk.Volume = tick.AskVolume;
+                }
+
+                curBid.Close = tick.Bid;
+                curBid.Volume += tick.BidVolume;
+                curBid.High = Math.Max(curBid.High, tick.Bid);
+                curBid.Low = Math.Min(curBid.Low, tick.Bid);
+
+                curAsk.Close = tick.Ask;
+                curAsk.Volume += tick.AskVolume;
+                curAsk.High = Math.Max(curAsk.High, tick.Ask);
+                curAsk.Low = Math.Min(curAsk.Low, tick.Ask);
+            }
+            resBid.Add(curBid);
+            resAsk.Add(curAsk);
+
+            return new KeyValuePair<QHBar[], QHBar[]>(resBid.ToArray(), resAsk.ToArray());
         }
 
         void DeleteChunksAndMetaFromFolders(IList<Folder> Folders)
