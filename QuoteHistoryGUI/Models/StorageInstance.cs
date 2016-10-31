@@ -286,10 +286,13 @@ namespace QuoteHistoryGUI.Models
 
                 Interactor.Source = this;
                 MainView.ShowLoading();
-                Interactor.Delete();
+                var res = Interactor.Delete();
                 MainView.HideLoading();
 
+                if (res ==1)
                 MessageBox.Show("Deletion completed!", "Delete",MessageBoxButton.OK,MessageBoxImage.Information);
+
+                Application.Current.MainWindow.Activate();
                 return true;
             }
         }
@@ -316,39 +319,68 @@ namespace QuoteHistoryGUI.Models
                     var chunk = sel as ChunkFile;
                     if (chunk != null)
                     {
-                        var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.all);
-                        var items = HistorySerializer.Deserialize(chunk.Period, content);
+                        
                         if(chunk.Period == "ticks")
                         {
+                            tickToM1Update(chunk);
+                        }
+                        else if(chunk.Period == "ticks level2")
+                        {
+                            var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.oneDate);
+                            var items = HistorySerializer.Deserialize(chunk.Period, content);
                             var itemsList = new List<QHItem>();
-                            for(int i = 0; i < 24; i++)
-                            {
-                                var curChunk = new ChunkFile(chunk.Name,chunk.Period);
-                            }
-
-                            var ticks = items as IEnumerable<QHTick>;
-                            var bars = Editor.GetM1FromTicks(ticks);
-                            var parent = chunk.Parent.Parent;
+                            var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
+                            var ticks = Editor.GetTicksFromLevel2(ticksLevel2);
+                            var parent = chunk.Parent;
                             List<Folder> deleteList = new List<Folder>();
-                            foreach (var f in parent.Folders) if (f.Name.Length>=2 && f.Name.Substring(0, 2) == "M1") deleteList.Add(f);
+                            foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
                             deleteList.ForEach(t => parent.Folders.Remove(t));
-                            var bidChunk = new ChunkFile() { Name = "M1 bid file", Period = "M1 bid", Parent = parent };
-                            parent.Folders.Add(bidChunk);
-                            var bidMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
-                            parent.Folders.Add(bidMeta);
-                            Editor.SaveToDBParted(bars.Key, bidChunk);
-                            var askChunk = new ChunkFile() { Name = "M1 ask file", Period = "M1 ask", Parent = parent };
-                            parent.Folders.Add(askChunk);
-                            var askMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
-                            parent.Folders.Add(askMeta);
-                            Editor.SaveToDBParted(bars.Key, askChunk);
-
+                            var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
+                            var partCnt = Editor.SaveToDBParted(ticks, tickChunk);
+                            for (int i = partCnt; i >= 0; i--)
+                            {
+                                var Chunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Part = i, Parent = parent };
+                                parent.Folders.Add(Chunk);
+                            }
+                            for (int i = partCnt; i>=0; i--)
+                            {
+                                var Meta = new MetaFile() { Name = "ticks meta", Period = "ticks", Part = i, Parent = parent };
+                                parent.Folders.Add(Meta);
+                            }
+                            var res = MessageBox.Show("Ticks level2 to ticks upstream update was aplied.\n Make ticks to M1?", "Upstream update", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                            if(res == MessageBoxResult.Yes)
+                            {
+                                tickToM1Update(tickChunk);
+                            }
                         }
                     }
                 }
 
                 return true;
             }
+        }
+
+        private void tickToM1Update(ChunkFile chunk)
+        {
+            var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.allDate);
+            var items = HistorySerializer.Deserialize(chunk.Period, content);
+            var itemsList = new List<QHItem>();
+            var ticks = items as IEnumerable<QHTick>;
+            var bars = Editor.GetM1FromTicks(ticks);
+            var parent = chunk.Parent.Parent;
+            List<Folder> deleteList = new List<Folder>();
+            foreach (var f in parent.Folders) if (f.Name.Length >= 2 && f.Name.Substring(0, 2) == "M1") deleteList.Add(f);
+            deleteList.ForEach(t => parent.Folders.Remove(t));
+            var bidChunk = new ChunkFile() { Name = "M1 bid file", Period = "M1 bid", Parent = parent };
+            parent.Folders.Add(bidChunk);
+            var bidMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
+            parent.Folders.Add(bidMeta);
+            Editor.SaveToDBParted(bars.Key, bidChunk);
+            var askChunk = new ChunkFile() { Name = "M1 ask file", Period = "M1 ask", Parent = parent };
+            parent.Folders.Add(askChunk);
+            var askMeta = new MetaFile() { Name = "M1 ask meta", Period = "M1 ask", Parent = parent };
+            parent.Folders.Add(askMeta);
+            Editor.SaveToDBParted(bars.Value, askChunk);
         }
 
         private bool CloseDelegate(object o, bool isCheckOnly)

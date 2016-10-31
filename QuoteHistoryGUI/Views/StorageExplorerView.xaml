@@ -107,7 +107,7 @@
                 </HierarchicalDataTemplate>
             </TreeView.Resources>
         </TreeView >
-        <GridSplitter Width="3" BorderBrush="Black" HorizontalAlignment="Right" VerticalAlignment="Stretch" ResizeBehavior="CurrentAndNext" Grid.Column="0"/>
+        <GridSplitter Width="2" Visibility="Visible" Background="#DBDBDB" BorderBrush="Black" HorizontalAlignment="Right" VerticalAlignment="Stretch" ResizeBehavior="CurrentAndNext" Grid.Column="0"/>
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition/>
@@ -122,6 +122,7 @@
                     <ColumnDefinition/>
                     <ColumnDefinition Width="80"/>
                 </Grid.ColumnDefinitions>
+                <Rectangle Grid.Column="0" Grid.ColumnSpan="2" Fill="#DBDBDB"/>
                 <TextBlock Name="FilePath" FontFamily="Consolas" Margin="3" Text="{Binding Path=FilePath}"/>
                 <Button Name="SaveButton" Background="Transparent" Content="Save" Command="{Binding SaveBtnClick}" Margin="3" Grid.Column="1"/>
             </Grid>

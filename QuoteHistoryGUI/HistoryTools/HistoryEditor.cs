@@ -89,12 +89,12 @@ namespace QuoteHistoryGUI.HistoryTools
         }
         public enum hourReadMode
         {
-            all,
-            one
+            allDate,
+            oneDate
         }
         
 
-        public byte[] ReadAllPart(HistoryFile f, hourReadMode hm = hourReadMode.one)
+        public byte[] ReadAllPart(HistoryFile f, hourReadMode hm = hourReadMode.oneDate)
         {
 
             var path = HistoryDatabaseFuncs.GetPath(f);
@@ -103,7 +103,7 @@ namespace QuoteHistoryGUI.HistoryTools
             List<byte> result = new List<byte>();
             int hstart;
             int hend;
-            if(hm == hourReadMode.one)
+            if(hm == hourReadMode.oneDate)
             {
                 hstart = dateTime[3];
                 hend = dateTime[3] + 1;
@@ -290,16 +290,16 @@ namespace QuoteHistoryGUI.HistoryTools
                     resBid.Add(curBid);
                     curBid = new QHBar();
                     curBid.Time = time;
-                    curBid.Open = curBid.High = curBid.Low = curBid.Close = ticks.First().Bid;
-                    curBid.Volume = tick.BidVolume;
+                    curBid.Open = curBid.High = curBid.Low = curBid.Close = tick.Bid;
+                    curBid.Volume = 0;
                 }
                 if (curAsk.Time != time)
                 {
                     resAsk.Add(curAsk);
                     curAsk = new QHBar();
                     curAsk.Time = time;
-                    curAsk.Open = curAsk.High = curAsk.Low = curAsk.Close = ticks.First().Ask;
-                    curAsk.Volume = tick.AskVolume;
+                    curAsk.Open = curAsk.High = curAsk.Low = curAsk.Close = tick.Ask;
+                    curAsk.Volume = 0;
                 }
 
                 curBid.Close = tick.Bid;
@@ -317,7 +317,27 @@ namespace QuoteHistoryGUI.HistoryTools
 
             return new KeyValuePair<QHBar[], QHBar[]>(resBid.ToArray(), resAsk.ToArray());
         }
+        public QHTick[] GetTicksFromLevel2(IEnumerable<QHTickLevel2> ticks2)
+        {
+            if (ticks2 == null || ticks2.Count() == 0)
+                return null;
 
+            List<QHTick> res = new List<QHTick>();
+
+            foreach (var t2 in ticks2)
+            {
+                res.Add(new QHTick()
+                {
+                    Time = t2.Time,
+                    Bid = t2.BestBid.Key,
+                    BidVolume = t2.BestBid.Value,
+                    Ask = t2.BestAsk.Key,
+                    AskVolume = t2.BestAsk.Value
+                });
+            }
+
+            return res.ToArray();
+        }
         void DeleteChunksAndMetaFromFolders(IList<Folder> Folders)
         {
             var toDel = new List<Folder>();

@@ -94,10 +94,15 @@ namespace QuoteHistoryGUI.HistoryTools
             it.Dispose();
         }
 
-        public void Delete()
+        public int Delete()
         {
-            var it = Source.HistoryStoreDB.CreateIterator();
+
             var sel = Selection.ToArray();
+            if (sel.Count() == 0)
+            { MessageBox.Show("Nothing to delete.", "Delete", MessageBoxButton.OK, MessageBoxImage.Information); return 0; }
+
+            var it = Source.HistoryStoreDB.CreateIterator();
+            
             HistoryEditor editor = new HistoryEditor(Source.HistoryStoreDB);
             foreach (var fold in sel)
             {  
@@ -149,6 +154,8 @@ namespace QuoteHistoryGUI.HistoryTools
                             Source.HistoryStoreDB.Delete(it.GetKey());
                         }
 
+                        it = Source.HistoryStoreDB.CreateIterator();
+
                         key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", chunk.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], chunk.Part);
                         it.Seek(key);
                         if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
@@ -167,7 +174,7 @@ namespace QuoteHistoryGUI.HistoryTools
                                     }
                                 }
                             }
-                            Source.HistoryStoreDB.Delete(it.GetKey());
+                            
                         }
 
                     }
@@ -182,6 +189,8 @@ namespace QuoteHistoryGUI.HistoryTools
                             if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
                             {
                                 MessageBox.Show("Unable to delete Meta when Chunk file exists. Delete Chunk File and Meta will be deleted too.", "Delete error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                it.Dispose();
+                                return -1;
                             }
                         }
                         else
@@ -199,6 +208,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
             }
             it.Dispose();
+            return 1;
         }
 
 
