@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace QuoteHistoryGUI.HistoryTools
 {
@@ -13,7 +14,7 @@ namespace QuoteHistoryGUI.HistoryTools
     {
         public StorageInstance Source;
         public StorageInstance Destination;
-
+        public Dispatcher Dispatcher;
         public List<Folder> Selection = new List<Folder>();
 
         public void AddToSelection(Folder fold)
@@ -33,6 +34,7 @@ namespace QuoteHistoryGUI.HistoryTools
         }
         public void Copy(BackgroundWorker worker = null)
         {
+            List<byte[]> deleteList = new List<byte[]>();
             var it = Source.HistoryStoreDB.CreateIterator();
             int copiedCnt = 0;
             foreach (var fold in Selection)
@@ -96,7 +98,6 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public int Delete()
         {
-
             var sel = Selection.ToArray();
             if (sel.Count() == 0)
             { MessageBox.Show("Nothing to delete.", "Delete", MessageBoxButton.OK, MessageBoxImage.Information); return 0; }
@@ -110,11 +111,16 @@ namespace QuoteHistoryGUI.HistoryTools
                 {
                     if (fold.Parent == null)
                     {
-                        Source.Folders.Remove(fold);
+                        if(Dispatcher!=null)
+                            Dispatcher.Invoke((Action)delegate () { Source.Folders.Remove(fold); });
+                        else Source.Folders.Remove(fold);
+
                     }
                     else
                     {
-                        fold.Parent.Folders.Remove(fold);
+                        if (Dispatcher != null)
+                            Dispatcher.Invoke((Action)delegate () { fold.Parent.Folders.Remove(fold); });
+                        else fold.Parent.Folders.Remove(fold);
                     }
 
                     var path = HistoryDatabaseFuncs.GetPath(fold);
@@ -150,7 +156,9 @@ namespace QuoteHistoryGUI.HistoryTools
                         it.Seek(key);
                         if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
                         {
-                            fold.Parent.Folders.Remove(fold);
+                            if (Dispatcher != null)
+                                Dispatcher.Invoke((Action)delegate () { fold.Parent.Folders.Remove(fold); });
+                            else fold.Parent.Folders.Remove(fold);
                             Source.HistoryStoreDB.Delete(it.GetKey());
                         }
 
@@ -168,7 +176,9 @@ namespace QuoteHistoryGUI.HistoryTools
                                     var delChunk = fold as ChunkFile;
                                     if (meta.Period == delChunk.Period && meta.Part == delChunk.Part)
                                     {
-                                        fold.Parent.Folders.Remove(meta);
+                                        if (Dispatcher != null)
+                                            Dispatcher.Invoke((Action)delegate () { fold.Parent.Folders.Remove(meta); });
+                                        else fold.Parent.Folders.Remove(meta);
                                         Source.HistoryStoreDB.Delete(it.GetKey());
                                         break;
                                     }

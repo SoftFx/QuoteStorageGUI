@@ -33,6 +33,7 @@ namespace QuoteHistoryGUI.Dialogs
         StorageInstance _destination;
         SelectTemplateWorker temW;
         string templateText;
+        bool isMove = false;
         public CopyDialog(StorageInstance source, ObservableCollection<StorageInstance> tabs, HistoryInteractor interactor)
         {
             InitializeComponent();
@@ -75,6 +76,7 @@ namespace QuoteHistoryGUI.Dialogs
         }
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            isMove = OperationTypeBox.SelectedIndex == 1;
             CopyWorker = new BackgroundWorker();
             _interactor.Source = _source;
             _interactor.Destination = _destination;
@@ -114,6 +116,12 @@ namespace QuoteHistoryGUI.Dialogs
 
             
             _interactor.Copy(worker);
+            if (isMove)
+            {
+                _interactor.Dispatcher = Dispatcher;
+                _interactor.Delete();
+                _interactor.Dispatcher = null;
+            }
             _interactor.Destination.Refresh();
         }
         private void CopyProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -123,7 +131,7 @@ namespace QuoteHistoryGUI.Dialogs
         private void worker_Copied(object sender, RunWorkerCompletedEventArgs e)
         {
             IsCopying = false;
-            MessageBox.Show("Copied!","Copy Result",MessageBoxButton.OK,MessageBoxImage.Asterisk);
+            MessageBox.Show("Done!","Result",MessageBoxButton.OK,MessageBoxImage.Asterisk);
             Close();
             CopyButton.IsEnabled = true;
         }
@@ -132,7 +140,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (CopyWorker != null && CopyWorker.IsBusy)
             {
                 CopyWorker.CancelAsync();
-                MessageBox.Show("Copying canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                MessageBox.Show("Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 _interactor.Destination.Refresh();
             }
         }

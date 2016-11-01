@@ -290,7 +290,7 @@ namespace QuoteHistoryGUI.Models
                 MainView.HideLoading();
 
                 if (res ==1)
-                MessageBox.Show("Deletion completed!", "Delete",MessageBoxButton.OK,MessageBoxImage.Information);
+                MessageBox.Show("Delete completed!", "Delete",MessageBoxButton.OK,MessageBoxImage.Information);
 
                 Application.Current.MainWindow.Activate();
                 return true;

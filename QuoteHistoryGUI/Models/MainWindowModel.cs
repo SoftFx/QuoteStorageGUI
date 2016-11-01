@@ -139,6 +139,7 @@ namespace QuoteHistoryGUI.Models
             Interactor = new HistoryInteractor();
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
             ImportBtnClick = new SingleDelegateCommand(ImportDelegate);
+            CreateBtnClick = new SingleDelegateCommand(CreateDelegate);
             StorageTabs = new ObservableCollection<StorageInstance>();
             MasterStorage = new ObservableCollection<StorageInstance>();
             SlaveStorage = new ObservableCollection<StorageInstance>();
@@ -157,6 +158,7 @@ namespace QuoteHistoryGUI.Models
 
         public ICommand OpenBtnClick { get; private set; }
         public ICommand ImportBtnClick { get; private set; }
+        public ICommand CreateBtnClick { get; private set; }
         public ICommand CopyContextBtnClick { get; private set; }
         public ICommand UpdateBtnClick { get; private set; }
         private bool OpenBaseDelegate(object o, bool isCheckOnly)
@@ -194,6 +196,31 @@ namespace QuoteHistoryGUI.Models
                     Owner = Application.Current.MainWindow
                 };
                 dlg.ShowDialog();
+                return true;
+            }
+        }
+        private bool CreateDelegate(object o, bool isCheckOnly)
+        {
+
+            if (isCheckOnly)
+                return true;
+            else
+            {
+                var dlg = new System.Windows.Forms.FolderBrowserDialog
+                { };
+
+                if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    var path = dlg.SelectedPath;
+                    Directory.CreateDirectory(path + "\\HistoryDB");
+                    var historyStoreDB = new DB(path + "\\HistoryDB",
+                            new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
+                    var tab = new StorageInstance(path, Interactor, StorageInstance.OpenMode.ReadWrite);
+                    if (tab.Status == "Ok")
+                        TryToAddStorage(tab);
+                    else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
+
+                }
                 return true;
             }
         }
