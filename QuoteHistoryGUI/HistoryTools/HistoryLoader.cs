@@ -197,7 +197,7 @@ namespace QuoteHistoryGUI
                                    
                                     if (i==0 || i ==2)
                                     {
-                                        var chunk = new ChunkFile(names[i] + " file" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last());
+                                        var chunk = new ChunkFile(names[i] + " file" + (getedKey.Last() > 0 ? ("." + getedKey.Last() + "") : ""), names[i], getedKey.Last());
                                         chunk.Parent = _folder;
                                         _dispatcher.Invoke((Action)delegate () { _folder.Folders.Add(chunk);});
                                   
@@ -208,7 +208,7 @@ namespace QuoteHistoryGUI
                                         it.Seek(getedKey);
                                         _dispatcher.Invoke((Action)delegate () { Application.Current.MainWindow.Activate(); });
                                     }
-                                    else _dispatcher.Invoke((Action)delegate () { _folder.Folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("(" + getedKey.Last() + ")") : ""), names[i], getedKey.Last())); _folder.Folders[_folder.Folders.Count - 1].Parent = _folder; });
+                                    else _dispatcher.Invoke((Action)delegate () { _folder.Folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("." + getedKey.Last() + "") : ""), names[i], getedKey.Last())); _folder.Folders[_folder.Folders.Count - 1].Parent = _folder; });
                                     it.Next();
                                     if (it.IsValid())
                                     {
@@ -232,6 +232,16 @@ namespace QuoteHistoryGUI
         }
 
         private void Refresh(object sender, DoWorkEventArgs e)
+        {
+            Folder[] oldFolders = new Folder[_folders.Count()];
+            _folders.CopyTo(oldFolders, 0);
+            _dispatcher.Invoke((Action)delegate () { _folders.Clear(); });
+            if (oldFolders.Count() == 0 || oldFolders[0].Parent == null)
+                ReadSymbols(_folders);
+            else ReadDateTimes(oldFolders[0].Parent);
+        }
+
+        private void RefreshAll(object sender, DoWorkEventArgs e)
         {
             Folder[] oldFolders = new Folder[_folders.Count()];
             _folders.CopyTo(oldFolders, 0);

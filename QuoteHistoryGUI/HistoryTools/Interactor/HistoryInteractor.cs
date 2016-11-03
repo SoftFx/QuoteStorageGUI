@@ -37,6 +37,8 @@ namespace QuoteHistoryGUI.HistoryTools
             List<byte[]> deleteList = new List<byte[]>();
             var it = Source.HistoryStoreDB.CreateIterator();
             int copiedCnt = 0;
+            int copiedItemsCnt = 0;
+            DateTime lastReport = DateTime.UtcNow;
             foreach (var fold in Selection)
             {
                 copiedCnt++;
@@ -60,9 +62,9 @@ namespace QuoteHistoryGUI.HistoryTools
 
                             while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1,true,true))
                             {
-                                if(worker != null)    
-                                    worker.ReportProgress(1, "Copying "+ copiedCnt+"/"+Selection.Count+" match");
-                                
+                                if(worker != null && (DateTime.UtcNow-lastReport).Seconds>1)    
+                                    worker.ReportProgress(1, "Copying "+ copiedCnt+"/"+Selection.Count + " match: " + copiedItemsCnt + " items");
+                                copiedItemsCnt++;
                                 Destination.HistoryStoreDB.Put(it.GetKey(), it.GetValue());
                                 it.Next();
                             }
@@ -88,9 +90,11 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                     if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
                     {
+                        if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 1)
+                            worker.ReportProgress(1, "Copying " + copiedCnt + "/" + Selection.Count + " match: "+ copiedItemsCnt+" items");
+                        copiedItemsCnt++;
                         Destination.HistoryStoreDB.Put(it.GetKey(), it.GetValue());
                     }
-
                 }
             }
             it.Dispose();

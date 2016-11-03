@@ -277,7 +277,7 @@ namespace QuoteHistoryGUI.Models
                 var MainModel = Application.Current.MainWindow.DataContext as MainWindowModel;
                 var MainView = Application.Current.MainWindow as MainWindowView;
 
-                var result = MessageBox.Show("Are you sure?", "Delete", MessageBoxButton.YesNo);
+                var result = MessageBox.Show("Are you sure?", "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (result == MessageBoxResult.No) return true;
 
                 Interactor.DiscardSelection();

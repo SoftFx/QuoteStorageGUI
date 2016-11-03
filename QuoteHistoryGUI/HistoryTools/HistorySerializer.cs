@@ -48,10 +48,13 @@ namespace QuoteHistoryGUI.HistoryTools
         public decimal BidVolume;
         public decimal Ask;
         public decimal AskVolume;
+        public int Part = 0;
         public override byte[] Serialize()
         {
             string tickStr = "";
             tickStr += Time.ToString("yyyy.MM.dd HH:mm:ss.fff");
+            if (Part > 0)
+                tickStr = tickStr + "-" + Part;
             tickStr += "\t";
             tickStr += Bid.ToString(CultureInfo.InvariantCulture);
             tickStr += "\t";
@@ -71,7 +74,7 @@ namespace QuoteHistoryGUI.HistoryTools
         public KeyValuePair<decimal, decimal>[] Asks;
         public KeyValuePair<decimal, decimal> BestBid { get { return Bids.Count()>0?Bids.Last():new KeyValuePair<decimal, decimal>(); } }
         public KeyValuePair<decimal, decimal> BestAsk { get { return Asks.Count() > 0 ? Asks.First() : new KeyValuePair<decimal, decimal>();} }
-
+        public int Part=0;
         public override byte[] Serialize()
         {
             throw new NotImplementedException();
@@ -128,6 +131,12 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 var splittedLine = reader.ReadLine().Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
                 QHTick tick = new QHTick();
+                var dateAndPartStr = splittedLine[1].Split('-');
+                if (dateAndPartStr.Count() == 2)
+                {
+                    tick.Part = int.Parse(dateAndPartStr[1]);
+                    splittedLine[1] = dateAndPartStr[0];
+                }
                 tick.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
                 tick.Bid = decimal.Parse(splittedLine[2], CultureInfo.InvariantCulture);
                 tick.BidVolume = decimal.Parse(splittedLine[3], CultureInfo.InvariantCulture);
@@ -146,6 +155,12 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 var splittedLine = reader.ReadLine().Split(new char[]{'\t', ' '}, StringSplitOptions.RemoveEmptyEntries);
                 QHTickLevel2 tick = new QHTickLevel2();
+                var dateAndPartStr = splittedLine[1].Split('-');
+                if (dateAndPartStr.Count() == 2)
+                {
+                    tick.Part = int.Parse(dateAndPartStr[1]);
+                    splittedLine[1] = dateAndPartStr[0];
+                }
                 tick.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
                 List<KeyValuePair<decimal, decimal>> Bids = new List<KeyValuePair<decimal, decimal>>();
                 List<KeyValuePair<decimal, decimal>> Asks = new List<KeyValuePair<decimal, decimal>>();

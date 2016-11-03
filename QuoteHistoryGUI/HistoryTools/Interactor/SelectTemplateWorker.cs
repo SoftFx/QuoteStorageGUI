@@ -17,45 +17,87 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
             _sourceTree = tree;
         }
 
-        public IEnumerable<Folder> GetByMatch(string template, BackgroundWorker worker = null)
+        public string[] GetORTemplates(string template)
         {
-            if (worker != null)
+            List<string> result = new List<string>();
+            var ind = template.IndexOf('(');
+            if (ind == -1)
+                return new string[] { template };
+            result.Add(template.Substring(0,ind));
+            var curTemplate = template.Substring(ind + 1);
+            while (true)
             {
-                worker.ReportProgress(1, "Matching "+template);
-            }
-            var result = new List<Folder>();
-            var wordTemplates = template.Split(new char[]{ '/','\\',';','\t'});
-            var matchedFolders = new List<Folder>(_sourceTree);
-            var matchedFiles = new List<HistoryFile>();
-            var n_matchedFolders = new List<Folder>();
-            foreach (var wordTemplate in wordTemplates)
-            {
-                
-                n_matchedFolders = new List<Folder>();
-                foreach (var folder in matchedFolders)
+                var closeInd = curTemplate.IndexOf(')');
+                if (closeInd == -1)
                 {
-                    if (Match(folder.Name, wordTemplate))
+                    if (curTemplate != "")
+                        throw (new InvalidOperationException("Unable to parse template. \")\" symbol not found."));
+                    break;
+                }
+                var alternatives = curTemplate.Substring(0, closeInd).Split('|');
+                List<string> tempRes = new List<string>();
+                foreach(var alt in alternatives)
+                {
+                    foreach(var temp in result)
                     {
-                        n_matchedFolders.Add(folder);
+                        tempRes.Add(temp + alt);
                     }
                 }
-                matchedFolders = new List<Folder>();
-                foreach (var folder in n_matchedFolders)
+                result = new List<string>(tempRes);
+                curTemplate = curTemplate.Substring(closeInd + 1);
+                ind = curTemplate.IndexOf('(');
+                if (ind == -1) { for (int i = 0; i < result.Count(); i++) { result[i] += curTemplate; } break; }
+                for (int i = 0; i < result.Count(); i++) { result[i] += curTemplate.Substring(0,ind); }
+                curTemplate = curTemplate.Substring(ind + 1);
+            }
+            return result.ToArray();
+        }
+
+
+        public IEnumerable<Folder> GetByMatch(string itemplate, BackgroundWorker worker = null)
+        {
+            var templates = GetORTemplates(itemplate);
+            var res = new List<Folder>();
+            foreach (var template in templates)
+            {
+                if (worker != null)
                 {
-                    if (!folder.Loaded)
-                    {   
-                        if(folder as ChunkFile == null && folder as MetaFile == null)
-                            _loader.ReadDateTimes(folder);
-                        folder.Loaded = true;
-                    }
-                    if(folder.Folders!=null)
-                    foreach (var child_folder in folder.Folders)
+                    worker.ReportProgress(1, "Matching " + template);
+                }
+                var result = new List<Folder>();
+                var wordTemplates = template.Split(new char[] { '/', '\\', ';', '\t' });
+                var matchedFolders = new List<Folder>(_sourceTree);
+                var matchedFiles = new List<HistoryFile>();
+                var n_matchedFolders = new List<Folder>();
+                foreach (var wordTemplate in wordTemplates)
+                {
+                    n_matchedFolders = new List<Folder>();
+                    foreach (var folder in matchedFolders)
                     {
-                        matchedFolders.Add(child_folder);
+                        if (Match(folder.Name, wordTemplate))
+                        {
+                            n_matchedFolders.Add(folder);
+                        }
+                    }
+                    matchedFolders = new List<Folder>();
+                    foreach (var folder in n_matchedFolders)
+                    {
+                        if (!folder.Loaded)
+                        {
+                            if (folder as ChunkFile == null && folder as MetaFile == null)
+                                _loader.ReadDateTimes(folder);
+                            folder.Loaded = true;
+                        }
+                        if (folder.Folders != null)
+                            foreach (var child_folder in folder.Folders)
+                            {
+                                matchedFolders.Add(child_folder);
+                            }
                     }
                 }
+                res.AddRange(n_matchedFolders);
             }
-            return n_matchedFolders;
+            return res;
         }
 
         public bool Match(string word, string template)

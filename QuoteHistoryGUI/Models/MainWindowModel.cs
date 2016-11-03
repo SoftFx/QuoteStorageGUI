@@ -215,6 +215,7 @@ namespace QuoteHistoryGUI.Models
                     Directory.CreateDirectory(path + "\\HistoryDB");
                     var historyStoreDB = new DB(path + "\\HistoryDB",
                             new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
+                    historyStoreDB.Dispose();
                     var tab = new StorageInstance(path, Interactor, StorageInstance.OpenMode.ReadWrite);
                     if (tab.Status == "Ok")
                         TryToAddStorage(tab);

@@ -228,7 +228,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 {
                     pathStr += (path_part.Name + "/");
                 }
-                pathStr += (file.Name + " (" + file.Part + ")");
+                pathStr += (file.Name + "." + file.Part + "");
 
                 MetaCorruptionMessage = "Meta for file " + pathStr + "was not found.\nMeta was recalculated";
             }
@@ -254,7 +254,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     {
                         pathStr += (path_part.Name + "/");
                     }
-                    pathStr += (file.Name + " (" + file.Part + ")");
+                    pathStr += (file.Name + "." + file.Part + "");
                     MetaCorruptionMessage = "File " + pathStr + " has being updated or its meta was invalid.\nMeta was recalculated";
                 }
             }
@@ -328,6 +328,7 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 res.Add(new QHTick()
                 {
+                    Part = t2.Part,
                     Time = t2.Time,
                     Bid = t2.BestBid.Key,
                     BidVolume = t2.BestBid.Value,
