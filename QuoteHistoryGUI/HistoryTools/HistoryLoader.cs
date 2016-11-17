@@ -197,7 +197,7 @@ namespace QuoteHistoryGUI
                                    
                                     if (i==0 || i ==2)
                                     {
-                                        var chunk = new ChunkFile(names[i] + " file" + (getedKey.Last() > 0 ? ("." + getedKey.Last() + "") : ""), names[i], getedKey.Last());
+                                        var chunk = new ChunkFile(names[i] + " file" + (getedKey.Last() > 0 ? ("." + getedKey.Last() + "") : ""), names[i], getedKey[getedKey.Length-2]);
                                         chunk.Parent = _folder;
                                         _dispatcher.Invoke((Action)delegate () { _folder.Folders.Add(chunk);});
                                   
@@ -219,7 +219,6 @@ namespace QuoteHistoryGUI
                             }
                         }
                         catch (Exception) { }
- 
                 }
                 it.Dispose();
             }

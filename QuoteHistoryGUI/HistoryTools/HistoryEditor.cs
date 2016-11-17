@@ -67,6 +67,19 @@ namespace QuoteHistoryGUI.HistoryTools
                 var cnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
                 if (cnt[0] == 'P' && cnt[1] == 'K')
                     isZip = true;
+                if (!isZip)
+                {
+                    List<byte> res = new List<byte>(cnt);
+                    int flushPart = 1;
+                    while (true)
+                    {
+                        var cntPart = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part, flushPart));
+                        if (cntPart == null) break;
+                        res.AddRange(cntPart);
+                        flushPart++;
+                    }
+                    cnt = res.ToArray();
+                }
                 var Text = GetOrUnzip(cnt);
                 return new KeyValuePair<string, byte[]>(isZip ? "Zip" : "Text", Text);
             }
@@ -145,7 +158,10 @@ namespace QuoteHistoryGUI.HistoryTools
             return part;
         }
 
-
+        public int CalculatePartCount(IEnumerable<QHItem> items)
+        {
+            return items.Count()/MaxCountPerChunk+ items.Count()%MaxCountPerChunk>0?1:0;
+        }
 
         public void SaveToDB(byte[] content, ChunkFile f)
         {

@@ -326,30 +326,12 @@ namespace QuoteHistoryGUI.Models
                         }
                         else if(chunk.Period == "ticks level2")
                         {
-                            var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.oneDate);
-                            var items = HistorySerializer.Deserialize(chunk.Period, content);
-                            var itemsList = new List<QHItem>();
-                            var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
-                            var ticks = Editor.GetTicksFromLevel2(ticksLevel2);
-                            var parent = chunk.Parent;
-                            List<Folder> deleteList = new List<Folder>();
-                            foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
-                            deleteList.ForEach(t => parent.Folders.Remove(t));
-                            var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
-                            var partCnt = Editor.SaveToDBParted(ticks, tickChunk);
-                            for (int i = partCnt; i >= 0; i--)
-                            {
-                                var Chunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Part = i, Parent = parent };
-                                parent.Folders.Add(Chunk);
-                            }
-                            for (int i = partCnt; i>=0; i--)
-                            {
-                                var Meta = new MetaFile() { Name = "ticks meta", Period = "ticks", Part = i, Parent = parent };
-                                parent.Folders.Add(Meta);
-                            }
+                            tick2ToTickUpdate(chunk);
                             var res = MessageBox.Show("Ticks level2 to ticks upstream update was aplied.\n Make ticks to M1?", "Upstream update", MessageBoxButton.YesNo, MessageBoxImage.Question);
                             if(res == MessageBoxResult.Yes)
                             {
+
+                                var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = chunk.Parent };
                                 tickToM1Update(tickChunk);
                             }
                         }
@@ -360,7 +342,33 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
-        private void tickToM1Update(ChunkFile chunk)
+        private QHTick[] tick2ToTickUpdate(ChunkFile chunk)
+        {
+            var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.oneDate);
+            var items = HistorySerializer.Deserialize(chunk.Period, content);
+            var itemsList = new List<QHItem>();
+            var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
+            var ticks = Editor.GetTicksFromLevel2(ticksLevel2);
+            var parent = chunk.Parent;
+            List<Folder> deleteList = new List<Folder>();
+            foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
+            deleteList.ForEach(t => parent.Folders.Remove(t));
+            var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
+            var partCnt = Editor.SaveToDBParted(ticks, tickChunk);
+            for (int i = partCnt; i >= 0; i--)
+            {
+                var Chunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Part = i, Parent = parent };
+                parent.Folders.Add(Chunk);
+            }
+            for (int i = partCnt; i >= 0; i--)
+            {
+                var Meta = new MetaFile() { Name = "ticks meta", Period = "ticks", Part = i, Parent = parent };
+                parent.Folders.Add(Meta);
+            }
+            return ticks;
+        }
+
+        private KeyValuePair<QHBar[], QHBar[]> tickToM1Update(ChunkFile chunk)
         {
             var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.allDate);
             var items = HistorySerializer.Deserialize(chunk.Period, content);
@@ -381,6 +389,7 @@ namespace QuoteHistoryGUI.Models
             var askMeta = new MetaFile() { Name = "M1 ask meta", Period = "M1 ask", Parent = parent };
             parent.Folders.Add(askMeta);
             Editor.SaveToDBParted(bars.Value, askChunk);
+            return bars;
         }
 
         private bool CloseDelegate(object o, bool isCheckOnly)

@@ -41,7 +41,7 @@ namespace QuoteHistoryGUI.Views
             };
             _loadingDlg = new LoadingDialog()
             {
-                Owner = Application.Current.MainWindow
+                Owner = this as Window
             };
             dlg.ShowDialog();
             if (dlg.StoragePath.Text != "")

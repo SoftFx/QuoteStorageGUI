@@ -29,6 +29,7 @@ namespace QuoteHistoryGUI.HistoryTools
             public string Period;
             public string Type;
             public int Part;
+            public int FlushPart;
         }
 
         public static DBEntry DeserealizeKey(byte[] key)
@@ -61,16 +62,18 @@ namespace QuoteHistoryGUI.HistoryTools
             date /= 100;
             var year = date;
             entry.Time = new DateTime((int)year, (int)month, (int)day, (int)hour, 0, 0);
+            entry.Part = key[key.Length - 2];
+            entry.FlushPart = key[key.Length - 1];
             return entry;
         }
-        public static byte[] SerealizeKey(string sym, string type, string period, int year, int month, int day, int hour, int partNum = 0)
+        public static byte[] SerealizeKey(string sym, string type, string period, int year, int month, int day, int hour, int partNum = 0, int flushPart = 0)
         {
             var _prefix = new byte[sym.Length + 2];
             ASCIIEncoding.ASCII.GetBytes(sym).CopyTo(_prefix, 0);
             _prefix[sym.Length] = (byte)(type == "Chunk" ? 1 : 0);
             _prefix[sym.Length + 1] = periodicityDict[period];
             var prefOffset = _prefix.Length;
-            byte[] resKey = new byte[prefOffset + 5];
+            byte[] resKey = new byte[prefOffset + 6];
             _prefix.CopyTo(resKey, 0);
             UInt32 date = (uint)year;
             date = date * 100 + (uint)month;
@@ -82,6 +85,7 @@ namespace QuoteHistoryGUI.HistoryTools
             resKey[prefOffset + 2] = bd[1];
             resKey[prefOffset + 3] = bd[0];
             resKey[prefOffset + 4] = (byte)partNum;
+            resKey[prefOffset + 5] = (byte)flushPart;
             return resKey;
         }
 
@@ -110,7 +114,7 @@ namespace QuoteHistoryGUI.HistoryTools
         }
 
 
-        public static bool ValidateKeyByKey(byte[] key1, byte[] key2, bool validateSymbol = true, int validationDateLevel = 1, bool validateType = false, bool validatePeriod = false, bool validatePart = false)
+        public static bool ValidateKeyByKey(byte[] key1, byte[] key2, bool validateSymbol = true, int validationDateLevel = 1, bool validateType = false, bool validatePeriod = false, bool validatePart = false, bool validateFlushPart = true)
         {
             List<byte> sym1Bytes = new List<byte>();
             for (int i = 0; i < key1.Length; i++)
@@ -143,10 +147,13 @@ namespace QuoteHistoryGUI.HistoryTools
                 return false;
             if (dp1.Value != dp2.Value && validatePart)
                 return false;
+            if (key1[key1.Length - 1] != key2[key2.Length - 1] && validateFlushPart)
+                return false;
             if (key1[sym1.Length] != key2[sym2.Length] && validateType)
                 return false;
             if (key1[sym1.Length + 1] != key2[sym2.Length + 1] && validatePeriod)
                 return false;
+
             return true;
         }
 

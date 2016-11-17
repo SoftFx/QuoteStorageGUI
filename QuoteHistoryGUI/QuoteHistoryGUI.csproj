@@ -65,7 +65,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
+    <ApplicationDefinition Include="Views\CopyApp.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
@@ -86,6 +86,7 @@
     <Compile Include="HistoryTools\Interactor\SelectTemplateWorker.cs" />
     <Compile Include="Models\StorageExplorerModel.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="Views\ConsoleCopyApp.cs" />
     <Compile Include="Views\StorageExplorerView.xaml.cs">
       <DependentUpon>StorageExplorerView.xaml</DependentUpon>
     </Compile>
@@ -109,8 +110,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
+    <Compile Include="Views\CopyApp.xaml.cs">
+      <DependentUpon>CopyApp.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="HistoryTools\HistoryEditor.cs" />
@@ -149,7 +150,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="app.manifest" />
+    <None Include="app.manifest">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
