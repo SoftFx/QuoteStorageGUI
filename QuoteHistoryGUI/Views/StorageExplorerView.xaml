@@ -13,7 +13,7 @@
             <ColumnDefinition Name="treeColumn" Width="auto" MinWidth="50"/>
             <ColumnDefinition MinWidth="100" />
         </Grid.ColumnDefinitions>
-        <TreeView Grid.Column="0" BorderBrush="White"  TreeViewItem.Selected="treeView_Selected" TreeViewItem.Unselected="treeView_Selected"  Name="treeView" TreeViewItem.Expanded="treeView_Expanded" MouseDoubleClick="OnDoubleClick" KeyDown="OnKey"  ItemsSource="{Binding Path=Folders, Mode=TwoWay,NotifyOnSourceUpdated=True, UpdateSourceTrigger=PropertyChanged}"  Background="White" VirtualizingStackPanel.IsVirtualizing="True" >
+        <TreeView Grid.Column="0" BorderBrush="White" TreeViewItem.Unselected="treeView_Selected" TreeViewItem.Selected="treeView_Selected" Name="treeView" TreeViewItem.Expanded="treeView_Expanded" MouseDoubleClick="OnDoubleClick" KeyDown="OnKey"  ItemsSource="{Binding Path=Folders, Mode=TwoWay,NotifyOnSourceUpdated=True, UpdateSourceTrigger=PropertyChanged}"  Background="White" VirtualizingStackPanel.IsVirtualizing="True" >
             <TreeView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy" Command="{Binding CopyBtnClick}"/>
@@ -24,6 +24,19 @@
             </TreeView.ContextMenu>
             
             <TreeView.Resources>
+
+                <LinearGradientBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" EndPoint="0,1" StartPoint="0,0">
+                    <GradientStop Color="#FFD9F4FF" Offset="0"/>
+                    <GradientStop Color="#FF9BDDFB" Offset="1"/>
+                </LinearGradientBrush>
+                <LinearGradientBrush x:Key="{x:Static SystemColors.ControlBrushKey}" EndPoint="0,1" StartPoint="0,0">
+                    <GradientStop Color="#FFEEEDED" Offset="0"/>
+                    <GradientStop Color="#FFDDDDDD" Offset="1"/>
+                </LinearGradientBrush>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="Black" />
+
+
                 <Style x:Key="ExpandingFolderStyle" TargetType="{x:Type Image}">
                     <Setter Property="Source" Value="../Icons/closeFolder.png"/>
                     <Style.Triggers>
@@ -33,15 +46,7 @@
                     </Style.Triggers>
 
                 </Style>
-                <Style TargetType="{x:Type TreeViewItem}">
-                    <Setter Property="IsExpanded" Value="{Binding IsExpanded}">
-                    </Setter>
-                    <Style.Resources>
-                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#B3B3B3"/>
-                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextColorKey}" Color="Black"/>
-                        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#CCCCCC"/>
-                    </Style.Resources>
-                </Style>
+                
                 <DataTemplate DataType="{x:Type vs:LoadingFolder}">
                     <StackPanel Orientation="Horizontal" >
 
@@ -50,6 +55,7 @@
                         <TextBlock Text="  " VerticalAlignment="Center">
                         </TextBlock>
                         <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center"></TextBlock>
+                        <TextBlock Text="  " VerticalAlignment="Center"/>
                     </StackPanel>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vs:ChunkFile}" >
@@ -68,6 +74,7 @@
                                 </ContextMenu>
                             </TextBlock.ContextMenu>
                         </TextBlock>
+                        <TextBlock Text="  " VerticalAlignment="Center"/>
                     </StackPanel>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vs:MetaFile}">
@@ -85,6 +92,7 @@
                                 </ContextMenu>
                             </TextBlock.ContextMenu>
                         </TextBlock>
+                        <TextBlock Text="  " VerticalAlignment="Center"/>
                     </StackPanel>
                 </DataTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Path=Folders}" DataType="{x:Type vs:Folder}">
@@ -106,6 +114,30 @@
                     </StackPanel>
                 </HierarchicalDataTemplate>
             </TreeView.Resources>
+
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="{x:Type TreeViewItem}">
+                    <Setter Property="BorderThickness" Value="1.5"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="BorderBrush" Value="#adc6e5"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsSelected" Value="True"/>
+                                <Condition Property="IsSelectionActive" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <Setter Property="BorderBrush" Value="LightGray"/>
+                        </MultiTrigger>
+                    </Style.Triggers>
+                    <Style.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="2"/>
+                        </Style>
+                    </Style.Resources>
+                </Style>
+            </TreeView.ItemContainerStyle>
+
         </TreeView >
         <GridSplitter Width="2" Visibility="Visible" Background="#DBDBDB" BorderBrush="Black" HorizontalAlignment="Right" VerticalAlignment="Stretch" ResizeBehavior="CurrentAndNext" Grid.Column="0"/>
         <Grid Grid.Column="1">

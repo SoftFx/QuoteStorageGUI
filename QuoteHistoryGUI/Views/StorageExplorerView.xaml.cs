@@ -99,13 +99,10 @@ namespace QuoteHistoryGUI.Views
 
         List<TreeViewItem> selectedItems = new List<TreeViewItem>();
         object selectedItemLock = new object();
+        bool isShiftSelect = false;
 
         private void treeView_Selected(object sender, RoutedEventArgs e)
         {
-            if(HandleSelection)
-            {
-                return;
-            }
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) || Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
             {
                 lock (selectedItemLock)
@@ -113,7 +110,7 @@ namespace QuoteHistoryGUI.Views
                     var treeItem = e.OriginalSource as TreeViewItem;
                     if (e.RoutedEvent == TreeViewItem.SelectedEvent)
                     {
-                        if (selectedItems.Contains(treeItem))
+                        /*if (selectedItems.Contains(treeItem))
                         {
                             HandleSelection = true;
                             treeItem.IsSelected = false;
@@ -125,16 +122,23 @@ namespace QuoteHistoryGUI.Views
                             HandleSelection = true;
                             treeItem.IsSelected = true;
                             selectedItems.Add(treeItem);
+                            //treeItem.Background = SystemColors.ActiveBorderBrush;
                             HandleSelection = false;
-                        }
+                        }*/
                     }
                     else
                     {
-                        HandleSelection = true;
-                        if (selectedItems.Contains(treeItem))
-                            treeItem.IsSelected = true;
-                        else treeItem.IsSelected = false;
-                        HandleSelection = false;
+                        
+                        if (selectedItems.Contains(treeItem) && isShiftSelect)
+                        {
+                            treeItem.Background = SystemColors.WindowBrush;
+                            selectedItems.Remove(treeItem);
+                        }
+                        else {
+                            treeItem.Background = SystemColors.ActiveCaptionBrush;
+                            selectedItems.Add(treeItem);
+                            isShiftSelect = true;
+                        }
                     }
                 }
             }
@@ -142,16 +146,17 @@ namespace QuoteHistoryGUI.Views
             {
                 lock (selectedItemLock)
                 {
-                    var treeItem = e.OriginalSource as TreeViewItem;
-                    foreach (var t in selectedItems)
+                    if (e.RoutedEvent == TreeViewItem.SelectedEvent)
                     {
-                        HandleSelection = true;
-                        if (t!=treeItem)
-                            t.IsSelected = false;
-                        HandleSelection = false;
+                        isShiftSelect = false;
+                        var treeItem = e.OriginalSource as TreeViewItem;
+                        foreach (var t in selectedItems)
+                        {
+                            t.Background = SystemColors.WindowBrush;
+                        }
+                        selectedItems.Clear();
+                        selectedItems.Add(treeItem);
                     }
-                    selectedItems.Clear();
-                    selectedItems.Add(treeItem);
                 }
             }
             (this.DataContext as StorageInstance).Selection = new List<Folder>(selectedItems.Select(t => { return t.DataContext as Folder; }));

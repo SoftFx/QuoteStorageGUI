@@ -70,6 +70,12 @@ namespace QuoteHistoryGUI.Models
             set { }
         }
 
+        public string LastSelected
+        {
+            get { return "Last selected:"; }
+            set { }
+        }
+
 
         public void TryToAddStorage(StorageInstance st)
         {
