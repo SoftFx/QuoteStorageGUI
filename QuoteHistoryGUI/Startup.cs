@@ -39,11 +39,14 @@ namespace QuoteHistoryGUI
                         try
                         {
                             QHApp myConsoleApp = new QHApp();
+                            myConsoleApp.ApplicationMode = QHApp.AppMode.ImportDialog;
                             if (args.Count() == 3)
                             {
                                 Console.Out.WriteLine("");
                                 Console.Out.WriteLine("Importing from " + args[2] + " to " + args[1]);
-                                myConsoleApp.SetParamsForConsole(args[1], args[2]);
+                                myConsoleApp.ApplicationMode = QHApp.AppMode.Console;
+                                myConsoleApp.Source = args[2];
+                                myConsoleApp.Destination = args[1];
                             }
                             myConsoleApp.Run();
                         }
@@ -52,7 +55,12 @@ namespace QuoteHistoryGUI
                             Console.Out.WriteLine(e.Message);
                         }
                         break;
-                }       
+                    default:
+                        new QHApp().Run();
+                        break;
+                }
+            }
+            else new QHApp().Run();
         }
     }
 }
