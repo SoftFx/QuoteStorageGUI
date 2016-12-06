@@ -26,15 +26,15 @@ namespace QuoteHistoryGUI.Dialogs
     public partial class CopyDialog : Window
     {
         HistoryInteractor _interactor;
-        ObservableCollection<StorageInstance> _tabs;
+        ObservableCollection<StorageInstanceModel> _tabs;
         BackgroundWorker CopyWorker;
         bool IsCopying = false;
-        StorageInstance _source;
-        StorageInstance _destination;
+        StorageInstanceModel _source;
+        StorageInstanceModel _destination;
         SelectTemplateWorker temW;
         string templateText;
         bool isMove = false;
-        public CopyDialog(StorageInstance source, ObservableCollection<StorageInstance> tabs, HistoryInteractor interactor)
+        public CopyDialog(StorageInstanceModel source, ObservableCollection<StorageInstanceModel> tabs, HistoryInteractor interactor)
         {
             InitializeComponent();
             Source.Text = source.StoragePath;
@@ -43,7 +43,7 @@ namespace QuoteHistoryGUI.Dialogs
                 if (tab != source) _destination = tab; 
             }
             Destination.Text = _destination.StoragePath;
-            var win = Application.Current.MainWindow as MainWindowView;
+            var win = Application.Current.MainWindow as QHAppWindowView;
             
             _interactor = interactor;
             
@@ -81,7 +81,7 @@ namespace QuoteHistoryGUI.Dialogs
             _interactor.Source = _source;
             _interactor.Destination = _destination;
 
-            if (_interactor.Destination.openMode == StorageInstance.OpenMode.ReadOnly)
+            if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
             {
                 MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return;

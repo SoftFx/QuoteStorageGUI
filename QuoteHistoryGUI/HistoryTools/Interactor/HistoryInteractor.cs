@@ -12,8 +12,8 @@ namespace QuoteHistoryGUI.HistoryTools
 {
     public class HistoryInteractor
     {
-        public StorageInstance Source;
-        public StorageInstance Destination;
+        public StorageInstanceModel Source;
+        public StorageInstanceModel Destination;
         public Dispatcher Dispatcher;
         public List<Folder> Selection = new List<Folder>();
 

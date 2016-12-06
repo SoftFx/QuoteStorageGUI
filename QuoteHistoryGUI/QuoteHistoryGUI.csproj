@@ -65,7 +65,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="Views\CopyApp.xaml">
+    <ApplicationDefinition Include="Views\QHApp.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
@@ -84,9 +84,7 @@
     <Compile Include="HistoryTools\HistoryDatabaseFuncs.cs" />
     <Compile Include="HistoryTools\Interactor\HistoryInteractor.cs" />
     <Compile Include="HistoryTools\Interactor\SelectTemplateWorker.cs" />
-    <Compile Include="Models\StorageExplorerModel.cs" />
     <Compile Include="Startup.cs" />
-    <Compile Include="Views\ConsoleCopyApp.cs" />
     <Compile Include="Views\StorageExplorerView.xaml.cs">
       <DependentUpon>StorageExplorerView.xaml</DependentUpon>
     </Compile>
@@ -106,24 +104,24 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\MainWindowView.xaml">
+    <Page Include="Views\QHAppWindowView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Views\CopyApp.xaml.cs">
-      <DependentUpon>CopyApp.xaml</DependentUpon>
+    <Compile Include="Views\QHApp.xaml.cs">
+      <DependentUpon>QHApp.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="HistoryTools\HistoryEditor.cs" />
-    <Compile Include="Models\StorageInstance.cs" />
+    <Compile Include="Models\StorageInstanceModel.cs" />
     <Compile Include="SingleDelegateCommand.cs" />
     <Compile Include="Dialogs\StorageSelectionDialog.xaml.cs">
       <DependentUpon>StorageSelectionDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="HistoryTools\Folder.cs" />
     <Compile Include="HistoryTools\HistoryLoader.cs" />
-    <Compile Include="Views\MainWindowView.xaml.cs">
-      <DependentUpon>MainWindowView.xaml</DependentUpon>
+    <Compile Include="Views\QHAppWindowView.xaml.cs">
+      <DependentUpon>QHAppWindowView.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\StorageExplorerView.xaml">
@@ -132,7 +130,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\MainWindowModel.cs" />
+    <Compile Include="Models\QHAppWindowModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -29,7 +29,7 @@ namespace QuoteHistoryGUI.Dialogs
         BackgroundWorker Worker;
         bool Replace;
         bool isUIVersion = true;
-        public ImportDialog(StorageInstance Destination = null, StorageInstance Source = null)
+        public ImportDialog(StorageInstanceModel Destination = null, StorageInstanceModel Source = null)
         {
             
             Worker = new BackgroundWorker();
@@ -62,7 +62,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 SourcePath.Text = dlg.SelectedPath;
-                Interactor.Source = new StorageInstance(dlg.SelectedPath, Interactor);
+                Interactor.Source = new StorageInstanceModel(dlg.SelectedPath, Interactor);
             }
             if (Interactor.Source!=null && Interactor.Source.Status != "Ok")
             {
@@ -82,7 +82,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 DestinationPath.Text = dlg.SelectedPath;
-                Interactor.Destination = new StorageInstance(dlg.SelectedPath, Interactor);
+                Interactor.Destination = new StorageInstanceModel(dlg.SelectedPath, Interactor);
             }
             if (Interactor.Source != null && Interactor.Destination.Status != "Ok")
             {
@@ -102,7 +102,7 @@ namespace QuoteHistoryGUI.Dialogs
         public void DoImport(bool isUiVersion = true) {
             try
             {
-                if (Interactor.Destination.openMode == StorageInstance.OpenMode.ReadOnly)
+                if (Interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
                 {
                     throw (new Exception("Unable to import to storage opened in readonly mode"));
                     return;

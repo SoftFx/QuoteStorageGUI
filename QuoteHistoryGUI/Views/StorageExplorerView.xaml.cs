@@ -24,7 +24,7 @@ namespace QuoteHistoryGUI.Views
     /// </summary>
     public partial class StorageExplorerView : UserControl
     {
-        StorageInstance storage;
+        StorageInstanceModel storage;
         public StorageExplorerView()
         {
             InitializeComponent();
@@ -34,7 +34,7 @@ namespace QuoteHistoryGUI.Views
         {
             treeColumn.Width = new GridLength(1, GridUnitType.Auto);
             var tree = sender as TreeView;
-            var tab = tree.DataContext as StorageInstance;
+            var tab = tree.DataContext as StorageInstanceModel;
             var treeItem = e.OriginalSource as TreeViewItem;
             var folder = treeItem.DataContext as Folder;
             if (folder != null && tab != null)
@@ -48,11 +48,11 @@ namespace QuoteHistoryGUI.Views
             var tree = sender as TreeView;
             if (tree != null)
             {
-                var tab = tree.DataContext as StorageInstance;
+                var tab = tree.DataContext as StorageInstanceModel;
                 var chunk = tree.SelectedItem as ChunkFile;
                 if (chunk != null && tab != null)
                 {
-                    var wind = Application.Current.MainWindow as MainWindowView;
+                    var wind = Application.Current.MainWindow as QHAppWindowView;
                     wind.ShowLoading();
                     tab.OpenChunk(chunk);
                     Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
@@ -60,7 +60,7 @@ namespace QuoteHistoryGUI.Views
                 var meta = tree.SelectedItem as MetaFile;
                 if (meta != null && tab != null)
                 {
-                    var wind = Application.Current.MainWindow as MainWindowView;
+                    var wind = Application.Current.MainWindow as QHAppWindowView;
                     wind.ShowLoading();
                     tab.OpenMeta(meta);
                     Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
@@ -74,11 +74,11 @@ namespace QuoteHistoryGUI.Views
             var tree = sender as TreeView;
             if (tree != null && e.Key==Key.Enter)
             {
-                var tab = tree.DataContext as StorageInstance;
+                var tab = tree.DataContext as StorageInstanceModel;
                 var chunk = tree.SelectedItem as ChunkFile;
                 if (chunk != null && tab != null)
                 {
-                    var wind = Application.Current.MainWindow as MainWindowView;
+                    var wind = Application.Current.MainWindow as QHAppWindowView;
                     wind.ShowLoading();
                     tab.OpenChunk(chunk);
                     Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
@@ -86,7 +86,7 @@ namespace QuoteHistoryGUI.Views
                 var meta = tree.SelectedItem as MetaFile;
                 if (meta != null && tab != null)
                 {
-                    var wind = Application.Current.MainWindow as MainWindowView;
+                    var wind = Application.Current.MainWindow as QHAppWindowView;
                     wind.ShowLoading();
                     tab.OpenMeta(meta);
                     Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
@@ -159,7 +159,7 @@ namespace QuoteHistoryGUI.Views
                     }
                 }
             }
-            (this.DataContext as StorageInstance).Selection = new List<Folder>(selectedItems.Select(t => { return t.DataContext as Folder; }));
+            (this.DataContext as StorageInstanceModel).Selection = new List<Folder>(selectedItems.Select(t => { return t.DataContext as Folder; }));
 
         }
 
@@ -169,8 +169,8 @@ namespace QuoteHistoryGUI.Views
 
         private void UpStream_Click(object sender, RoutedEventArgs e)
         {
-            var inst = this.DataContext as StorageInstance;
-            var wind = Application.Current.MainWindow as MainWindowView;
+            var inst = this.DataContext as StorageInstanceModel;
+            var wind = Application.Current.MainWindow as QHAppWindowView;
 
         }
     }
