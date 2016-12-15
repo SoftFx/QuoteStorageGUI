@@ -1,0 +1,50 @@
+﻿<Window x:Class="QuoteHistoryGUI.Dialogs.UpstreamDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:QuoteHistoryGUI.Dialogs"
+        mc:Ignorable="d"
+        SizeToContent="WidthAndHeight"
+        Title="UpstreamDialog" 
+                ResizeMode="NoResize">
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition>
+                <RowDefinition.Style>
+                    <Style TargetType="{x:Type RowDefinition}">
+                        <Setter Property="Height" Value="30" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ElementName=TemplateExpander, Path=IsExpanded}" Value="True">
+                                <Setter Property="Height" Value="auto" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </RowDefinition.Style>
+            </RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="80"/>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition />
+            <ColumnDefinition Width=" 55"/>
+            <ColumnDefinition Width=" 25"/>
+        </Grid.ColumnDefinitions>
+
+        <Expander Name="TemplateExpander"   Grid.Row="3" Grid.ColumnSpan="5" Grid.RowSpan="2" Height="auto">
+            <Expander.Header>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="  Copy templates  (symbol[/year[/month[/day[/hour[/file]]]]];)"/>
+                    <TextBlock Text="       "/>
+
+                </StackPanel>
+            </Expander.Header>
+            <!--<TextBox Name="TemplatesBox" Height="200" AcceptsReturn="True" Margin="4"/>-->
+            <local:TemplateControl Height="200" x:Name="TemplateBox"/>
+        </Expander>
+    </Grid>
+</Window>
