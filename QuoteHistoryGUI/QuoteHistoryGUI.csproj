@@ -78,6 +78,12 @@
     <Compile Include="Dialogs\CopyDialog.xaml.cs">
       <DependentUpon>CopyDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\TemplateControl.xaml.cs">
+      <DependentUpon>TemplateControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\UpstreamDialog.xaml.cs">
+      <DependentUpon>UpstreamDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="HistoryTools\HistoryRecalculateUpdater.cs" />
     <Compile Include="HistoryTools\HistoryParams.cs" />
     <Compile Include="HistoryTools\HistorySerializer.cs" />
@@ -101,6 +107,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\CopyDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\TemplateControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\UpstreamDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

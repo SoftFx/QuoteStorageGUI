@@ -140,7 +140,7 @@ namespace QuoteHistoryGUI.Dialogs
         {
             
             Interactor.Import(Replace, Worker);
-            Interactor.Destination.Refresh();
+            //Interactor.Destination.Refresh();
         }
 
         private void ImportCompleted(object sender, RunWorkerCompletedEventArgs e)

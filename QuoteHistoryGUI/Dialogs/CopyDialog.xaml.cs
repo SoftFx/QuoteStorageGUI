@@ -47,7 +47,7 @@ namespace QuoteHistoryGUI.Dialogs
             
             _interactor = interactor;
             
-            TemplatesBox.Text = GetTemplates(interactor.Selection);
+            TemplateBox.TemplateBox.Text = GetTemplates(interactor.Selection);
             _interactor.Selection.Clear();
             _tabs = tabs;
             _source = source;
@@ -88,7 +88,7 @@ namespace QuoteHistoryGUI.Dialogs
             }
 
             temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
-            templateText = TemplatesBox.Text;
+            templateText = TemplateBox.TemplateBox.Text;
 
             IsCopying = true;
             CopyButton.IsEnabled = false;

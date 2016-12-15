@@ -57,7 +57,8 @@
                     </Button>
                 </StackPanel>
             </Expander.Header>
-            <TextBox Name="TemplatesBox" Height="200" AcceptsReturn="True" Margin="4"/>
+            <!--<TextBox Name="TemplatesBox" Height="200" AcceptsReturn="True" Margin="4"/>-->
+            <local:TemplateControl Height="200" x:Name="TemplateBox"/>
         </Expander>
     </Grid>
 </Window>
