@@ -120,7 +120,6 @@ namespace QuoteHistoryGUI.Dialogs
                     Worker.ProgressChanged += ImportProgressChanged;
                     Worker.RunWorkerCompleted += ImportCompleted;
                     Worker.RunWorkerAsync();
-
                 }
                 else
                 {
@@ -138,16 +137,17 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void ImportWork(object sender, DoWorkEventArgs e)
         {
-            
+            if (!isUIVersion) Console.Out.WriteLine("Import Started");
+            if (!isUIVersion) Console.Out.WriteLine("...");
             Interactor.Import(Replace, Worker);
-            //Interactor.Destination.Refresh();
+            if (isUIVersion) Interactor.Destination.Refresh();
         }
 
         private void ImportCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            ReportBlock.Text = "Import Completed!";
+            ReportBlock.Text = "Import Completed";
             if (isUIVersion)
-                MessageBox.Show("Import Completed!", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Import Completed", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
             else Console.Out.WriteLine("Import Completed!");
             this.Close();
         }
@@ -157,6 +157,7 @@ namespace QuoteHistoryGUI.Dialogs
             var key = e.UserState as byte[];
             var entry = HistoryDatabaseFuncs.DeserealizeKey(key);
             ReportBlock.Text = entry.Symbol + " "+entry.Time.ToString();
+            if(!isUIVersion) Console.Write("\r{0}%   ", ReportBlock.Text);
         }
     }
 }

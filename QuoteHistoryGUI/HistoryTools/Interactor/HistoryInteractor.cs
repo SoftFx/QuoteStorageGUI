@@ -253,6 +253,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 sourceIter.Next();
             }
+            sourceIter.Dispose();
         }
 
     }
