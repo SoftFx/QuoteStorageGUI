@@ -37,7 +37,7 @@ namespace QuoteHistoryGUI.Models
         #endregion
         public string Status = "";
         public HistoryEditor Editor;
-        
+
         public StorageInstanceModel(string path, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite)
         {
             openMode = mode;
@@ -57,7 +57,7 @@ namespace QuoteHistoryGUI.Models
 
         public OpenMode openMode;
         private DB _historyStoreDB;
-        
+
         private HistoryFile _currentFile;
         private ObservableCollection<Folder> _folders;
 
@@ -100,8 +100,10 @@ namespace QuoteHistoryGUI.Models
         private string _fileContent;
         public string FileContent
         {
-            get {
-                return _fileContent; }
+            get
+            {
+                return _fileContent;
+            }
             set
             {
                 if (_fileContent == value)
@@ -141,14 +143,16 @@ namespace QuoteHistoryGUI.Models
         private void OpenBase(string path)
         {
             Folders = new ObservableCollection<Folder>();
-            try {
+            try
+            {
                 if (!Directory.Exists(path + "\\HistoryDB"))
                     throw new Exception("Cant't find a history database folder (HistoryDB) in folder: " + path);
                 _historyStoreDB = new DB(path + "\\HistoryDB",
                         new Options() { BloomFilter = new BloomFilterPolicy(10) });
                 Editor = new HistoryEditor(_historyStoreDB);
                 HistoryLoader hl = new HistoryLoader(Application.Current.Dispatcher, _historyStoreDB);
-                hl.ReadSymbols(Folders); }
+                hl.ReadSymbols(Folders);
+            }
             catch (Exception ex)
             {
                 Status = ex.Message;
@@ -189,7 +193,7 @@ namespace QuoteHistoryGUI.Models
                 par = par.Parent;
             }
             path = par.Name + "/" + path;
-            FilePath = path;   
+            FilePath = path;
 
         }
 
@@ -214,7 +218,7 @@ namespace QuoteHistoryGUI.Models
 
         public void SaveChunk()
         {
-            if(openMode == OpenMode.ReadOnly)
+            if (openMode == OpenMode.ReadOnly)
             {
                 MessageBox.Show("Unable to save in readonly mode", "Save", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return;
@@ -223,7 +227,7 @@ namespace QuoteHistoryGUI.Models
             wind.ShowLoading();
             if (_currentFile as ChunkFile != null)
                 Editor.SaveToDB(ASCIIEncoding.ASCII.GetBytes(FileContent), _currentFile as ChunkFile);
-            else MessageBox.Show("Meta file editing is not possible!", "hmm...",MessageBoxButton.OK,MessageBoxImage.Asterisk);
+            else MessageBox.Show("Meta file editing is not possible!", "hmm...", MessageBoxButton.OK, MessageBoxImage.Asterisk);
             wind.HideLoading();
             Application.Current.MainWindow.Activate();
         }
@@ -251,7 +255,7 @@ namespace QuoteHistoryGUI.Models
                 Interactor.DiscardSelection();
                 Selection.ForEach(t => { Interactor.AddToSelection(t); });
 
-                
+
                 var dlg = new CopyDialog(this, MainModel.StorageTabs, Interactor)
                 {
                     Owner = Application.Current.MainWindow
@@ -289,8 +293,8 @@ namespace QuoteHistoryGUI.Models
                 var res = Interactor.Delete();
                 MainView.HideLoading();
 
-                if (res ==1)
-                MessageBox.Show("Delete completed!", "Delete",MessageBoxButton.OK,MessageBoxImage.Information);
+                if (res == 1)
+                    MessageBox.Show("Delete completed!", "Delete", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 Application.Current.MainWindow.Activate();
                 return true;
@@ -314,28 +318,34 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-                foreach(var sel in Selection)
-                {
-                    var chunk = sel as ChunkFile;
-                    if (chunk != null)
+                try {
+                    foreach (var sel in Selection)
                     {
-                        
-                        if(chunk.Period == "ticks")
+                        var chunk = sel as ChunkFile;
+                        if (chunk != null)
                         {
-                            tickToM1Update(chunk);
-                        }
-                        else if(chunk.Period == "ticks level2")
-                        {
-                            tick2ToTickUpdate(chunk);
-                            var res = MessageBox.Show("Ticks level2 to ticks upstream update was aplied.\n Make ticks to M1?", "Upstream update", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                            if(res == MessageBoxResult.Yes)
-                            {
 
-                                var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = chunk.Parent };
-                                tickToM1Update(tickChunk);
+                            if (chunk.Period == "ticks")
+                            {
+                                tickToM1Update(chunk);
+                            }
+                            else if (chunk.Period == "ticks level2")
+                            {
+                                tick2ToTickUpdate(chunk);
+                                var res = MessageBox.Show("Ticks level2 to ticks upstream update was aplied.\n Make ticks to M1?", "Upstream update", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                                if (res == MessageBoxResult.Yes)
+                                {
+
+                                    var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = chunk.Parent };
+                                    tickToM1Update(tickChunk);
+                                }
                             }
                         }
                     }
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
 
                 return true;
@@ -344,71 +354,62 @@ namespace QuoteHistoryGUI.Models
 
         public KeyValuePair<ChunkFile[], QHTick[]> tick2ToTickUpdate(ChunkFile chunk, bool showMessages = true)
         {
-            try
+
+            var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.oneDate);
+            var items = HistorySerializer.Deserialize(chunk.Period, content);
+            var itemsList = new List<QHItem>();
+            var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
+            var ticks = Editor.GetTicksFromLevel2(ticksLevel2);
+            var parent = chunk.Parent;
+            List<Folder> deleteList = new List<Folder>();
+            foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
+            deleteList.ForEach(t => parent.Folders.Remove(t));
+            var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
+            var partCnt = Editor.SaveToDBParted(ticks, tickChunk, true, showMessages);
+            List<ChunkFile> chunks = new List<ChunkFile>();
+            for (int i = partCnt; i >= 0; i--)
             {
-                var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.oneDate);
-                var items = HistorySerializer.Deserialize(chunk.Period, content);
-                var itemsList = new List<QHItem>();
-                var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
-                var ticks = Editor.GetTicksFromLevel2(ticksLevel2);
-                var parent = chunk.Parent;
-                List<Folder> deleteList = new List<Folder>();
-                foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
-                deleteList.ForEach(t => parent.Folders.Remove(t));
-                var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
-                var partCnt = Editor.SaveToDBParted(ticks, tickChunk, true, showMessages);
-                List<ChunkFile> chunks = new List<ChunkFile>();
-                for (int i = partCnt; i >= 0; i--)
-                {
-                    var Chunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Part = i, Parent = parent };
-                    chunks.Add(Chunk);
-                    parent.Folders.Add(Chunk);
-                }
-                for (int i = partCnt; i >= 0; i--)
-                {
-                    var Meta = new MetaFile() { Name = "ticks meta", Period = "ticks", Part = i, Parent = parent };
-                    parent.Folders.Add(Meta);
-                }
-                return new KeyValuePair<ChunkFile[], QHTick[]>(chunks.ToArray(), ticks);
+                var Chunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Part = i, Parent = parent };
+                chunks.Add(Chunk);
+                parent.Folders.Add(Chunk);
             }
-            catch (Exception ex)
+            for (int i = partCnt; i >= 0; i--)
             {
-                int a = 1; }
-            return new KeyValuePair<ChunkFile[], QHTick[]>(); ;
+                var Meta = new MetaFile() { Name = "ticks meta", Period = "ticks", Part = i, Parent = parent };
+                parent.Folders.Add(Meta);
+            }
+            return new KeyValuePair<ChunkFile[], QHTick[]>(chunks.ToArray(), ticks);
+
+
 
         }
 
         public KeyValuePair<QHBar[], QHBar[]> tickToM1Update(ChunkFile chunk, bool showMessages = true)
         {
-            try
-            {
-                var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.allDate);
-                var items = HistorySerializer.Deserialize(chunk.Period, content);
-                var itemsList = new List<QHItem>();
-                var ticks = items as IEnumerable<QHTick>;
-                var bars = Editor.GetM1FromTicks(ticks);
-                var parent = chunk.Parent.Parent;
-                List<Folder> deleteList = new List<Folder>();
-                foreach (var f in parent.Folders) if (f.Name.Length >= 2 && f.Name.Substring(0, 2) == "M1") deleteList.Add(f);
-                deleteList.ForEach(t => parent.Folders.Remove(t));
-                var bidChunk = new ChunkFile() { Name = "M1 bid file", Period = "M1 bid", Parent = parent };
-                parent.Folders.Add(bidChunk);
-                var bidMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
-                parent.Folders.Add(bidMeta);
-                Editor.SaveToDBParted(bars.Key, bidChunk, true, showMessages);
-                var askChunk = new ChunkFile() { Name = "M1 ask file", Period = "M1 ask", Parent = parent };
-                parent.Folders.Add(askChunk);
-                var askMeta = new MetaFile() { Name = "M1 ask meta", Period = "M1 ask", Parent = parent };
-                parent.Folders.Add(askMeta);
-                Editor.SaveToDBParted(bars.Value, askChunk, true, showMessages); 
-                return bars;
-            }
-            catch (Exception ex)
-            {
-                int a = 1;
-            }
-            return new KeyValuePair<QHBar[], QHBar[]>();
-            
+
+            var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.allDate);
+            var items = HistorySerializer.Deserialize(chunk.Period, content);
+            var itemsList = new List<QHItem>();
+            var ticks = items as IEnumerable<QHTick>;
+            var bars = Editor.GetM1FromTicks(ticks);
+            var parent = chunk.Parent.Parent;
+            List<Folder> deleteList = new List<Folder>();
+            foreach (var f in parent.Folders) if (f.Name.Length >= 2 && f.Name.Substring(0, 2) == "M1") deleteList.Add(f);
+            deleteList.ForEach(t => parent.Folders.Remove(t));
+            var bidChunk = new ChunkFile() { Name = "M1 bid file", Period = "M1 bid", Parent = parent };
+            parent.Folders.Add(bidChunk);
+            var bidMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
+            parent.Folders.Add(bidMeta);
+            Editor.SaveToDBParted(bars.Key, bidChunk, true, showMessages);
+            var askChunk = new ChunkFile() { Name = "M1 ask file", Period = "M1 ask", Parent = parent };
+            parent.Folders.Add(askChunk);
+            var askMeta = new MetaFile() { Name = "M1 ask meta", Period = "M1 ask", Parent = parent };
+            parent.Folders.Add(askMeta);
+            Editor.SaveToDBParted(bars.Value, askChunk, true, showMessages);
+            return bars;
+
+
+
         }
 
         private bool CloseDelegate(object o, bool isCheckOnly)

@@ -171,7 +171,7 @@ namespace QuoteHistoryGUI.HistoryTools
             }
             catch
             {
-                if (showMessages)
+                
                 MessageBox.Show("There is a syntax error! Unable to save.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.MainWindow.Activate();
                 return;

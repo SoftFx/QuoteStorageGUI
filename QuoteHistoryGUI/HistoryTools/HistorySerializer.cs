@@ -153,7 +153,6 @@ namespace QuoteHistoryGUI.HistoryTools
             StreamReader reader = new StreamReader(new MemoryStream(content));
             while (!reader.EndOfStream)
             {
-                try {
                     var splittedLine = reader.ReadLine().Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     QHTickLevel2 tick = new QHTickLevel2();
                     var dateAndPartStr = splittedLine[1].Split('-');
@@ -192,11 +191,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     tick.Asks = Asks.ToArray();
 
                     res.Add(tick);
-                }
-                catch (Exception e)
-                {
-                    int a = 1;
-                }
+
             }
             return res;
         }
