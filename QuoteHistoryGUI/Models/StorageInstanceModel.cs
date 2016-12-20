@@ -342,54 +342,73 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
-        private QHTick[] tick2ToTickUpdate(ChunkFile chunk)
+        public KeyValuePair<ChunkFile[], QHTick[]> tick2ToTickUpdate(ChunkFile chunk, bool showMessages = true)
         {
-            var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.oneDate);
-            var items = HistorySerializer.Deserialize(chunk.Period, content);
-            var itemsList = new List<QHItem>();
-            var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
-            var ticks = Editor.GetTicksFromLevel2(ticksLevel2);
-            var parent = chunk.Parent;
-            List<Folder> deleteList = new List<Folder>();
-            foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
-            deleteList.ForEach(t => parent.Folders.Remove(t));
-            var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
-            var partCnt = Editor.SaveToDBParted(ticks, tickChunk);
-            for (int i = partCnt; i >= 0; i--)
+            try
             {
-                var Chunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Part = i, Parent = parent };
-                parent.Folders.Add(Chunk);
+                var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.oneDate);
+                var items = HistorySerializer.Deserialize(chunk.Period, content);
+                var itemsList = new List<QHItem>();
+                var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
+                var ticks = Editor.GetTicksFromLevel2(ticksLevel2);
+                var parent = chunk.Parent;
+                List<Folder> deleteList = new List<Folder>();
+                foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
+                deleteList.ForEach(t => parent.Folders.Remove(t));
+                var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
+                var partCnt = Editor.SaveToDBParted(ticks, tickChunk, true, showMessages);
+                List<ChunkFile> chunks = new List<ChunkFile>();
+                for (int i = partCnt; i >= 0; i--)
+                {
+                    var Chunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Part = i, Parent = parent };
+                    chunks.Add(Chunk);
+                    parent.Folders.Add(Chunk);
+                }
+                for (int i = partCnt; i >= 0; i--)
+                {
+                    var Meta = new MetaFile() { Name = "ticks meta", Period = "ticks", Part = i, Parent = parent };
+                    parent.Folders.Add(Meta);
+                }
+                return new KeyValuePair<ChunkFile[], QHTick[]>(chunks.ToArray(), ticks);
             }
-            for (int i = partCnt; i >= 0; i--)
+            catch (Exception ex)
             {
-                var Meta = new MetaFile() { Name = "ticks meta", Period = "ticks", Part = i, Parent = parent };
-                parent.Folders.Add(Meta);
-            }
-            return ticks;
+                int a = 1; }
+            return new KeyValuePair<ChunkFile[], QHTick[]>(); ;
+
         }
 
-        private KeyValuePair<QHBar[], QHBar[]> tickToM1Update(ChunkFile chunk)
+        public KeyValuePair<QHBar[], QHBar[]> tickToM1Update(ChunkFile chunk, bool showMessages = true)
         {
-            var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.allDate);
-            var items = HistorySerializer.Deserialize(chunk.Period, content);
-            var itemsList = new List<QHItem>();
-            var ticks = items as IEnumerable<QHTick>;
-            var bars = Editor.GetM1FromTicks(ticks);
-            var parent = chunk.Parent.Parent;
-            List<Folder> deleteList = new List<Folder>();
-            foreach (var f in parent.Folders) if (f.Name.Length >= 2 && f.Name.Substring(0, 2) == "M1") deleteList.Add(f);
-            deleteList.ForEach(t => parent.Folders.Remove(t));
-            var bidChunk = new ChunkFile() { Name = "M1 bid file", Period = "M1 bid", Parent = parent };
-            parent.Folders.Add(bidChunk);
-            var bidMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
-            parent.Folders.Add(bidMeta);
-            Editor.SaveToDBParted(bars.Key, bidChunk);
-            var askChunk = new ChunkFile() { Name = "M1 ask file", Period = "M1 ask", Parent = parent };
-            parent.Folders.Add(askChunk);
-            var askMeta = new MetaFile() { Name = "M1 ask meta", Period = "M1 ask", Parent = parent };
-            parent.Folders.Add(askMeta);
-            Editor.SaveToDBParted(bars.Value, askChunk);
-            return bars;
+            try
+            {
+                var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.allDate);
+                var items = HistorySerializer.Deserialize(chunk.Period, content);
+                var itemsList = new List<QHItem>();
+                var ticks = items as IEnumerable<QHTick>;
+                var bars = Editor.GetM1FromTicks(ticks);
+                var parent = chunk.Parent.Parent;
+                List<Folder> deleteList = new List<Folder>();
+                foreach (var f in parent.Folders) if (f.Name.Length >= 2 && f.Name.Substring(0, 2) == "M1") deleteList.Add(f);
+                deleteList.ForEach(t => parent.Folders.Remove(t));
+                var bidChunk = new ChunkFile() { Name = "M1 bid file", Period = "M1 bid", Parent = parent };
+                parent.Folders.Add(bidChunk);
+                var bidMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
+                parent.Folders.Add(bidMeta);
+                Editor.SaveToDBParted(bars.Key, bidChunk, true, showMessages);
+                var askChunk = new ChunkFile() { Name = "M1 ask file", Period = "M1 ask", Parent = parent };
+                parent.Folders.Add(askChunk);
+                var askMeta = new MetaFile() { Name = "M1 ask meta", Period = "M1 ask", Parent = parent };
+                parent.Folders.Add(askMeta);
+                Editor.SaveToDBParted(bars.Value, askChunk, true, showMessages); 
+                return bars;
+            }
+            catch (Exception ex)
+            {
+                int a = 1;
+            }
+            return new KeyValuePair<QHBar[], QHBar[]>();
+            
         }
 
         private bool CloseDelegate(object o, bool isCheckOnly)

@@ -47,7 +47,7 @@ namespace QuoteHistoryGUI.Dialogs
             
             _interactor = interactor;
             
-            TemplateBox.TemplateBox.Text = GetTemplates(interactor.Selection);
+            TemplateBox.TemplateBox.Text = TemplateBox.GetTemplates(interactor.Selection);
             _interactor.Selection.Clear();
             _tabs = tabs;
             _source = source;
@@ -57,23 +57,7 @@ namespace QuoteHistoryGUI.Dialogs
         {
             InitializeComponent();
         }
-        string GetTemplates(IEnumerable<Folder> selection)
-        {
-            string res = "";
-            foreach(var sel in selection)
-            {
-                string path = "";
-                var curSel = sel;
-                while (curSel != null)
-                {
-                    path = curSel.Name + "/" + path;
-                    curSel = curSel.Parent;
-                }
-                res += path.Substring(0, path.Length - 1);
-                res += ";\n";
-            }
-            return res;
-        }
+        
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             isMove = OperationTypeBox.SelectedIndex == 1;
@@ -98,7 +82,6 @@ namespace QuoteHistoryGUI.Dialogs
             CopyWorker.ProgressChanged += CopyProgressChanged;
             CopyWorker.RunWorkerCompleted += worker_Copied;
             CopyWorker.RunWorkerAsync(CopyWorker);
-            
         }
 
         private void worker_Copy(object sender, DoWorkEventArgs e)

@@ -25,13 +25,16 @@ namespace QuoteHistoryGUI.HistoryTools
                 if (Selection.Contains(current)) return;
                 current = current.Parent;
             }
-            if (!Selection.Contains(fold)) {  Selection.Add(fold); }
+            if (!Selection.Contains(fold)) { Selection.Add(fold); }
         }
 
         public void DiscardSelection()
         {
             Selection.Clear();
         }
+
+
+
         public void Copy(BackgroundWorker worker = null)
         {
             List<byte[]> deleteList = new List<byte[]>();
@@ -39,65 +42,24 @@ namespace QuoteHistoryGUI.HistoryTools
             int copiedCnt = 0;
             int copiedItemsCnt = 0;
             DateTime lastReport = DateTime.UtcNow;
-            foreach (var fold in Selection)
+
+
+
+            for (int i = 0; i < Selection.Count; i++)
             {
-                copiedCnt++;
-                if (fold as ChunkFile == null && fold as MetaFile == null)
+                var fold = Selection[i];
+                var files = Source.Editor.EnumerateFilesInFolder(fold);
+                foreach (var file in files)
                 {
-
-
-                    var path = HistoryDatabaseFuncs.GetPath(fold);
-                    int[] dateTime = { 2000, 1, 1, 0 };
-                    for (int i = 1; i < path.Count; i++)
+                    Destination.HistoryStoreDB.Put(file.Key, file.Value);
+                    copiedCnt++;
+                    if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 1)
                     {
-                        dateTime[i - 1] = int.Parse(path[i].Name);
-                    }
-
-                    foreach (var period in HistoryDatabaseFuncs.periodicityDict)
-                    {
-                        foreach (var type in HistoryDatabaseFuncs.typeDict)
-                        {
-                            var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
-                            it.Seek(key);
-
-                            while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1,true,true))
-                            {
-                                if(worker != null && (DateTime.UtcNow-lastReport).Seconds>1)    
-                                    worker.ReportProgress(1, "Copying "+ copiedCnt+"/"+Selection.Count + " match: " + copiedItemsCnt + " items");
-                                copiedItemsCnt++;
-                                Destination.HistoryStoreDB.Put(it.GetKey(), it.GetValue());
-                                it.Next();
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    byte[] key = new byte[] { } ;
-                    var path = HistoryDatabaseFuncs.GetPath(fold);
-                    int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
-                    if(fold as ChunkFile != null)
-                    {
-                        ChunkFile chunk = fold as ChunkFile;
-                        key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", chunk.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], chunk.Part);
-                        it.Seek(key);
-                    }
-                    if (fold as MetaFile != null)
-                    {
-                        MetaFile metaFile = fold as MetaFile;
-                        key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
-                        it.Seek(key);
-                    }
-                    if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
-                    {
-                        if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 1)
-                            worker.ReportProgress(1, "Copying " + copiedCnt + "/" + Selection.Count + " match: "+ copiedItemsCnt+" items");
-                        copiedItemsCnt++;
-                        Destination.HistoryStoreDB.Put(it.GetKey(), it.GetValue());
+                        worker.ReportProgress(1, "Copied " + copiedCnt + "items , processing " + (i + 1) + " of " + Selection.Count + " match");
+                        lastReport = DateTime.UtcNow;
                     }
                 }
             }
-            it.Dispose();
         }
 
         public int Delete()
@@ -107,15 +69,15 @@ namespace QuoteHistoryGUI.HistoryTools
             { MessageBox.Show("Nothing to delete.", "Delete", MessageBoxButton.OK, MessageBoxImage.Information); return 0; }
 
             var it = Source.HistoryStoreDB.CreateIterator();
-            
+
             HistoryEditor editor = new HistoryEditor(Source.HistoryStoreDB);
             foreach (var fold in sel)
-            {  
+            {
                 if (fold as ChunkFile == null && fold as MetaFile == null)
                 {
                     if (fold.Parent == null)
                     {
-                        if(Dispatcher!=null)
+                        if (Dispatcher != null)
                             Dispatcher.Invoke((Action)delegate () { Source.Folders.Remove(fold); });
                         else Source.Folders.Remove(fold);
 
@@ -140,7 +102,7 @@ namespace QuoteHistoryGUI.HistoryTools
                             var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
                             it.Seek(key);
 
-                            while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1,true,true))
+                            while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true))
                             {
                                 Source.HistoryStoreDB.Delete(it.GetKey());
                                 it.Next();
@@ -188,7 +150,7 @@ namespace QuoteHistoryGUI.HistoryTools
                                     }
                                 }
                             }
-                            
+
                         }
 
                     }
@@ -245,7 +207,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                 }
 
-                if(worker!=null && (DateTime.Now - ReportTime).Seconds > 1)
+                if (worker != null && (DateTime.Now - ReportTime).Seconds > 1)
                 {
                     worker.ReportProgress(1, sourceIter.GetKey());
                     ReportTime = DateTime.Now;

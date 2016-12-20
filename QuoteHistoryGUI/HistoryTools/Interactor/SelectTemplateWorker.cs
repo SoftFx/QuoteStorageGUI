@@ -54,18 +54,23 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
         }
 
 
-        public IEnumerable<Folder> GetByMatch(string itemplate, BackgroundWorker worker = null)
+        public IEnumerable<Folder> GetByMatch(string itemplate, BackgroundWorker worker = null, bool fillToTicksPath = false)
         {
             var templates = GetORTemplates(itemplate);
             var res = new List<Folder>();
+            DateTime lastReport = DateTime.UtcNow;
+            string mes = "";
             foreach (var template in templates)
             {
-                if (worker != null)
-                {
-                    worker.ReportProgress(1, "Matching " + template);
-                }
+                
                 var result = new List<Folder>();
-                var wordTemplates = template.Split(new char[] { '/', '\\', ';', '\t' });
+                var wordTemplates = new List<string>(template.Split(new char[] { '/', '\\', ';', '\t' }));
+                if (fillToTicksPath)
+                {
+                    while (wordTemplates.Count != 6)
+                        wordTemplates.Add("*");
+                }
+
                 var matchedFolders = new List<Folder>(_sourceTree);
                 var matchedFiles = new List<HistoryFile>();
                 var n_matchedFolders = new List<Folder>();
@@ -74,6 +79,12 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                     n_matchedFolders = new List<Folder>();
                     foreach (var folder in matchedFolders)
                     {
+                        if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
+                        {
+                            worker.ReportProgress(1, "Matching template : " + template + mes);
+                            if (mes.Length < 3) mes += "."; else mes = "";
+                            lastReport = DateTime.UtcNow;
+                        }
                         if (Match(folder.Name, wordTemplate))
                         {
                             n_matchedFolders.Add(folder);
@@ -82,6 +93,12 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                     matchedFolders = new List<Folder>();
                     foreach (var folder in n_matchedFolders)
                     {
+                        if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
+                        {
+                            worker.ReportProgress(1, "Matching template : " + template + mes);
+                            if (mes.Length < 3) mes += "."; else mes = "";
+                            lastReport = DateTime.UtcNow;
+                        }
                         if (!folder.Loaded)
                         {
                             if (folder as ChunkFile == null && folder as MetaFile == null)

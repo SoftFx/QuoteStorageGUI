@@ -24,5 +24,24 @@ namespace QuoteHistoryGUI.Dialogs
         {
             InitializeComponent();
         }
+
+        public string GetTemplates(IEnumerable<Folder> selection)
+        {
+            string res = "";
+            foreach (var sel in selection)
+            {
+                string path = "";
+                var curSel = sel;
+                while (curSel != null)
+                {
+                    path = curSel.Name + "/" + path;
+                    curSel = curSel.Parent;
+                }
+                res += path.Substring(0, path.Length - 1);
+                res += ";\n";
+            }
+            return res;
+        }
+
     }
 }

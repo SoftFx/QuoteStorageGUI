@@ -37,7 +37,7 @@
             <Button Name="OpenButton" Content="Open"  Width="60"  Margin="5" Command="{Binding OpenBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />
             <Button Name="ImportButton" Content="Import" Grid.Column="1"  Width="60"  Margin="5" Command="{Binding ImportBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />
             <Button Name="СreateButton" Content="Сreate" Grid.Column="2"  Width="60"  Margin="5" Command="{Binding CreateBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />
-            <Button Name="UpstreamButton" Content="Upstream" Grid.Column="3"  Width="60"  Margin="5" Command="{Binding CreateBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />
+            <Button Name="UpstreamButton" Content="Upstream" Grid.Column="3"  Width="60"  Margin="5" Command="{Binding UpdateBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />
 
         </Grid>
 
