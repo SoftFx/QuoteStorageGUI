@@ -37,7 +37,8 @@ namespace QuoteHistoryGUI.Dialogs
         {
             InitializeComponent();
             Level2Box.IsChecked = true;
-            TemplateBox.TemplateBox.Text = TemplateBox.GetTemplates(interactor.Selection);
+            TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
+                HistoryInteractor.GetTemplates(interactor.Selection));
             _interactor = interactor;
             _interactor.Selection.Clear();
             _source = source;
@@ -50,7 +51,7 @@ namespace QuoteHistoryGUI.Dialogs
             is2levelUpstream = Level2Box.IsChecked.HasValue && Level2Box.IsChecked.Value;
 
             temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
-            templateText = TemplateBox.TemplateBox.Text;
+            templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
 
             Upstreaming = true;
             UpstreamButton.IsEnabled = false;

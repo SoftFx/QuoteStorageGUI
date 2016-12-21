@@ -47,9 +47,8 @@ namespace QuoteHistoryGUI.Dialogs
             
             _interactor = interactor;
             
-            //TemplateBox.TemplateBox.Text = GetTemplates(interactor.Selection);
             TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
-                GetTemplates(interactor.Selection));
+                HistoryInteractor.GetTemplates(interactor.Selection));
             _interactor.Selection.Clear();
             _tabs = tabs;
             _source = source;
@@ -58,43 +57,6 @@ namespace QuoteHistoryGUI.Dialogs
         public CopyDialog()
         {
             InitializeComponent();
-        }
-
-        //string GetTemplates(IEnumerable<Folder> selection)
-        //{
-        //    string res = "";
-        //    foreach(var sel in selection)
-        //    {
-        //        string path = "";
-        //        var curSel = sel;
-        //        while (curSel != null)
-        //        {
-        //            path = curSel.Name + "/" + path;
-        //            curSel = curSel.Parent;
-        //        }
-        //        res += path.Substring(0, path.Length - 1);
-        //        res += ";\n";
-        //    }
-        //    return res;
-        //}
-
-        IEnumerable<string> GetTemplates(IEnumerable<Folder> selection)
-        {
-            List<string> result = new List<string>();
-            foreach (var sel in selection)
-            {
-                string res = "";
-                string path = "";
-                var curSel = sel;
-                while (curSel != null)
-                {
-                    path = curSel.Name + "/" + path;
-                    curSel = curSel.Parent;
-                }
-                res += path.Substring(0, path.Length - 1);
-                result.Add(res);
-            }
-            return result;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

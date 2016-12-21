@@ -17,6 +17,25 @@ namespace QuoteHistoryGUI.HistoryTools
         public Dispatcher Dispatcher;
         public List<Folder> Selection = new List<Folder>();
 
+        public static IEnumerable<string> GetTemplates(IEnumerable<Folder> selection)
+        {
+            List<string> result = new List<string>();
+            foreach (var sel in selection)
+            {
+                string res = "";
+                string path = "";
+                var curSel = sel;
+                while (curSel != null)
+                {
+                    path = curSel.Name + "/" + path;
+                    curSel = curSel.Parent;
+                }
+                res += path.Substring(0, path.Length - 1);
+                result.Add(res);
+            }
+            return result;
+        }
+
         public void AddToSelection(Folder fold)
         {
             Folder current = fold.Parent;
