@@ -4,19 +4,71 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:QuoteHistoryGUI.Dialogs"
-             mc:Ignorable="d" 
-             d:DesignHeight="200" d:DesignWidth="300">
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style x:Key="ComboBoxWithCheckBoxesStyle" TargetType="{x:Type ComboBox}">
+            <Setter Property="IsEditable" Value="True"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="ItemsSource" Value="{Binding Path=Source}"/>
+            <Setter Property="Text" Value="{Binding Path=Text}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="{x:Type local:SelectableItem}">
+                        <CheckBox Content="{Binding Text}" IsChecked="{Binding IsChecked}"/>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ListBoxTemplatesStyle" TargetType="{x:Type ListBox}">
+            <Setter Property="ItemsSource" Value="{Binding Path=Source}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate DataType="{x:Type local:SelectableItem}">
+                        <Grid HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="28"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Text="{Binding Path=Value, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Button Grid.Column="1" Content="X" ToolTip="Delete" Margin="2" Click="RemoveButtonClick" CommandParameter="{Binding }"/>
+                        </Grid>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="35"/>
-            <RowDefinition/>
-            <RowDefinition/>
+            <RowDefinition Height="28"/>
+            <RowDefinition Height="28"/>
+            <RowDefinition MinHeight="80"/>
         </Grid.RowDefinitions>
-        <TextBox Name="TemplateBox" Grid.Row="1" Grid.ColumnSpan="3" Grid.RowSpan="2" Margin="5"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="70"/>
+        </Grid.ColumnDefinitions>
+        <Label Grid.Column="0" Grid.Row="0" Content="Symbol"/>
+        <Label Grid.Column="1" Grid.Row="0" Content="[/Year"/>
+        <Label Grid.Column="2" Grid.Row="0" Content="[/Month"/>
+        <Label Grid.Column="3" Grid.Row="0" Content="[/Day"/>
+        <Label Grid.Column="4" Grid.Row="0" Content="[/Hour"/>
+        <Label Grid.Column="5" Grid.Row="0" Content="[/File]]]]]"/>
+        <ComboBox Grid.Column="0" Grid.Row="1" DataContext="{Binding Path=Symbols}" Style="{StaticResource ComboBoxWithCheckBoxesStyle}"/>
+        <ComboBox Grid.Column="1" Grid.Row="1" DataContext="{Binding Path=Years}" Style="{StaticResource ComboBoxWithCheckBoxesStyle}"/>
+        <ComboBox Grid.Column="2" Grid.Row="1" DataContext="{Binding Path=Months}" Style="{StaticResource ComboBoxWithCheckBoxesStyle}"/>
+        <ComboBox Grid.Column="3" Grid.Row="1" DataContext="{Binding Path=Days}" Style="{StaticResource ComboBoxWithCheckBoxesStyle}"/>
+        <ComboBox Grid.Column="4" Grid.Row="1" DataContext="{Binding Path=Hours}" Style="{StaticResource ComboBoxWithCheckBoxesStyle}"/>
+        <ComboBox Grid.Column="5" Grid.Row="1" DataContext="{Binding Path=Ticks}" Style="{StaticResource ComboBoxWithCheckBoxesStyle}"/>
+        <Button Content="Add" Grid.Column="6" Grid.Row="1" Margin="4,2" Click="AddButtonClick"/>
+        <ListBox Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="7" DataContext="{Binding Path=Templates}" Style="{StaticResource ListBoxTemplatesStyle}"/>
     </Grid>
 </UserControl>

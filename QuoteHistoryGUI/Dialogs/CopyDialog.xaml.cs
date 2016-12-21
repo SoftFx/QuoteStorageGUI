@@ -47,7 +47,9 @@ namespace QuoteHistoryGUI.Dialogs
             
             _interactor = interactor;
             
-            TemplateBox.TemplateBox.Text = GetTemplates(interactor.Selection);
+            //TemplateBox.TemplateBox.Text = GetTemplates(interactor.Selection);
+            TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
+                GetTemplates(interactor.Selection));
             _interactor.Selection.Clear();
             _tabs = tabs;
             _source = source;
@@ -57,11 +59,31 @@ namespace QuoteHistoryGUI.Dialogs
         {
             InitializeComponent();
         }
-        string GetTemplates(IEnumerable<Folder> selection)
+
+        //string GetTemplates(IEnumerable<Folder> selection)
+        //{
+        //    string res = "";
+        //    foreach(var sel in selection)
+        //    {
+        //        string path = "";
+        //        var curSel = sel;
+        //        while (curSel != null)
+        //        {
+        //            path = curSel.Name + "/" + path;
+        //            curSel = curSel.Parent;
+        //        }
+        //        res += path.Substring(0, path.Length - 1);
+        //        res += ";\n";
+        //    }
+        //    return res;
+        //}
+
+        IEnumerable<string> GetTemplates(IEnumerable<Folder> selection)
         {
-            string res = "";
-            foreach(var sel in selection)
+            List<string> result = new List<string>();
+            foreach (var sel in selection)
             {
+                string res = "";
                 string path = "";
                 var curSel = sel;
                 while (curSel != null)
@@ -70,10 +92,11 @@ namespace QuoteHistoryGUI.Dialogs
                     curSel = curSel.Parent;
                 }
                 res += path.Substring(0, path.Length - 1);
-                res += ";\n";
+                result.Add(res);
             }
-            return res;
+            return result;
         }
+
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             isMove = OperationTypeBox.SelectedIndex == 1;
@@ -88,7 +111,7 @@ namespace QuoteHistoryGUI.Dialogs
             }
 
             temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
-            templateText = TemplateBox.TemplateBox.Text;
+            templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
 
             IsCopying = true;
             CopyButton.IsEnabled = false;
@@ -98,7 +121,6 @@ namespace QuoteHistoryGUI.Dialogs
             CopyWorker.ProgressChanged += CopyProgressChanged;
             CopyWorker.RunWorkerCompleted += worker_Copied;
             CopyWorker.RunWorkerAsync(CopyWorker);
-            
         }
 
         private void worker_Copy(object sender, DoWorkEventArgs e)
