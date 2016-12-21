@@ -138,7 +138,7 @@ namespace QuoteHistoryGUI.HistoryTools
             return result.ToArray();
         }
 
-        public int SaveToDBParted(IEnumerable<QHItem> items, ChunkFile file, bool rebuildMeta = true)
+        public int SaveToDBParted(IEnumerable<QHItem> items, ChunkFile file, bool rebuildMeta = true, bool showMessages = true)
         {
             ChunkFile f = new ChunkFile(file.Name,file.Period, 0, file.Parent);
             int part = 0;
@@ -149,12 +149,12 @@ namespace QuoteHistoryGUI.HistoryTools
                 {
                     f.Part = part;
                     part++;
-                    SaveToDB(HistorySerializer.Serialize(chunk), f);
+                    SaveToDB(HistorySerializer.Serialize(chunk), f, showMessages);
                     chunk = new List<QHItem>();
                 }
                 chunk.Add(item);
             }
-            if (chunk.Count != 0) SaveToDB(HistorySerializer.Serialize(chunk), f); else part--;
+            if (chunk.Count != 0) SaveToDB(HistorySerializer.Serialize(chunk), f, showMessages); else part--;
             return part;
         }
 
@@ -163,7 +163,7 @@ namespace QuoteHistoryGUI.HistoryTools
             return items.Count()/MaxCountPerChunk+ items.Count()%MaxCountPerChunk>0?1:0;
         }
 
-        public void SaveToDB(byte[] content, ChunkFile f)
+        public void SaveToDB(byte[] content, ChunkFile f, bool showMessages = true)
         {
             try
             {
@@ -171,6 +171,7 @@ namespace QuoteHistoryGUI.HistoryTools
             }
             catch
             {
+                
                 MessageBox.Show("There is a syntax error! Unable to save.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.MainWindow.Activate();
                 return;
@@ -212,7 +213,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
             _dbase.Put(key, value);
 
-            RebuildMeta(f);
+            RebuildMeta(f, showMessages);
         }
 
 
@@ -378,6 +379,59 @@ namespace QuoteHistoryGUI.HistoryTools
             parent.Folders.Add(meta);
             //SaveToDB(content, chunk);
             RebuildMeta(chunk);
+        }
+
+        public IEnumerable<KeyValuePair<byte[], byte[]>> EnumerateFilesInFolder(Folder fold)
+        {
+            var it = _dbase.CreateIterator();
+
+            if (fold as ChunkFile == null && fold as MetaFile == null)
+            {
+                var path = HistoryDatabaseFuncs.GetPath(fold);
+                int[] dateTime = { 2000, 1, 1, 0 };
+                for (int i = 1; i < path.Count; i++)
+                {
+                    dateTime[i - 1] = int.Parse(path[i].Name);
+                }
+
+                foreach (var period in HistoryDatabaseFuncs.periodicityDict)
+                {
+                    foreach (var type in HistoryDatabaseFuncs.typeDict)
+                    {
+                        var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
+                        it.Seek(key);
+                        while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true))
+                        {
+                            yield return new KeyValuePair<byte[], byte[]>(it.GetKey(), it.GetValue());
+                            it.Next();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                byte[] key = new byte[] { };
+                var path = HistoryDatabaseFuncs.GetPath(fold);
+                int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
+                if (fold as ChunkFile != null)
+                {
+                    ChunkFile chunk = fold as ChunkFile;
+                    key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", chunk.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], chunk.Part);
+                    it.Seek(key);
+                }
+                if (fold as MetaFile != null)
+                {
+                    MetaFile metaFile = fold as MetaFile;
+                    key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
+                    it.Seek(key);
+                }
+                if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                {
+                    yield return new KeyValuePair<byte[], byte[]>(it.GetKey(), it.GetValue());
+                }
+            }
+
+            it.Dispose();
         }
     }
    

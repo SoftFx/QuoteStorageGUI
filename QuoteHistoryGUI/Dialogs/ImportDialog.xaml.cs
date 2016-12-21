@@ -145,7 +145,7 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void ImportCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            ReportBlock.Text = "Import Completed";
+            ReportBlock.Text = "\nImport Completed";
             if (isUIVersion)
                 MessageBox.Show("Import Completed", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
             else Console.Out.WriteLine("Import Completed!");
@@ -157,7 +157,7 @@ namespace QuoteHistoryGUI.Dialogs
             var key = e.UserState as byte[];
             var entry = HistoryDatabaseFuncs.DeserealizeKey(key);
             ReportBlock.Text = entry.Symbol + " "+entry.Time.ToString();
-            if(!isUIVersion) Console.Write("\r{0}%   ", ReportBlock.Text);
+            if(!isUIVersion) Console.Write("\r{0}", ReportBlock.Text);
         }
     }
 }

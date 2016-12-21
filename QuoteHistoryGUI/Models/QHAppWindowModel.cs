@@ -145,6 +145,7 @@ namespace QuoteHistoryGUI.Models
             Interactor = new HistoryInteractor();
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
             ImportBtnClick = new SingleDelegateCommand(ImportDelegate);
+            UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
             CreateBtnClick = new SingleDelegateCommand(CreateDelegate);
             StorageTabs = new ObservableCollection<StorageInstanceModel>();
             MasterStorage = new ObservableCollection<StorageInstanceModel>();
@@ -205,6 +206,24 @@ namespace QuoteHistoryGUI.Models
                 return true;
             }
         }
+
+        private bool UpdateDelegate(object o, bool isCheckOnly)
+        {
+            if (isCheckOnly)
+                return true;
+            else
+            {
+                Interactor.DiscardSelection();
+                MasterStorage[0].Selection.ForEach(t => { Interactor.AddToSelection(t); });
+                
+                var dlg = new UpstreamDialog(MasterStorage.Count > 0 ? MasterStorage[0] : null, Interactor)
+                {
+                    Owner = Application.Current.MainWindow
+                };
+                dlg.ShowDialog();
+                return true;
+            }
+        }
         private bool CreateDelegate(object o, bool isCheckOnly)
         {
 
@@ -239,6 +258,7 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
+
                 var dlg = new CopyDialog()
                 {
                     Owner = Application.Current.MainWindow
