@@ -196,7 +196,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 zipStream.SetLevel(3); //0-9, 9 being the highest level of compression
 
-                ZipEntry newEntry = new ZipEntry(f.Period+""+(f.Part==0?"": ("."+f.Part.ToString())) + ".txt");
+                ZipEntry newEntry = new ZipEntry(f.Period+".txt");
                 newEntry.DateTime = DateTime.Now;
 
                 zipStream.PutNextEntry(newEntry);
