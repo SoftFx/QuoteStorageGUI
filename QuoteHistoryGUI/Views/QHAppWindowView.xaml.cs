@@ -27,7 +27,7 @@ namespace QuoteHistoryGUI.Views
         private readonly QHAppWindowModel _model;
         public QHAppWindowView()
         {        
-            DataContext = _model = new QHAppWindowModel();
+            DataContext = _model = new QHAppWindowModel(this.Dispatcher);
             InitializeComponent();
         }
         private void Window_ContentRendered(object sender, EventArgs e)
@@ -45,7 +45,7 @@ namespace QuoteHistoryGUI.Views
             {
                 if (dlg.StoragePath.Text != "")
                 {
-                    var tab = new StorageInstanceModel(dlg.StoragePath.Text, _model.Interactor, (bool)dlg.ReadOnlyBox.IsChecked?StorageInstanceModel.OpenMode.ReadOnly:StorageInstanceModel.OpenMode.ReadWrite);
+                    var tab = new StorageInstanceModel(dlg.StoragePath.Text, this.Dispatcher, _model.Interactor, (bool)dlg.ReadOnlyBox.IsChecked?StorageInstanceModel.OpenMode.ReadOnly:StorageInstanceModel.OpenMode.ReadWrite);
                     if (tab.Status == "Ok")
                         _model.TryToAddStorage(tab);
                     else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);

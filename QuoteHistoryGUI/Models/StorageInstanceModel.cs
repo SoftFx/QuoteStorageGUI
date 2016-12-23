@@ -1,6 +1,7 @@
 ﻿using LevelDB;
 using QuoteHistoryGUI.Dialogs;
 using QuoteHistoryGUI.HistoryTools;
+using QuoteHistoryGUI.HistoryTools.MetaStorage;
 using QuoteHistoryGUI.Views;
 using System;
 using System.Collections.Generic;
@@ -38,7 +39,7 @@ namespace QuoteHistoryGUI.Models
         public string Status = "";
         public HistoryEditor Editor;
 
-        public StorageInstanceModel(string path, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite)
+        public StorageInstanceModel(string path, Dispatcher dispatcher, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite)
         {
             openMode = mode;
             StoragePath = path;
@@ -51,6 +52,7 @@ namespace QuoteHistoryGUI.Models
             RefreshBtnClick = new SingleDelegateCommand(RefreshDelegate);
             CloseBtnClick = new SingleDelegateCommand(CloseDelegate);
             UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
+            _dispatcher = dispatcher;
         }
 
 
@@ -60,6 +62,8 @@ namespace QuoteHistoryGUI.Models
 
         private HistoryFile _currentFile;
         private ObservableCollection<Folder> _folders;
+        
+        public MetaStorage MetaStorage;
 
         public DB HistoryStoreDB { get { return _historyStoreDB; } }
         public List<Folder> Selection;
@@ -70,6 +74,8 @@ namespace QuoteHistoryGUI.Models
         public ICommand RefreshBtnClick { get; private set; }
         public ICommand CloseBtnClick { get; private set; }
         public ICommand UpdateBtnClick { get; private set; }
+
+        private Dispatcher _dispatcher;
 
         public ObservableCollection<Folder> Folders
         {
@@ -150,7 +156,7 @@ namespace QuoteHistoryGUI.Models
                 _historyStoreDB = new DB(path + "\\HistoryDB",
                         new Options() { BloomFilter = new BloomFilterPolicy(10) });
                 Editor = new HistoryEditor(_historyStoreDB);
-                HistoryLoader hl = new HistoryLoader(Application.Current.Dispatcher, _historyStoreDB);
+                HistoryLoader hl = new HistoryLoader(_dispatcher, _historyStoreDB);
                 hl.ReadSymbols(Folders);
             }
             catch (Exception ex)
@@ -168,13 +174,13 @@ namespace QuoteHistoryGUI.Models
             if (!f.Loaded)
             {
                 f.Loaded = true;
-                var ha = new HistoryLoader(Application.Current.Dispatcher, HistoryStoreDB);
+                var ha = new HistoryLoader(_dispatcher, HistoryStoreDB);
                 ha.ReadDateTimesAsync(f, Editor);
             }
         }
         public void Refresh()
         {
-            HistoryLoader hl = new HistoryLoader(Application.Current.Dispatcher, _historyStoreDB);
+            HistoryLoader hl = new HistoryLoader(_dispatcher, _historyStoreDB);
             hl.Refresh(Folders);
         }
 
@@ -363,7 +369,7 @@ namespace QuoteHistoryGUI.Models
             var parent = chunk.Parent;
             List<Folder> deleteList = new List<Folder>();
             foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
-            deleteList.ForEach(t => parent.Folders.Remove(t));
+            deleteList.ForEach(t => _dispatcher.Invoke(()=>parent.Folders.Remove(t)));
             var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
             var partCnt = Editor.SaveToDBParted(ticks, tickChunk, true, showMessages);
             List<ChunkFile> chunks = new List<ChunkFile>();
@@ -371,12 +377,12 @@ namespace QuoteHistoryGUI.Models
             {
                 var Chunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Part = i, Parent = parent };
                 chunks.Add(Chunk);
-                parent.Folders.Add(Chunk);
+                _dispatcher.Invoke(() => parent.Folders.Add(Chunk));
             }
             for (int i = partCnt; i >= 0; i--)
             {
                 var Meta = new MetaFile() { Name = "ticks meta", Period = "ticks", Part = i, Parent = parent };
-                parent.Folders.Add(Meta);
+                _dispatcher.Invoke(() => parent.Folders.Add(Meta));
             }
             return new KeyValuePair<ChunkFile[], QHTick[]>(chunks.ToArray(), ticks);
 
@@ -394,17 +400,18 @@ namespace QuoteHistoryGUI.Models
             var bars = Editor.GetM1FromTicks(ticks);
             var parent = chunk.Parent.Parent;
             List<Folder> deleteList = new List<Folder>();
+            
             foreach (var f in parent.Folders) if (f.Name.Length >= 2 && f.Name.Substring(0, 2) == "M1") deleteList.Add(f);
-            deleteList.ForEach(t => parent.Folders.Remove(t));
+            deleteList.ForEach(t => _dispatcher.Invoke(() => parent.Folders.Remove(t)));
             var bidChunk = new ChunkFile() { Name = "M1 bid file", Period = "M1 bid", Parent = parent };
-            parent.Folders.Add(bidChunk);
+            _dispatcher.Invoke(() => parent.Folders.Add(bidChunk));
             var bidMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
-            parent.Folders.Add(bidMeta);
+            _dispatcher.Invoke(() => parent.Folders.Add(bidMeta));
             Editor.SaveToDBParted(bars.Key, bidChunk, true, showMessages);
             var askChunk = new ChunkFile() { Name = "M1 ask file", Period = "M1 ask", Parent = parent };
-            parent.Folders.Add(askChunk);
+            _dispatcher.Invoke(() => parent.Folders.Add(askChunk));
             var askMeta = new MetaFile() { Name = "M1 ask meta", Period = "M1 ask", Parent = parent };
-            parent.Folders.Add(askMeta);
+            _dispatcher.Invoke(() => parent.Folders.Add(askMeta));
             Editor.SaveToDBParted(bars.Value, askChunk, true, showMessages);
             return bars;
 

@@ -90,6 +90,7 @@
     <Compile Include="HistoryTools\HistoryDatabaseFuncs.cs" />
     <Compile Include="HistoryTools\Interactor\HistoryInteractor.cs" />
     <Compile Include="HistoryTools\Interactor\SelectTemplateWorker.cs" />
+    <Compile Include="HistoryTools\MetaStorage\MetaStorage.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="Views\StorageExplorerView.xaml.cs">
       <DependentUpon>StorageExplorerView.xaml</DependentUpon>

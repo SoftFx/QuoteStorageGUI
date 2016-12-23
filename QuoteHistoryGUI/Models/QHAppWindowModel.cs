@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -24,6 +25,7 @@ namespace QuoteHistoryGUI.Models
         #region INotifyPropertyChanged
 
         public event PropertyChangedEventHandler PropertyChanged;
+        public Dispatcher Dispatcher;
 
         private string _version;
         public string Version {
@@ -141,16 +143,18 @@ namespace QuoteHistoryGUI.Models
 
         HistoryEditor _historyReader;
         public HistoryInteractor Interactor;
-        public QHAppWindowModel() {
+        public QHAppWindowModel(Dispatcher dispatcher) {
             Interactor = new HistoryInteractor();
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
             ImportBtnClick = new SingleDelegateCommand(ImportDelegate);
             UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
             CreateBtnClick = new SingleDelegateCommand(CreateDelegate);
+            ExportBtnClick = new SingleDelegateCommand(ExportDelegate);
             StorageTabs = new ObservableCollection<StorageInstanceModel>();
             MasterStorage = new ObservableCollection<StorageInstanceModel>();
             SlaveStorage = new ObservableCollection<StorageInstanceModel>();
             CopyContextBtnClick = new SingleDelegateCommand(CopyContextDelegate);
+            Dispatcher = dispatcher;
             try {
                 StreamReader r = File.OpenText("version.txt");
                 Version = "QuoteStorageGUI build: " + r.ReadLine();
@@ -168,6 +172,7 @@ namespace QuoteHistoryGUI.Models
         public ICommand CreateBtnClick { get; private set; }
         public ICommand CopyContextBtnClick { get; private set; }
         public ICommand UpdateBtnClick { get; private set; }
+        public ICommand ExportBtnClick { get; private set; }
         private bool OpenBaseDelegate(object o, bool isCheckOnly)
         {
 
@@ -182,7 +187,7 @@ namespace QuoteHistoryGUI.Models
                 dlg.ShowDialog();
                 if (dlg.StoragePath.Text != "")
                 {
-                    var tab = new StorageInstanceModel(dlg.StoragePath.Text, Interactor,(bool)dlg.ReadOnlyBox.IsChecked?StorageInstanceModel.OpenMode.ReadOnly:StorageInstanceModel.OpenMode.ReadWrite);
+                    var tab = new StorageInstanceModel(dlg.StoragePath.Text,this.Dispatcher, this. Interactor,(bool)dlg.ReadOnlyBox.IsChecked?StorageInstanceModel.OpenMode.ReadOnly:StorageInstanceModel.OpenMode.ReadWrite);
                     if (tab.Status == "Ok")
                         TryToAddStorage(tab);
                     else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
@@ -203,6 +208,40 @@ namespace QuoteHistoryGUI.Models
                     Owner = Application.Current.MainWindow
                 };
                 dlg.ShowDialog();
+                return true;
+            }
+        }
+
+        private bool ExportDelegate(object o, bool isCheckOnly)
+        {
+
+            if (isCheckOnly)
+                return true;
+            else
+            {
+                LastSelected = "M1 ask read";
+                var fold = MasterStorage[0].Folders.Where(t => t.Name == "NMCBTC").First(); ;
+                HistoryLoader hl = new HistoryLoader(Application.Current.Dispatcher, MasterStorage[0].HistoryStoreDB);
+                Stopwatch w = new Stopwatch();
+                w.Reset();
+                w.Start();
+//                string ask = hl.ReadMeta(fold.Name, "M1 ask");
+//                string bid = hl.ReadMeta(fold.Name, "M1 bid");
+                w.Stop();
+
+                Stopwatch w1 = new Stopwatch();
+                w1.Reset();
+                w1.Start();
+//                string ticks = hl.ReadMeta(fold.Name, "ticks");
+                w1.Stop();
+
+                Stopwatch w2 = new Stopwatch();
+                w2.Reset();
+                w2.Start();
+    //            string level2 = hl.ReadMeta(fold, "ticks level2");
+                w2.Stop();
+
+  //              MessageBox.Show("M1: "+ask+"/"+bid+" " + w.ElapsedMilliseconds + " ms\n" + "ticks: "+ticks+" " + w1.ElapsedMilliseconds + " ms\nlevel2: "+level2+" " + w2.ElapsedMilliseconds + " ms");
                 return true;
             }
         }
@@ -241,7 +280,7 @@ namespace QuoteHistoryGUI.Models
                     var historyStoreDB = new DB(path + "\\HistoryDB",
                             new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
                     historyStoreDB.Dispose();
-                    var tab = new StorageInstanceModel(path, Interactor, StorageInstanceModel.OpenMode.ReadWrite);
+                    var tab = new StorageInstanceModel(path, this.Dispatcher, Interactor, StorageInstanceModel.OpenMode.ReadWrite);
                     if (tab.Status == "Ok")
                         TryToAddStorage(tab);
                     else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);

@@ -48,13 +48,13 @@
             <RowDefinition MinHeight="80"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="60"/>
-            <ColumnDefinition Width="60"/>
-            <ColumnDefinition Width="60"/>
-            <ColumnDefinition Width="60"/>
-            <ColumnDefinition Width="60"/>
-            <ColumnDefinition Width="60"/>
-            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Label Grid.Column="0" Grid.Row="0" Content="Symbol"/>
         <Label Grid.Column="1" Grid.Row="0" Content="[/Year"/>

@@ -34,7 +34,7 @@ namespace QuoteHistoryGUI.Views
                     new ImportDialog().Show();
                     break;
                 case AppMode.Console:
-                    new ImportDialog(new Models.StorageInstanceModel(Destination), new Models.StorageInstanceModel(Source)).DoImport(false);
+                    new ImportDialog(new Models.StorageInstanceModel(Destination, this.Dispatcher), new Models.StorageInstanceModel(Source, this.Dispatcher)).DoImport(false);
                     break;
                 default:
                     new QHAppWindowView().ShowDialog();

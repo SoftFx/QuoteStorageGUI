@@ -62,7 +62,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 SourcePath.Text = dlg.SelectedPath;
-                Interactor.Source = new StorageInstanceModel(dlg.SelectedPath, Interactor);
+                Interactor.Source = new StorageInstanceModel(dlg.SelectedPath, Owner.Dispatcher, Interactor);
             }
             if (Interactor.Source!=null && Interactor.Source.Status != "Ok")
             {
@@ -82,7 +82,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 DestinationPath.Text = dlg.SelectedPath;
-                Interactor.Destination = new StorageInstanceModel(dlg.SelectedPath, Interactor);
+                Interactor.Destination = new StorageInstanceModel(dlg.SelectedPath, Owner.Dispatcher, Interactor);
             }
             if (Interactor.Source != null && Interactor.Destination.Status != "Ok")
             {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace QuoteHistoryGUI.HistoryTools
 {
-    static class HistoryDatabaseFuncs
+    public static class HistoryDatabaseFuncs
     {
         static public readonly Dictionary<string, byte> periodicityDict = new Dictionary<string, byte>()
         {

@@ -31,6 +31,7 @@
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="70"/>
                 <ColumnDefinition Width="148"/>
             </Grid.ColumnDefinitions>
 
@@ -38,7 +39,7 @@
             <Button Name="ImportButton" Content="Import" Grid.Column="1"  Width="60"  Margin="5" Command="{Binding ImportBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />
             <Button Name="СreateButton" Content="Сreate" Grid.Column="2"  Width="60"  Margin="5" Command="{Binding CreateBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />
             <Button Name="UpstreamButton" Content="Upstream" Grid.Column="3"  Width="60"  Margin="5" Command="{Binding UpdateBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />
-
+            <Button Name="Export" Content="Export" Grid.Column="4"  Width="60"  Margin="5" Command="{Binding ExportBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />
         </Grid>
 
         <Border BorderThickness="2" Grid.Row="2">
