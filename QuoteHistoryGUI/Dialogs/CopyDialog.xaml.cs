@@ -29,6 +29,7 @@ namespace QuoteHistoryGUI.Dialogs
         ObservableCollection<StorageInstanceModel> _tabs;
         BackgroundWorker CopyWorker;
         bool IsCopying = false;
+        bool isMetaMatching = true;
         StorageInstanceModel _source;
         StorageInstanceModel _destination;
         SelectTemplateWorker temW;
@@ -36,7 +37,9 @@ namespace QuoteHistoryGUI.Dialogs
         bool isMove = false;
         public CopyDialog(StorageInstanceModel source, ObservableCollection<StorageInstanceModel> tabs, HistoryInteractor interactor)
         {
+            
             InitializeComponent();
+            this.MetaMatching.IsChecked = true;
             Source.Text = source.StoragePath;
             foreach(var tab in tabs)
             {
@@ -76,6 +79,7 @@ namespace QuoteHistoryGUI.Dialogs
             templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
 
             IsCopying = true;
+            isMetaMatching = this.MetaMatching.IsChecked.HasValue && this.MetaMatching.IsChecked.Value;
             CopyButton.IsEnabled = false;
             CopyWorker.WorkerReportsProgress=true;
             CopyWorker.WorkerSupportsCancellation = true;
@@ -87,24 +91,35 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void worker_Copy(object sender, DoWorkEventArgs e)
         {
-            var templates = templateText.Split(new char[] { ';', ',', '\n', '\r' });
-            var matched = new List<Folder>();
             BackgroundWorker worker = e.Argument as BackgroundWorker;
-            foreach (var templ in templates)
-                if (templ != "")
-                    matched.AddRange(temW.GetByMatch(templ, worker));
-            foreach (var match in matched)
+            var templates = templateText.Split(new char[] { ';', ',', '\n', '\r' });
+            if (isMetaMatching)
             {
-                _interactor.AddToSelection(match);
+                var templList = new List<string>(templates);
+                var matchEnum = temW.GetFromMetaByMatch(templList, _source, worker);
+                _interactor.Copy(matchEnum, worker);
             }
-
-            
-            _interactor.Copy(worker);
-            if (isMove)
+            else
             {
-                _interactor.Dispatcher = Dispatcher;
-                _interactor.Delete();
-                _interactor.Dispatcher = null;
+                var matched = new List<Folder>();
+
+
+                foreach (var templ in templates)
+                    if (templ != "")
+                        matched.AddRange(temW.GetByMatch(templ, worker));
+                foreach (var match in matched)
+                {
+                    _interactor.AddToSelection(match);
+                }
+
+
+                _interactor.Copy(worker);
+                if (isMove)
+                {
+                    _interactor.Dispatcher = Dispatcher;
+                    _interactor.Delete();
+                    _interactor.Dispatcher = null;
+                }
             }
             _interactor.Destination.Refresh();
         }

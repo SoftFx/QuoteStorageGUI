@@ -1,9 +1,11 @@
-﻿using System;
+﻿using QuoteHistoryGUI.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static QuoteHistoryGUI.HistoryTools.HistoryDatabaseFuncs;
 
 namespace QuoteHistoryGUI.HistoryTools.Interactor
 {
@@ -23,7 +25,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
             var ind = template.IndexOf('(');
             if (ind == -1)
                 return new string[] { template };
-            result.Add(template.Substring(0,ind));
+            result.Add(template.Substring(0, ind));
             var curTemplate = template.Substring(ind + 1);
             while (true)
             {
@@ -36,9 +38,9 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                 }
                 var alternatives = curTemplate.Substring(0, closeInd).Split('|');
                 List<string> tempRes = new List<string>();
-                foreach(var alt in alternatives)
+                foreach (var alt in alternatives)
                 {
-                    foreach(var temp in result)
+                    foreach (var temp in result)
                     {
                         tempRes.Add(temp + alt);
                     }
@@ -47,7 +49,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                 curTemplate = curTemplate.Substring(closeInd + 1);
                 ind = curTemplate.IndexOf('(');
                 if (ind == -1) { for (int i = 0; i < result.Count(); i++) { result[i] += curTemplate; } break; }
-                for (int i = 0; i < result.Count(); i++) { result[i] += curTemplate.Substring(0,ind); }
+                for (int i = 0; i < result.Count(); i++) { result[i] += curTemplate.Substring(0, ind); }
                 curTemplate = curTemplate.Substring(ind + 1);
             }
             return result.ToArray();
@@ -62,7 +64,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
             string mes = "";
             foreach (var template in templates)
             {
-                
+
                 var result = new List<Folder>();
                 var wordTemplates = new List<string>(template.Split(new char[] { '/', '\\', ';', '\t' }));
                 if (fillToTicksPath)
@@ -117,67 +119,80 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
             return res;
         }
 
-        public IEnumerable<Folder> GetFromMetaByMatch(string itemplate, BackgroundWorker worker = null, bool fillToTicksPath = false)
+        List<string> getPathFromMetaEntry(DBEntry entry)
         {
-            var templates = GetORTemplates(itemplate);
-            var res = new List<Folder>();
+            List<string> result = new List<string>();
+            result.Add(entry.Symbol);
+            result.Add(entry.Time.Year.ToString());
+            result.Add(entry.Time.Month.ToString());
+            result.Add(entry.Time.Day.ToString());
+            if (entry.Period != "M1 bid" && entry.Period != "M1 ask")
+            {
+                result.Add(entry.Time.Hour.ToString());
+            }
+            result.Add(entry.Period);
+            return result;
+        }
+
+        public IEnumerable<DBEntry> GetFromMetaByMatch(List<string> itemplates, StorageInstanceModel source, BackgroundWorker worker = null, bool fillToTicksPath = false)
+        {
             DateTime lastReport = DateTime.UtcNow;
-            string mes = "";
+            var templates = new List<string>();
+            foreach (var orTemplate in itemplates)
+            {
+                templates.AddRange(GetORTemplates(orTemplate));
+            }
+            var wordTemplates = new List<List<string>>();
             foreach (var template in templates)
             {
-
-                var result = new List<Folder>();
-                var wordTemplates = new List<string>(template.Split(new char[] { '/', '\\', ';', '\t' }));
-                if (fillToTicksPath)
-                {
-                    while (wordTemplates.Count != 6)
-                        wordTemplates.Add("*");
-                }
-
-                var matchedFolders = new List<Folder>(_sourceTree);
-                var matchedFiles = new List<HistoryFile>();
-                var n_matchedFolders = new List<Folder>();
-                foreach (var wordTemplate in wordTemplates)
-                {
-                    n_matchedFolders = new List<Folder>();
-                    foreach (var folder in matchedFolders)
-                    {
-                        if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
-                        {
-                            worker.ReportProgress(1, "Matching template : " + template + mes);
-                            if (mes.Length < 3) mes += "."; else mes = "";
-                            lastReport = DateTime.UtcNow;
-                        }
-                        if (Match(folder.Name, wordTemplate))
-                        {
-                            n_matchedFolders.Add(folder);
-                        }
-                    }
-                    matchedFolders = new List<Folder>();
-                    foreach (var folder in n_matchedFolders)
-                    {
-                        if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
-                        {
-                            worker.ReportProgress(1, "Matching template : " + template + mes);
-                            if (mes.Length < 3) mes += "."; else mes = "";
-                            lastReport = DateTime.UtcNow;
-                        }
-                        if (!folder.Loaded)
-                        {
-                            if (folder as ChunkFile == null && folder as MetaFile == null)
-                                _loader.ReadDateTimes(folder);
-                            folder.Loaded = true;
-                        }
-                        if (folder.Folders != null)
-                            foreach (var child_folder in folder.Folders)
-                            {
-                                matchedFolders.Add(child_folder);
-                            }
-                    }
-                }
-                res.AddRange(n_matchedFolders);
+                wordTemplates.Add(new List<string>(template.Split(new char[] { '/', '\\', ';', '\t' })));
             }
-            return res;
+            List<string> symbols = new List<string>();
+            foreach (var fold in source.Folders)
+            {
+                foreach (var wordTempl in wordTemplates)
+                {
+                    if (wordTempl[0].Trim() == "*" || wordTempl[0].Trim() == fold.Name)
+                    {
+                        symbols.Add(fold.Name);
+                        break;
+                    }
+                }
+            }
+            bool add = true;
+
+            
+
+            foreach (var symbol in symbols)
+            {
+                int cnt = 0;
+                foreach (var period in HistoryDatabaseFuncs.periodicityDict.Keys)
+                {
+                    foreach (var meta in source.MetaStorage.GetMeta(symbol, period))
+                    {
+                        cnt++;
+                        if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
+                        {
+                            worker.ReportProgress(1, "Matching files : " + symbol+" "+ cnt+"/"+ source.MetaStorage.GetMeta(symbol, period).Count());
+                            lastReport = DateTime.UtcNow;
+                        }
+                        foreach (var template in wordTemplates)
+                        {
+                            var pathWords = getPathFromMetaEntry(meta);
+                            add = true;
+                            for (int i = 0; i < template.Count(); i++)
+                            {
+                                if(!Match(pathWords[i], template[i]))
+                                {
+                                    add = false;
+                                    break;
+                                }
+                            }
+                            if (add) yield return meta;
+                        }
+                    }
+                }
+            }
         }
 
 
@@ -190,7 +205,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
             bool anyStart = template.First() == '*';
 
             var templParts = new List<string>();
-            (new List<string>(template.Split('*'))).ForEach(t => { if (t != "") templParts.Add(t);});
+            (new List<string>(template.Split('*'))).ForEach(t => { if (t != "") templParts.Add(t); });
 
             if (templParts.Count == 0)
                 return anyStart || anyEnd;
@@ -202,7 +217,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                 templParts.RemoveAt(0);
             }
 
-            foreach(var part in templParts)
+            foreach (var part in templParts)
             {
                 var ind = word.IndexOf(part);
                 if (ind == -1) return false;

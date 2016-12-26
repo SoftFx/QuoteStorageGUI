@@ -66,7 +66,8 @@ namespace QuoteHistoryGUI.Dialogs
         {
             var dlg = new System.Windows.Forms.FolderBrowserDialog
             {};
-
+            if (StoragePath.Text != "")
+                dlg.SelectedPath = StoragePath.Text;
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 StoragePath.Text = dlg.SelectedPath;

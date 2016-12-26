@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using static QuoteHistoryGUI.HistoryTools.HistoryDatabaseFuncs;
 
 namespace QuoteHistoryGUI.HistoryTools
 {
@@ -78,6 +79,41 @@ namespace QuoteHistoryGUI.HistoryTools
                         lastReport = DateTime.UtcNow;
                     }
                 }
+            }
+        }
+
+        public void Copy(IEnumerable<DBEntry> matchedEntries, BackgroundWorker worker = null)
+        {
+
+            int copiedCnt = 0;
+            int copiedItemsCnt = 0;
+            DateTime lastReport = DateTime.UtcNow;
+
+            foreach(var entry in matchedEntries)
+            {
+                copiedCnt++;
+                var key = SerealizeKey(entry.Symbol, entry.Type, entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part, entry.FlushPart);
+                var value = Source.HistoryStoreDB.Get(key);
+                if (value != null)
+                    Destination.HistoryStoreDB.Put(key, value);
+
+                if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 1)
+                {
+                    worker.ReportProgress(1, "Copied " + copiedCnt + "items");
+                    lastReport = DateTime.UtcNow;
+                }
+
+                int flushPart = 0;
+                key = SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part, flushPart);
+                value = Source.HistoryStoreDB.Get(key);
+                while (value != null)
+                {
+                    Destination.HistoryStoreDB.Put(key, value);
+                    flushPart++;
+                    key = SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part, flushPart);
+                    value = Source.HistoryStoreDB.Get(key);
+                }
+
             }
         }
 

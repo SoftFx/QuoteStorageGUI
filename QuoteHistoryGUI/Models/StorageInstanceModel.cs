@@ -43,7 +43,9 @@ namespace QuoteHistoryGUI.Models
         {
             openMode = mode;
             StoragePath = path;
+            _dispatcher = dispatcher;
             OpenBase(path);
+            MetaStorage = new MetaStorage(new HistoryLoader(_dispatcher, _historyStoreDB));
             Interactor = inter;
             Selection = new List<Folder>();
             SaveBtnClick = new SingleDelegateCommand(SaveDelegate);
@@ -52,7 +54,7 @@ namespace QuoteHistoryGUI.Models
             RefreshBtnClick = new SingleDelegateCommand(RefreshDelegate);
             CloseBtnClick = new SingleDelegateCommand(CloseDelegate);
             UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
-            _dispatcher = dispatcher;
+            
         }
 
 
