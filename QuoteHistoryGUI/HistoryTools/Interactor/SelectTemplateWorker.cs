@@ -170,7 +170,8 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                 {
                     int cnt = 0;
                     int allCnt = source.MetaStorage.GetMeta(symbol, period).Count();
-                    foreach (var meta in source.MetaStorage.GetMeta(symbol, period))
+                    var metas = source.MetaStorage.GetMeta(symbol, period).ToArray();
+                    foreach (var meta in metas)
                     {
                         cnt++;
                         allCnt++;
