@@ -174,7 +174,6 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                     foreach (var meta in metas)
                     {
                         cnt++;
-                        allCnt++;
                         if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
                         {
                             worker.ReportProgress(1, "Matching and Copying files : " + symbol+" "+ cnt+"/"+ allCnt);
