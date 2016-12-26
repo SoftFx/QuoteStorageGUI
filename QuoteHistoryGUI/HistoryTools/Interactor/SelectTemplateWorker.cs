@@ -165,15 +165,18 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
 
             foreach (var symbol in symbols)
             {
-                int cnt = 0;
+
                 foreach (var period in HistoryDatabaseFuncs.periodicityDict.Keys)
                 {
+                    int cnt = 0;
+                    int allCnt = source.MetaStorage.GetMeta(symbol, period).Count();
                     foreach (var meta in source.MetaStorage.GetMeta(symbol, period))
                     {
                         cnt++;
+                        allCnt++;
                         if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
                         {
-                            worker.ReportProgress(1, "Matching files : " + symbol+" "+ cnt+"/"+ source.MetaStorage.GetMeta(symbol, period).Count());
+                            worker.ReportProgress(1, "Matching and Copying files : " + symbol+" "+ cnt+"/"+ allCnt);
                             lastReport = DateTime.UtcNow;
                         }
                         foreach (var template in wordTemplates)
