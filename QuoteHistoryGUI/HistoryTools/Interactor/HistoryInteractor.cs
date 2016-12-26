@@ -82,7 +82,7 @@ namespace QuoteHistoryGUI.HistoryTools
             }
         }
 
-        public void Copy(IEnumerable<DBEntry> matchedEntries, BackgroundWorker worker = null)
+        public void Copy(IEnumerable<DBEntry> matchedEntries, BackgroundWorker worker = null, bool copyChunk = false)
         {
 
             int copiedCnt = 0;
@@ -92,26 +92,34 @@ namespace QuoteHistoryGUI.HistoryTools
             foreach(var entry in matchedEntries)
             {
                 copiedCnt++;
-                var key = SerealizeKey(entry.Symbol, entry.Type, entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part, entry.FlushPart);
-                var value = Source.HistoryStoreDB.Get(key);
-                if (value != null)
-                    Destination.HistoryStoreDB.Put(key, value);
 
                 if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 1)
                 {
                     worker.ReportProgress(1, "Copied " + copiedCnt + "items");
                     lastReport = DateTime.UtcNow;
                 }
-
-                int flushPart = 0;
-                key = SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part, flushPart);
-                value = Source.HistoryStoreDB.Get(key);
-                while (value != null)
+                byte[] key;
+                byte[] value;
+                if (copyChunk)
                 {
-                    Destination.HistoryStoreDB.Put(key, value);
-                    flushPart++;
+                    int flushPart = 0;
                     key = SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part, flushPart);
                     value = Source.HistoryStoreDB.Get(key);
+                    while (value != null)
+                    {
+                        Destination.HistoryStoreDB.Put(key, value);
+                        flushPart++;
+                        key = SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part, flushPart);
+                        value = Source.HistoryStoreDB.Get(key);
+                    }
+                }
+                else
+                {
+                    key = SerealizeKey(entry.Symbol, entry.Type, entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part, entry.FlushPart);
+                    value = Source.HistoryStoreDB.Get(key);
+                    if (value != null)
+                        Destination.HistoryStoreDB.Put(key, value);
+
                 }
 
             }
