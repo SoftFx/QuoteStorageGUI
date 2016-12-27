@@ -76,7 +76,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     copiedCnt++;
                     if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 0.5)
                     {
-                        worker.ReportProgress(1, "Copied " + copiedCnt + "items , processing " + num + " match");
+                        worker.ReportProgress(1, "Copied " + copiedCnt + "items , processing " + num + " matched folder or file");
                         lastReport = DateTime.UtcNow;
                     }
                 }
