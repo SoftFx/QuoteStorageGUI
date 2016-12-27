@@ -39,7 +39,7 @@ namespace QuoteHistoryGUI.Dialogs
         {
             
             InitializeComponent();
-            this.MetaMatching.IsChecked = true;
+            this.MetaMatching.IsChecked = false;
             Source.Text = source.StoragePath;
             foreach(var tab in tabs)
             {
@@ -102,25 +102,30 @@ namespace QuoteHistoryGUI.Dialogs
             }
             else
             {
-                var matched = new List<Folder>();
+                
 
 
                 foreach (var templ in templates)
-                    if (templ != "")
-                        matched.AddRange(temW.GetByMatch(templ, worker));
-                foreach (var match in matched)
+                {
+                    worker.ReportProgress(1, "Template: " + templ);
+                    var matched = temW.GetByMatch(templ, worker).ToArray();
+
+                    _interactor.Copy(worker, matched);
+                    if (isMove)
+                    {
+                        _interactor.Dispatcher = Dispatcher;
+                        _interactor.Delete(matched);
+                        _interactor.Dispatcher = null;
+                    }
+
+
+                }
+                /*foreach (var match in matched)
                 {
                     _interactor.AddToSelection(match);
                 }
+                */
 
-
-                _interactor.Copy(worker);
-                if (isMove)
-                {
-                    _interactor.Dispatcher = Dispatcher;
-                    _interactor.Delete();
-                    _interactor.Dispatcher = null;
-                }
             }
             _interactor.Destination.Refresh();
         }

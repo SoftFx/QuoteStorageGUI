@@ -1,5 +1,6 @@
 ﻿using QuoteHistoryGUI.Models;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -61,7 +62,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
             var templates = GetORTemplates(itemplate);
             var res = new List<Folder>();
             DateTime lastReport = DateTime.UtcNow;
-            string mes = "";
+            int matchedCnt = 0;
             foreach (var template in templates)
             {
 
@@ -76,6 +77,44 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                 var matchedFolders = new List<Folder>(_sourceTree);
                 var matchedFiles = new List<HistoryFile>();
                 var n_matchedFolders = new List<Folder>();
+                Stack<KeyValuePair<Folder, int>> matchingStack = new Stack<KeyValuePair<Folder, int>>();
+                foreach (var fold in _sourceTree)
+                    matchingStack.Push(new KeyValuePair<Folder, int>(fold, 0));
+                int templateSize = wordTemplates.Count();
+                while (matchingStack.Count != 0)
+                {
+                    if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
+                    {
+                        worker.ReportProgress(1, "Matched files and folders count: " + matchedCnt);
+                        lastReport = DateTime.UtcNow;
+                    }
+
+                    var currentPair = matchingStack.Pop();
+                    var fold = currentPair.Key;
+                    var level = currentPair.Value;
+                    if (Match(fold.Name, wordTemplates[level])){
+                        if(level == templateSize - 1)
+                        {
+                            matchedCnt++;
+                            yield return currentPair.Key;
+                        }
+                        else
+                        {
+                            if (!fold.Loaded)
+                            {
+                                if (fold as ChunkFile == null && fold as MetaFile == null)
+                                    _loader.ReadDateTimes(fold);
+                                fold.Loaded = true;
+                            }
+                            if (fold.Folders != null)
+                                foreach (var child_folder in fold.Folders)
+                                {
+                                    matchingStack.Push(new KeyValuePair<Folder, int>(child_folder, level+1));
+                                }
+                        }
+                    }
+                }
+                /*
                 foreach (var wordTemplate in wordTemplates)
                 {
                     n_matchedFolders = new List<Folder>();
@@ -114,9 +153,9 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                             }
                     }
                 }
-                res.AddRange(n_matchedFolders);
+                res.AddRange(n_matchedFolders);*/
             }
-            return res;
+            //return res;
         }
 
         List<string> getPathFromMetaEntry(DBEntry entry)

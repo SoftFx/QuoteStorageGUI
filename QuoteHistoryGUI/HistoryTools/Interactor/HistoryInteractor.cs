@@ -55,27 +55,28 @@ namespace QuoteHistoryGUI.HistoryTools
 
 
 
-        public void Copy(BackgroundWorker worker = null)
+        public void Copy(BackgroundWorker worker = null, IEnumerable<Folder> selection = null)
         {
             List<byte[]> deleteList = new List<byte[]>();
-            var it = Source.HistoryStoreDB.CreateIterator();
             int copiedCnt = 0;
             int copiedItemsCnt = 0;
             DateTime lastReport = DateTime.UtcNow;
 
 
-
-            for (int i = 0; i < Selection.Count; i++)
+            if (selection == null)
+                selection = Selection;
+            int num = 0;
+            foreach (var fold in selection)
             {
-                var fold = Selection[i];
+                num++;
                 var files = Source.Editor.EnumerateFilesInFolder(fold);
                 foreach (var file in files)
                 {
                     Destination.HistoryStoreDB.Put(file.Key, file.Value);
                     copiedCnt++;
-                    if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 1)
+                    if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 0.5)
                     {
-                        worker.ReportProgress(1, "Copied " + copiedCnt + "items , processing " + (i + 1) + " of " + Selection.Count + " match");
+                        worker.ReportProgress(1, "Copied " + copiedCnt + "items , processing " + num + " match");
                         lastReport = DateTime.UtcNow;
                     }
                 }
@@ -125,16 +126,17 @@ namespace QuoteHistoryGUI.HistoryTools
             }
         }
 
-        public int Delete()
+        public int Delete(IEnumerable<Folder> selection = null)
         {
-            var sel = Selection.ToArray();
-            if (sel.Count() == 0)
-            { MessageBox.Show("Nothing to delete.", "Delete", MessageBoxButton.OK, MessageBoxImage.Information); return 0; }
+            if(selection == null)
+             selection = Selection;
+            /*if (selection.Count() == 0)
+            { MessageBox.Show("Nothing to delete.", "Delete", MessageBoxButton.OK, MessageBoxImage.Information); return 0; }*/
 
             var it = Source.HistoryStoreDB.CreateIterator();
 
             HistoryEditor editor = new HistoryEditor(Source.HistoryStoreDB);
-            foreach (var fold in sel)
+            foreach (var fold in selection)
             {
                 if (fold as ChunkFile == null && fold as MetaFile == null)
                 {
