@@ -29,6 +29,7 @@ namespace QuoteHistoryGUI.Views
         {
             InitializeComponent();
             var a = this.DataContext;
+            this.treeView.AddHandler(TreeViewItem.KeyDownEvent, new KeyEventHandler(treeView_KeyDown), true);
         }
         private void treeView_Expanded(object sender, RoutedEventArgs e)
         {
@@ -71,8 +72,14 @@ namespace QuoteHistoryGUI.Views
         private void OnKey(object sender, KeyEventArgs e)
         {
 
+            if (e.Key == Key.I)
+            {
+                var item = treeView.ItemContainerGenerator.ContainerFromItem(treeView.SelectedItem) as TreeViewItem;
+                item.Background = SystemColors.ActiveCaptionBrush;
+                int a = 1;
+            }
             var tree = sender as TreeView;
-            if (tree != null && e.Key==Key.Enter)
+            if (tree != null && e.Key == Key.Enter)
             {
                 var tab = tree.DataContext as StorageInstanceModel;
                 var chunk = tree.SelectedItem as ChunkFile;
@@ -94,8 +101,8 @@ namespace QuoteHistoryGUI.Views
             }
         }
 
-        
-       
+
+
 
         List<TreeViewItem> selectedItems = new List<TreeViewItem>();
         object selectedItemLock = new object();
@@ -105,49 +112,61 @@ namespace QuoteHistoryGUI.Views
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) || Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
             {
-                lock (selectedItemLock)
+
+            }
+
+        }
+
+
+
+
+        private void UpStream_Click(object sender, RoutedEventArgs e)
+        {
+            var inst = this.DataContext as StorageInstanceModel;
+            var wind = Application.Current.MainWindow as QHAppWindowView;
+
+        }
+
+        private void treeView_KeyDown(object sender, RoutedEventArgs e)
+        {
+            if (Keyboard.IsKeyDown(Key.Down) || Keyboard.IsKeyDown(Key.Up) || Keyboard.IsKeyDown(Key.Left) || Keyboard.IsKeyDown(Key.Right))
+                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) || Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
                 {
-                    var treeItem = e.OriginalSource as TreeViewItem;
-                    if (e.RoutedEvent == TreeViewItem.SelectedEvent)
+                    lock (selectedItemLock)
                     {
-                        /*if (selectedItems.Contains(treeItem))
-                        {
-                            HandleSelection = true;
-                            treeItem.IsSelected = false;
-                            selectedItems.Remove(treeItem);
-                            HandleSelection = false;
-                        }
-                        else
-                        {
-                            HandleSelection = true;
-                            treeItem.IsSelected = true;
-                            selectedItems.Add(treeItem);
-                            //treeItem.Background = SystemColors.ActiveBorderBrush;
-                            HandleSelection = false;
-                        }*/
-                    }
-                    else
-                    {
-                        
+                        var treeItem = e.OriginalSource as TreeViewItem;
+
+
                         if (selectedItems.Contains(treeItem) && isShiftSelect)
                         {
                             treeItem.Background = SystemColors.WindowBrush;
                             selectedItems.Remove(treeItem);
                         }
-                        else {
+                        else
+                        {
                             treeItem.Background = SystemColors.ActiveCaptionBrush;
                             selectedItems.Add(treeItem);
                             isShiftSelect = true;
                         }
+                        if (selectedItems.Select(t=> { return t.Header as Folder; }).Contains(treeView.SelectedItem as Folder))
+                        {
+                            var resources = treeView.Resources as ResourceDictionary;
+                            resources[SystemColors.HighlightBrushKey] = SystemColors.ActiveCaptionBrush;
+
+                        }
+                        else
+                        {
+                            var resources = treeView.Resources as ResourceDictionary;
+                            resources[SystemColors.HighlightBrushKey] = new LinearGradientBrush(new Color() { A = 255, R = 217, G = 244, B = 255 }, new Color() { A = 255, R = 155, G = 221, B = 251 }, new Point(0, 0), new Point(0, 1));
+
+                        }
                     }
                 }
-            }
-            else
-            {
-                lock (selectedItemLock)
+                else
                 {
-                    if (e.RoutedEvent == TreeViewItem.SelectedEvent)
+                    lock (selectedItemLock)
                     {
+
                         isShiftSelect = false;
                         var treeItem = e.OriginalSource as TreeViewItem;
                         foreach (var t in selectedItems)
@@ -155,23 +174,22 @@ namespace QuoteHistoryGUI.Views
                             t.Background = SystemColors.WindowBrush;
                         }
                         selectedItems.Clear();
-                        selectedItems.Add(treeItem);
+                        var resources = treeView.Resources as ResourceDictionary;
+                        resources[SystemColors.HighlightBrushKey] = new LinearGradientBrush(new Color() { A = 255, R = 217, G = 244, B = 255 }, new Color() { A = 255, R = 155, G = 221, B = 251 }, new Point(0, 0), new Point(0, 1));
+                        //selectedItems.Add(treeItem);
                     }
                 }
-            }
             (this.DataContext as StorageInstanceModel).Selection = new List<Folder>(selectedItems.Select(t => { return t.DataContext as Folder; }));
-
-        }
-
-        bool HandleSelection = false;
-
-       
-
-        private void UpStream_Click(object sender, RoutedEventArgs e)
-        {
-            var inst = this.DataContext as StorageInstanceModel;
-            var wind = Application.Current.MainWindow as QHAppWindowView;
-
+            /*
+                        if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) || Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+                        {
+                            var item = e.OriginalSource as TreeViewItem;
+                            item.Background = SystemColors.ActiveCaptionBrush;
+                            e.Handled = true;
+                            var resources = treeView.Resources as ResourceDictionary;
+                            resources[SystemColors.HighlightBrushKey] = new LinearGradientBrush(new Color() { A = 255, R = 217, G = 244, B = 255 }, new Color() { A = 255, R = 155, G = 221, B = 251 }, new Point(0, 0), new Point(0, 1));
+                        }
+            */
         }
     }
 }

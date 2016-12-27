@@ -13,7 +13,7 @@
             <ColumnDefinition Name="treeColumn" Width="auto" MinWidth="50"/>
             <ColumnDefinition MinWidth="100" />
         </Grid.ColumnDefinitions>
-        <TreeView Grid.Column="0" BorderBrush="White" TreeViewItem.Unselected="treeView_Selected" TreeViewItem.Selected="treeView_Selected" Name="treeView" TreeViewItem.Expanded="treeView_Expanded" MouseDoubleClick="OnDoubleClick" KeyDown="OnKey"  ItemsSource="{Binding Path=Folders, Mode=TwoWay,NotifyOnSourceUpdated=True, UpdateSourceTrigger=PropertyChanged}"  Background="White" VirtualizingStackPanel.IsVirtualizing="True" >
+        <TreeView Grid.Column="0" BorderBrush="White" TreeViewItem.Unselected="treeView_Selected" TreeViewItem.Selected="treeView_Selected" Name="treeView" TreeViewItem.Expanded="treeView_Expanded"  MouseDoubleClick="OnDoubleClick" KeyDown="OnKey"  ItemsSource="{Binding Path=Folders, Mode=TwoWay,NotifyOnSourceUpdated=True, UpdateSourceTrigger=PropertyChanged}"  Background="White" VirtualizingStackPanel.IsVirtualizing="True" >
             <TreeView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy" Command="{Binding CopyBtnClick}"/>
@@ -25,7 +25,7 @@
             
             <TreeView.Resources>
 
-                <LinearGradientBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" EndPoint="0,1" StartPoint="0,0">
+                <LinearGradientBrush   x:Key="{x:Static SystemColors.HighlightBrushKey}" EndPoint="0,1" StartPoint="0,0">
                     <GradientStop Color="#FFD9F4FF" Offset="0"/>
                     <GradientStop Color="#FF9BDDFB" Offset="1"/>
                 </LinearGradientBrush>
@@ -117,10 +117,10 @@
 
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}">
-                    <Setter Property="BorderThickness" Value="1.5"/>
+                    <Setter Property="BorderThickness" Value="1"/>
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="BorderBrush" Value="#adc6e5"/>
+                            <Setter Property="BorderBrush" Value="#798aa0"/>
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
