@@ -13,7 +13,8 @@
             <ColumnDefinition Name="treeColumn" Width="auto" MinWidth="50"/>
             <ColumnDefinition MinWidth="100" />
         </Grid.ColumnDefinitions>
-        <TreeView Grid.Column="0" BorderBrush="White" TreeViewItem.Unselected="treeView_Selected" TreeViewItem.Selected="treeView_Selected" Name="treeView" TreeViewItem.Expanded="treeView_Expanded"  MouseDoubleClick="OnDoubleClick" KeyDown="OnKey"  ItemsSource="{Binding Path=Folders, Mode=TwoWay,NotifyOnSourceUpdated=True, UpdateSourceTrigger=PropertyChanged}"  Background="White" VirtualizingStackPanel.IsVirtualizing="True" >
+        <TreeView Grid.Column="0"  BorderBrush="White" Name="treeView" TreeViewItem.Expanded="treeView_Expanded"  MouseDoubleClick="OnDoubleClick" KeyDown="OnKey"  ItemsSource="{Binding Path=Folders, Mode=TwoWay,NotifyOnSourceUpdated=True, UpdateSourceTrigger=PropertyChanged}"  Background="White" VirtualizingStackPanel.IsVirtualizing="True" >
+
             <TreeView.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Copy" Command="{Binding CopyBtnClick}"/>
@@ -37,7 +38,11 @@
                 <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="Black" />
 
 
+
+
                 <Style x:Key="ExpandingFolderStyle" TargetType="{x:Type Image}">
+                    
+                    
                     <Setter Property="Source" Value="../Icons/closeFolder.png"/>
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TreeViewItem}, Path=IsExpanded}" Value="True">
@@ -116,8 +121,10 @@
             </TreeView.Resources>
 
             <TreeView.ItemContainerStyle>
+
                 <Style TargetType="{x:Type TreeViewItem}">
                     <Setter Property="BorderThickness" Value="1"/>
+                    <EventSetter Event="MouseLeftButtonUp" Handler="treeViewItem_MouseLeftButtonUp"/>
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="BorderBrush" Value="#798aa0"/>
