@@ -24,8 +24,7 @@
 
         <Button Grid.Column="1" Margin="4" Content="Upstream" Click="UpstreamButton_Click" Name="UpstreamButton" MinWidth="75"/>
         <TextBlock Name="UpstreamStatusBlock" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="4"/>
-        <CheckBox Name="Level2Box" Grid.Column="0" Grid.Row="0" Content=":Ticks to M1 update for ticks geted from level2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="3" FlowDirection="RightToLeft" />
-        <!--<TextBlock Text="Ticks to M1 update for ticks geted from level2:" HorizontalAlignment="Right"   Grid.Row="0" Grid.Column="0"  Margin="5"/>-->
+        <CheckBox Name="Level2Box" Grid.Column="0" Grid.Row="0" Content=":Ticks to M1 update for ticks obtained from level2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="3" FlowDirection="RightToLeft" />
         <Expander Name="TemplateExpander"   Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="0" Margin="4">
             <Expander.Header>
                 <StackPanel Orientation="Horizontal">
