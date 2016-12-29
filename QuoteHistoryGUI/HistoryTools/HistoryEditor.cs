@@ -272,7 +272,7 @@ namespace QuoteHistoryGUI.HistoryTools
                         pathStr += (path_part.Name + "/");
                     }
                     pathStr += (file.Name + "." + file.Part + "");
-                    MetaCorruptionMessage = "File " + pathStr + " has being updated or its meta was invalid.\nMeta was recalculated";
+                    MetaCorruptionMessage = "File " + pathStr + " has been updated or its meta was invalid.\nMeta was recalculated";
                 }
             }
             _dbase.Put(metaKey, GettedEntry);
