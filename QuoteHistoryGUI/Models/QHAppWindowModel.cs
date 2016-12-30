@@ -159,8 +159,10 @@ namespace QuoteHistoryGUI.Models
                 StreamReader r = File.OpenText("version.txt");
                 Version = "QuoteStorageGUI build: " + r.ReadLine();
             }
-            catch { }
-            
+            catch {
+                Version = "QuoteStorageGUI";
+            }
+
         }
 
        

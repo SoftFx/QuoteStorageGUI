@@ -64,7 +64,7 @@ namespace QuoteHistoryGUI.Models
 
         private HistoryFile _currentFile;
         private ObservableCollection<Folder> _folders;
-        
+
         public MetaStorage MetaStorage;
 
         public DB HistoryStoreDB { get { return _historyStoreDB; } }
@@ -156,7 +156,7 @@ namespace QuoteHistoryGUI.Models
                 if (!Directory.Exists(path + "\\HistoryDB"))
                     throw new Exception("Cant't find a history database folder (HistoryDB) in folder: " + path);
                 _historyStoreDB = new DB(path + "\\HistoryDB",
-                        new Options() { BloomFilter = new BloomFilterPolicy(10) });
+                        new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
                 Editor = new HistoryEditor(_historyStoreDB);
                 HistoryLoader hl = new HistoryLoader(_dispatcher, _historyStoreDB);
                 hl.ReadSymbols(Folders);
@@ -326,7 +326,8 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-                try {
+                try
+                {
                     foreach (var sel in Selection)
                     {
                         var chunk = sel as ChunkFile;
@@ -351,7 +352,7 @@ namespace QuoteHistoryGUI.Models
                         }
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
@@ -371,7 +372,7 @@ namespace QuoteHistoryGUI.Models
             var parent = chunk.Parent;
             List<Folder> deleteList = new List<Folder>();
             foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
-            deleteList.ForEach(t => _dispatcher.Invoke(()=>parent.Folders.Remove(t)));
+            deleteList.ForEach(t => _dispatcher.Invoke(() => parent.Folders.Remove(t)));
             var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
             var partCnt = Editor.SaveToDBParted(ticks, tickChunk, true, showMessages);
             List<ChunkFile> chunks = new List<ChunkFile>();
@@ -402,7 +403,7 @@ namespace QuoteHistoryGUI.Models
             var bars = Editor.GetM1FromTicks(ticks);
             var parent = chunk.Parent.Parent;
             List<Folder> deleteList = new List<Folder>();
-            
+
             foreach (var f in parent.Folders) if (f.Name.Length >= 2 && f.Name.Substring(0, 2) == "M1") deleteList.Add(f);
             deleteList.ForEach(t => _dispatcher.Invoke(() => parent.Folders.Remove(t)));
             var bidChunk = new ChunkFile() { Name = "M1 bid file", Period = "M1 bid", Parent = parent };

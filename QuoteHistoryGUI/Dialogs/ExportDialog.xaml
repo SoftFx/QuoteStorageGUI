@@ -23,7 +23,7 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="30"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <ComboBox Name="OperationTypeBox" Grid.Row="1" Grid.Column="5" Width="80" HorizontalAlignment="Right" SelectedIndex="0"  Margin="4,2">
@@ -39,7 +39,7 @@
         <TextBox Name="DestinationBox" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3" Margin="4"/>
         <Button Name="BrowseButton" Click="BrowseButton_Click" Grid.Column="4" Grid.Row="1" Margin="4" Content="..."/>
         <Button Name ="CopyButton" Content="Start" Background="#F2F0ED" Width="80" HorizontalAlignment="Right"  BorderBrush="#7F6E53" Click="Button_Click" Grid.Row="2" Grid.Column="5" Margin="4,2" ></Button>
-        <TextBlock Name="CopyStatusBlock" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="4" Margin="4,2"/>
+        <TextBlock Name="CopyStatusBlock" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" Margin="4,2"/>
         <Expander Name="TemplateExpander" IsEnabled="False" Grid.Row="3" Grid.ColumnSpan="6" Grid.Column="0" Height="auto" Margin="2,2,2,4">
             <Expander.Header>
                 <StackPanel Orientation="Horizontal">

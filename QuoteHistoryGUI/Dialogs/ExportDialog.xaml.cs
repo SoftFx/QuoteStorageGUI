@@ -30,7 +30,7 @@ namespace QuoteHistoryGUI.Dialogs
         ObservableCollection<StorageInstanceModel> _tabs;
         BackgroundWorker CopyWorker;
         bool IsCopying = false;
-        bool isMetaMatching = true;
+        bool isMetaMatching = false;
         StorageInstanceModel _source;
         StorageInstanceModel _destination;
         SelectTemplateWorker temW;
@@ -153,12 +153,14 @@ namespace QuoteHistoryGUI.Dialogs
             MessageBox.Show("Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
             Close();
             CopyButton.IsEnabled = true;
+            _interactor.Destination.HistoryStoreDB.Dispose();
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (CopyWorker != null && CopyWorker.IsBusy)
             {
                 CopyWorker.CancelAsync();
+                _interactor.Destination.HistoryStoreDB.Dispose();
                 MessageBox.Show("Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 _interactor.Destination.Refresh();
             }
