@@ -62,7 +62,8 @@ namespace QuoteHistoryGUI
 
         private void ReadSymbolsWork(object sender, DoWorkEventArgs e)
         {
-            _dispatcher.Invoke((Action)delegate () { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
+            _dispatcher.Invoke(delegate
+            { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
             var it = _dbase.CreateIterator();
             it.SeekToFirst();
             while (it.IsValid())
@@ -76,13 +77,14 @@ namespace QuoteHistoryGUI
                     else break;
                 }
                 string sym = ASCIIEncoding.ASCII.GetString(nextKey.ToArray());
-                _dispatcher.Invoke((Action)delegate () { _folders.Insert(_folders.Count - 1, new Folder(sym)); _folders[_folders.Count - 2].Parent = null; });
+                _dispatcher.Invoke(delegate
+                { _folders.Insert(_folders.Count - 1, new Folder(sym)); _folders[_folders.Count - 2].Parent = null; });
                 for (int i = 0; i < 10; i++)
                     nextKey.Add(255);
                 it.Seek(nextKey.ToArray());
             }
             it.Dispose();
-            _dispatcher.Invoke((Action)delegate () { _folders.RemoveAt(_folders.Count - 1); });
+            _dispatcher.Invoke(delegate { _folders.RemoveAt(_folders.Count - 1); });
         }
 
         public void ReadDateTimesAsync(Folder folder, HistoryEditor editor = null)
@@ -103,7 +105,7 @@ namespace QuoteHistoryGUI
 
             LoadFolders();
             LoadFiles();
-            _dispatcher.Invoke((Action)delegate () { _folder.Folders.RemoveAt(0); });
+            _dispatcher.Invoke(delegate { _folder.Folders?.RemoveAt(0); });
         }
         public void Refresh(ObservableCollection<Folder> folders)
         {
@@ -120,7 +122,10 @@ namespace QuoteHistoryGUI
                 int[] dateTime = { 2000, 1, 1, 0 };
                 for (int i = 1; i < path.Count; i++)
                 {
-                    dateTime[i - 1] = int.Parse(path[i].Name);
+                    //dateTime[i - 1] = int.Parse(path[i].Name);
+                    int dt;
+                    int.TryParse(path[i].Name, out dt);
+                    dateTime[i - 1] = dt;
                 }
 
                 int curDateInd = path.Count - 1;
@@ -153,7 +158,14 @@ namespace QuoteHistoryGUI
                         {
                             if (HistoryDatabaseFuncs.ValidateKeyByKey(getedKey, key, true, path.Count, false, true))
                             {
-                                _dispatcher.Invoke((Action)delegate () { _folder.Folders.Add(new Folder(DT.ToString())); _folder.Folders[_folder.Folders.Count - 1].Parent = _folder; });
+                                _dispatcher.Invoke(delegate
+                                {
+                                    if (_folder.Folders != null)
+                                    {
+                                        _folder.Folders.Add(new Folder(DT.ToString()));
+                                        _folder.Folders[_folder.Folders.Count - 1].Parent = _folder;
+                                    }
+                                });
                                 break;
                             }
                         }
@@ -171,7 +183,10 @@ namespace QuoteHistoryGUI
                 int[] dateTime = { 2000, 1, 1, 0, 0 };
                 for (int i = 1; i < path.Count; i++)
                 {
-                    dateTime[i - 1] = int.Parse(path[i].Name);
+                    //dateTime[i - 1] = int.Parse(path[i].Name);
+                    int dt;
+                    int.TryParse(path[i].Name, out dt);
+                    dateTime[i - 1] = dt;
                 }
                 int curDateInd = path.Count - 1;
                 string[] names = { };
@@ -219,16 +234,23 @@ namespace QuoteHistoryGUI
                                 {
                                     var chunk = new ChunkFile(names[i] + " file" + (getedKey.Last() > 0 ? ("." + getedKey.Last() + "") : ""), names[i], getedKey[getedKey.Length - 2]);
                                     chunk.Parent = _folder;
-                                    _dispatcher.Invoke((Action)delegate () { _folder.Folders.Add(chunk); });
+                                    _dispatcher.Invoke(delegate { _folder.Folders?.Add(chunk); });
 
                                     if (_editor != null)
                                         _editor.RebuildMeta(chunk);
 
                                     it = _dbase.CreateIterator();
                                     it.Seek(getedKey);
-                                    _dispatcher.Invoke((Action)delegate () { Application.Current.MainWindow.Activate(); });
+                                    _dispatcher.Invoke(delegate { Application.Current.MainWindow.Activate(); });
                                 }
-                                else _dispatcher.Invoke((Action)delegate () { _folder.Folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("." + getedKey.Last() + "") : ""), names[i], getedKey.Last())); _folder.Folders[_folder.Folders.Count - 1].Parent = _folder; });
+                                else _dispatcher.Invoke(delegate
+                                {
+                                    if (_folder.Folders != null)
+                                    {
+                                        _folder.Folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("." + getedKey.Last() + "") : ""), names[i], getedKey.Last()));
+                                        _folder.Folders[_folder.Folders.Count - 1].Parent = _folder;
+                                    }
+                                });
                                 it.Next();
                                 if (it.IsValid())
                                 {
@@ -247,14 +269,14 @@ namespace QuoteHistoryGUI
         {
             LoadFolders();
             LoadFiles();
-            _dispatcher.Invoke((Action)delegate () { _folder.Folders.RemoveAt(0); });
+            _dispatcher.Invoke(delegate { _folder.Folders?.RemoveAt(0); });
         }
 
         private void Refresh(object sender, DoWorkEventArgs e)
         {
             Folder[] oldFolders = new Folder[_folders.Count()];
             _folders.CopyTo(oldFolders, 0);
-            _dispatcher.Invoke((Action)delegate () { _folders.Clear(); });
+            _dispatcher.Invoke(delegate { _folders.Clear(); });
             if (oldFolders.Count() == 0 || oldFolders[0].Parent == null)
                 ReadSymbols(_folders);
             else ReadDateTimes(oldFolders[0].Parent);
@@ -264,7 +286,7 @@ namespace QuoteHistoryGUI
         {
             Folder[] oldFolders = new Folder[_folders.Count()];
             _folders.CopyTo(oldFolders, 0);
-            _dispatcher.Invoke((Action)delegate () { _folders.Clear(); });
+            _dispatcher.Invoke(delegate { _folders.Clear(); });
             if (oldFolders.Count() == 0) return;
             if (oldFolders[0].Parent == null)
                 ReadSymbols(_folders);

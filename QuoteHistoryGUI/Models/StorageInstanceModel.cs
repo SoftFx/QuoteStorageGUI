@@ -41,6 +41,7 @@ namespace QuoteHistoryGUI.Models
 
         public StorageInstanceModel(string path, Dispatcher dispatcher, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite)
         {
+            _dispatcher = dispatcher;
             openMode = mode;
             StoragePath = path;
             _dispatcher = dispatcher;
@@ -54,7 +55,6 @@ namespace QuoteHistoryGUI.Models
             RefreshBtnClick = new SingleDelegateCommand(RefreshDelegate);
             CloseBtnClick = new SingleDelegateCommand(CloseDelegate);
             UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
-            
         }
 
 
@@ -340,7 +340,7 @@ namespace QuoteHistoryGUI.Models
                             else if (chunk.Period == "ticks level2")
                             {
                                 tick2ToTickUpdate(chunk);
-                                var res = MessageBox.Show("Ticks level2 to ticks upstream update was aplied.\n Make ticks to M1?", "Upstream update", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                                var res = MessageBox.Show("Ticks level2 to ticks upstream update was applied.\n Make ticks to M1?", "Upstream update", MessageBoxButton.YesNo, MessageBoxImage.Question);
                                 if (res == MessageBoxResult.Yes)
                                 {
 
