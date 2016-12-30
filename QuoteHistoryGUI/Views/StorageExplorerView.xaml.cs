@@ -253,6 +253,7 @@ namespace QuoteHistoryGUI.Views
                     {
                         var resources = treeView.Resources as ResourceDictionary;
                         resources[SystemColors.HighlightBrushKey] = SystemColors.ActiveCaptionBrush;
+                        MessageBox.Show("SystemColors.ActiveCaptionBrush");
                     }
                     else
                     {
@@ -274,7 +275,7 @@ namespace QuoteHistoryGUI.Views
                     }
                     selectedItems.Clear();
                     var resources = treeView.Resources as ResourceDictionary;
-                    resources[SystemColors.HighlightBrushKey] = new LinearGradientBrush(new Color() { A = 255, R = 217, G = 244, B = 255 }, new Color() { A = 255, R = 155, G = 221, B = 251 }, new Point(0, 0), new Point(0, 1));
+                    //resources[SystemColors.HighlightBrushKey] = new LinearGradientBrush(new Color() { A = 255, R = 217, G = 244, B = 255 }, new Color() { A = 255, R = 155, G = 221, B = 251 }, new Point(0, 0), new Point(0, 1));
                     //selectedItems.Add(treeItem);
                 }
             }

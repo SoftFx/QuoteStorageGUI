@@ -68,63 +68,64 @@ namespace QuoteHistoryGUI.Dialogs
             try
             {
                 var templates = templateText.Split(new char[] { ';', ',', '\n', '\r' });
-                var matched = new List<Folder>();
                 BackgroundWorker worker = e.Argument as BackgroundWorker;
+                var templNum = 0;
                 foreach (var templ in templates)
-                    if (templ != "")
-                        matched.AddRange(temW.GetByMatch(templ, worker, true));
-
-                DateTime lastReport = DateTime.UtcNow;
-                int upstramCnt = 0;
-                Folder lastDay = null;
-                ChunkFile lastTicksFile = null;
-                foreach (var sel in matched)
                 {
-                    upstramCnt++;
-
-                    if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
+                    templNum++;
+                    var matched = temW.GetByMatch(templ, worker, true);
+                    DateTime lastReport = DateTime.UtcNow;
+                    int upstramCnt = 0;
+                    Folder lastDay = null;
+                    ChunkFile lastTicksFile = null;
+                    foreach (var sel in matched)
                     {
-                        worker.ReportProgress(1, "Upstreaming : " + upstramCnt + "/" + matched.Count);
-                        lastReport = DateTime.UtcNow;
-                    }
+                        upstramCnt++;
 
-                    var chunk = sel as ChunkFile;
-                    if (chunk != null)
-                    {
-
-                        if (chunk.Period == "ticks")
+                        if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
                         {
-                            if (chunk.Parent.Parent != lastDay)
-                            {
-                                _interactor.Source.tickToM1Update(chunk, false);
-                                lastDay = chunk.Parent.Parent;
-                            }
+                            worker.ReportProgress(1, "Upstreaming : " + upstramCnt+", template processing: "+ templNum);
+                            lastReport = DateTime.UtcNow;
                         }
 
-                        if (chunk.Period == "ticks level2")
+                        var chunk = sel as ChunkFile;
+                        if (chunk != null)
                         {
-                            var res = _interactor.Source.tick2ToTickUpdate(chunk, false);
-                            if (is2levelUpstream)
+
+                            if (chunk.Period == "ticks")
                             {
-                                if (res.Key.Length != 0)
+                                if (chunk.Parent.Parent != lastDay)
                                 {
-                                    if (res.Key[0].Parent.Parent != lastDay)
+                                    _interactor.Source.tickToM1Update(chunk, false);
+                                    lastDay = chunk.Parent.Parent;
+                                }
+                            }
+
+                            if (chunk.Period == "ticks level2")
+                            {
+                                var res = _interactor.Source.tick2ToTickUpdate(chunk, false);
+                                if (is2levelUpstream)
+                                {
+                                    if (res.Key.Length != 0)
                                     {
-                                        if(lastTicksFile!=null)
-                                        _interactor.Source.tickToM1Update(lastTicksFile, false);
-                                        lastDay = res.Key[0].Parent.Parent;
+                                        if (res.Key[0].Parent.Parent != lastDay)
+                                        {
+                                            if (lastTicksFile != null)
+                                                _interactor.Source.tickToM1Update(lastTicksFile, false);
+                                            lastDay = res.Key[0].Parent.Parent;
+                                        }
+                                        lastTicksFile = res.Key[0];
                                     }
-                                    lastTicksFile = res.Key[0];
                                 }
                             }
                         }
-                    }
 
-                }
-                if (is2levelUpstream)
-                {
-                    if (lastTicksFile != null)
-                        _interactor.Source.tickToM1Update(lastTicksFile, false);
+                    }
+                    if (is2levelUpstream)
+                    {
+                        if (lastTicksFile != null)
+                            _interactor.Source.tickToM1Update(lastTicksFile, false);
+                    }
                 }
             }
             catch (Exception ex)
