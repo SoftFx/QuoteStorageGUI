@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:QuoteHistoryGUI.Dialogs"
         mc:Ignorable="d"
+        Icon="../Icons/upstream.png"
         SizeToContent="WidthAndHeight"
         Title="UpstreamDialog" 
                 ResizeMode="NoResize"
