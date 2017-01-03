@@ -201,7 +201,7 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void templateHelpButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Examples:\n\nAAABBB/2015/1/2/3;\nAAA*/*15/;\n*/*/*/1/M1*;\n*/2016/*/2*/*3/ticks file*;", "Template Help", MessageBoxButton.OK, MessageBoxImage.Question);
+            HelpDialog.ShowHelp("export");
         }
 
         private void AllRadioButton_Checked(object sender, RoutedEventArgs e)

@@ -32,7 +32,7 @@
                     <TextBlock Text="Copy templates:"/>
                     <Grid MinWidth="374"/>
                     <Button Name="templateHelpButton" Width="16" Height="16" Click="templateHelpButton_Click">
-                        <Image Source="../Icons/question.png" Height="10" Width="10" Margin="0" VerticalAlignment="Top"/>
+                        <Image Source="../Icons/question.png" Height="10" Width="10"/>
                     </Button>
                 </StackPanel>
             </Expander.Header>

@@ -69,6 +69,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Dialogs\HelpDialog.xaml.cs">
+      <DependentUpon>HelpDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\ExportDialog.xaml.cs">
       <DependentUpon>ExportDialog.xaml</DependentUpon>
     </Compile>
@@ -98,6 +101,10 @@
     <Compile Include="Views\StorageExplorerView.xaml.cs">
       <DependentUpon>StorageExplorerView.xaml</DependentUpon>
     </Compile>
+    <Page Include="Dialogs\HelpDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\ExportDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -203,6 +210,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\question.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="HelpDocumentation.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\export.png" />

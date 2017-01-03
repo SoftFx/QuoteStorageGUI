@@ -155,13 +155,15 @@ namespace QuoteHistoryGUI.Models
 
         HistoryEditor _historyReader;
         public HistoryInteractor Interactor;
-        public QHAppWindowModel(Dispatcher dispatcher) {
+        public QHAppWindowModel(Dispatcher dispatcher)
+        {
             Interactor = new HistoryInteractor();
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
             ImportBtnClick = new SingleDelegateCommand(ImportDelegate);
             UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
             CreateBtnClick = new SingleDelegateCommand(CreateDelegate);
             ExportBtnClick = new SingleDelegateCommand(ExportDelegate);
+            AboutBtnClick = new SingleDelegateCommand(AboutDelegate);
             StorageTabs = new ObservableCollection<StorageInstanceModel>();
             MasterStorage = new ObservableCollection<StorageInstanceModel>();
             SlaveStorage = new ObservableCollection<StorageInstanceModel>();
@@ -178,16 +180,13 @@ namespace QuoteHistoryGUI.Models
 
         }
 
-       
-
-
-
         public ICommand OpenBtnClick { get; private set; }
         public ICommand ImportBtnClick { get; private set; }
         public ICommand CreateBtnClick { get; private set; }
         public ICommand CopyContextBtnClick { get; private set; }
         public ICommand UpdateBtnClick { get; private set; }
         public ICommand ExportBtnClick { get; private set; }
+        public ICommand AboutBtnClick { get; private set; }
         private bool OpenBaseDelegate(object o, bool isCheckOnly)
         {
 
@@ -304,6 +303,13 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
-       
+        private bool AboutDelegate(object o, bool isCheckOnly)
+        {
+            if (isCheckOnly)
+                return true;
+
+            HelpDialog.ShowHelp();
+            return false;
+        }
     }
 }
