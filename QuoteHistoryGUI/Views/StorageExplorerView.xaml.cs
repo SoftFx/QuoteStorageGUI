@@ -24,7 +24,6 @@ namespace QuoteHistoryGUI.Views
     /// </summary>
     public partial class StorageExplorerView : UserControl
     {
-        StorageInstanceModel storage;
         public StorageExplorerView()
         {
             InitializeComponent();

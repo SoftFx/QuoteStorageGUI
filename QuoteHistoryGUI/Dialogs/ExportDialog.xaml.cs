@@ -29,7 +29,6 @@ namespace QuoteHistoryGUI.Dialogs
         HistoryInteractor _interactor;
         ObservableCollection<StorageInstanceModel> _tabs;
         BackgroundWorker CopyWorker;
-        bool IsCopying = false;
         bool isMetaMatching = false;
         StorageInstanceModel _source;
         StorageInstanceModel _destination;
@@ -89,8 +88,6 @@ namespace QuoteHistoryGUI.Dialogs
                 temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
                 templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
 
-                IsCopying = true;
-
                 CopyButton.IsEnabled = false;
                 CopyWorker.WorkerReportsProgress = true;
                 CopyWorker.WorkerSupportsCancellation = true;
@@ -117,8 +114,6 @@ namespace QuoteHistoryGUI.Dialogs
                     MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     return;
                 }
-
-                IsCopying = true;
 
                 CopyButton.IsEnabled = false;
                 CopyWorker.WorkerReportsProgress = true;
@@ -149,7 +144,7 @@ namespace QuoteHistoryGUI.Dialogs
                 foreach (var templ in templates)
                 {
                     worker.ReportProgress(1, "Template: " + templ);
-                    var matched = temW.GetByMatch(templ, worker).ToArray();
+                    var matched = temW.GetByMatch(templ, worker);
 
                     _interactor.Copy(worker, matched);
                     if (isMove)
@@ -182,7 +177,6 @@ namespace QuoteHistoryGUI.Dialogs
         }
         private void worker_Copied(object sender, RunWorkerCompletedEventArgs e)
         {
-            IsCopying = false;
             MessageBox.Show("Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
             Close();
             CopyButton.IsEnabled = true;
