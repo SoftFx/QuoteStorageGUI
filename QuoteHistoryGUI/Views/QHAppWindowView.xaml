@@ -13,10 +13,19 @@
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Center"
         >
+    <Window.Resources>
+        <Style x:Key="CmdButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Margin" Value="2,4"/>
+            <Setter Property="MinWidth" Value="80"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#DBDBDB"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
+    </Window.Resources>
 
     <Grid Background="#E6E6E6 ">
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="4" />
             <RowDefinition/>
             <RowDefinition Height="25"/>
@@ -24,43 +33,45 @@
         <Rectangle Grid.Row="1" Fill="#DBDBDB"/>
         <Rectangle Grid.Row="3" Fill="#DBDBDB"/>
 
-
-        <Grid>
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="80"/>
-                <ColumnDefinition Width="80"/>
-                <ColumnDefinition Width="80"/>
-                <ColumnDefinition Width="80"/>
-                <ColumnDefinition Width="80"/>
-                <ColumnDefinition Width="148"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Button Name="OpenButton"  Margin="2 5 2 5" Width="74" Command="{Binding OpenBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  >
+            <Button Name="OpenButton" Command="{Binding OpenBtnClick}" Style="{StaticResource CmdButtonStyle}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="../Icons/openFolder.png" Height="13"/>
                     <TextBlock Text=" Open"/>
                 </StackPanel>
             </Button>
-            <Button Name="ImportButton" Grid.Column="1"  Margin="2 5 2 5 " Width="74" Command="{Binding ImportBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left">
+            <Button Name="ImportButton" Grid.Column="1" Command="{Binding ImportBtnClick}" Style="{StaticResource CmdButtonStyle}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="../Icons/import.png" Height="13"/>
                     <TextBlock Text=" Import"/>
                 </StackPanel>
             </Button>
-            <!--<Button Name="СreateButton" Content="Сreate" Grid.Column="2"  Width="60"  Margin="5" Command="{Binding CreateBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />-->
-            <Button Name="Export" Grid.Column="2" IsEnabled="{Binding IsOpenedStorage}"  Margin="2 5 2 5" Width="74" Command="{Binding ExportBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left">
+            <!--<Button Name="СreateButton" Content="Сreate" Grid.Column="2" Command="{Binding CreateBtnClick}" Style="{StaticResource CmdButtonStyle}"/>-->
+            <Button Name="Export" Grid.Column="2" IsEnabled="{Binding IsOpenedStorage}" Command="{Binding ExportBtnClick}" Style="{StaticResource CmdButtonStyle}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="../Icons/export.png" Height="13"/>
                     <TextBlock Text=" Export"/>
                 </StackPanel>
             </Button>
-            <Button Name="UpstreamButton" Grid.Column="3" Margin="2 5 2 5" Width="74" IsEnabled="{Binding IsOpenedStorage}" Command="{Binding UpdateBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left" >
+            <Button Name="UpstreamButton" Grid.Column="3" IsEnabled="{Binding IsOpenedStorage}" Command="{Binding UpdateBtnClick}" Style="{StaticResource CmdButtonStyle}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="../Icons/upstream.png" Height="13"/>
                     <TextBlock Text=" Upstream"/>
                 </StackPanel>
             </Button>
-
+            <Button Name="About" Grid.Column="6" Command="{Binding AboutBtnClick}" Style="{StaticResource CmdButtonStyle}" MinWidth="30">
+                <Image Width="16" Height="16" Source="../Icons/question.png"/>
+            </Button>
         </Grid>
 
         <Border BorderThickness="2" Grid.Row="2">

@@ -71,5 +71,10 @@ namespace QuoteHistoryGUI.Views
             this.IsEnabled = true;
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            HelpDialog.CloseHelp();
+            base.OnClosing(e);
+        }
     }
 }
