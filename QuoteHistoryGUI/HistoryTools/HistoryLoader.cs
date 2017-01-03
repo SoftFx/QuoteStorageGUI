@@ -35,7 +35,6 @@ namespace QuoteHistoryGUI
         }
 
 
-
         public void ReadSymbols(ObservableCollection<Folder> folders)
         {
             _folders = folders;
@@ -49,7 +48,6 @@ namespace QuoteHistoryGUI
             var key = HistoryDatabaseFuncs.SerealizeKey(symbol, "Meta", period, 2000, 1, 1, 0);
             var it = _dbase.CreateIterator();
             it.Seek(key);
-            var res = "";
 
             List<HistoryDatabaseFuncs.DBEntry> resl = new List<HistoryDatabaseFuncs.DBEntry>();
             while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, 0, true, true))

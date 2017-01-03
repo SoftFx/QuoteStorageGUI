@@ -28,7 +28,6 @@ namespace QuoteHistoryGUI.Dialogs
         HistoryInteractor _interactor;
         ObservableCollection<StorageInstanceModel> _tabs;
         BackgroundWorker CopyWorker;
-        bool IsCopying = false;
         bool isMetaMatching = true;
         StorageInstanceModel _source;
         StorageInstanceModel _destination;
@@ -78,7 +77,6 @@ namespace QuoteHistoryGUI.Dialogs
             temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
             templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
 
-            IsCopying = true;
             isMetaMatching = this.MetaMatching.IsChecked.HasValue && this.MetaMatching.IsChecked.Value;
             CopyButton.IsEnabled = false;
             CopyWorker.WorkerReportsProgress=true;
@@ -135,7 +133,6 @@ namespace QuoteHistoryGUI.Dialogs
         }
         private void worker_Copied(object sender, RunWorkerCompletedEventArgs e)
         {
-            IsCopying = false;
             MessageBox.Show("Done!","Result",MessageBoxButton.OK,MessageBoxImage.Asterisk);
             Close();
             CopyButton.IsEnabled = true;

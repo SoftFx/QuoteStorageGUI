@@ -79,10 +79,11 @@ namespace QuoteHistoryGUI.Models
             set { }
         }
 
+        string lastSelected;
         public string LastSelected
         {
-            get { return "Last selected:"; }
-            set { }
+            get { return lastSelected; }
+            set { lastSelected = value; NotifyPropertyChanged("LastSelected"); }
         }
 
 
@@ -150,10 +151,6 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
-
-
-
-        HistoryEditor _historyReader;
         public HistoryInteractor Interactor;
         public QHAppWindowModel(Dispatcher dispatcher)
         {
@@ -217,11 +214,23 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-                var dlg = new ImportDialog(MasterStorage.Count>0? MasterStorage[0]:null, SlaveStorage.Count > 0 ? SlaveStorage[0] : null)
+                if (MasterStorage.Count == 0)
                 {
-                    Owner = Application.Current.MainWindow
-                };
-                dlg.ShowDialog();
+                    var dlg = new ImportDialog(MasterStorage.Count > 0 ? MasterStorage[0] : null, SlaveStorage.Count > 0 ? SlaveStorage[0] : null)
+                    {
+                        Owner = Application.Current.MainWindow
+                    };
+                    dlg.ShowDialog();
+                }
+                else
+                {
+                    var dlg = new SmartImportDialog(MasterStorage[0], StorageTabs, this.Interactor)
+                    {
+                        Owner = Application.Current.MainWindow
+                    };
+                    dlg.ShowDialog();
+                    return true;
+                }
                 return true;
             }
         }

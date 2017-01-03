@@ -26,15 +26,14 @@ namespace QuoteHistoryGUI.Dialogs
     {
         HistoryInteractor _interactor;
         BackgroundWorker UpstreamWorker;
-        bool Upstreaming = false;
         StorageInstanceModel _source;
-        StorageInstanceModel _destination;
         SelectTemplateWorker temW;
         string templateText;
         bool is2levelUpstream = false;
 
         public UpstreamDialog(StorageInstanceModel source, HistoryInteractor interactor)
         {
+
             InitializeComponent();
             Level2Box.IsChecked = true;
             TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
@@ -47,13 +46,11 @@ namespace QuoteHistoryGUI.Dialogs
         {
             UpstreamWorker = new BackgroundWorker();
             _interactor.Source = _source;
-            _interactor.Destination = _destination;
             is2levelUpstream = Level2Box.IsChecked.HasValue && Level2Box.IsChecked.Value;
 
             temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
             templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
 
-            Upstreaming = true;
             UpstreamButton.IsEnabled = false;
             UpstreamWorker.WorkerReportsProgress = true;
             UpstreamWorker.WorkerSupportsCancellation = true;
@@ -140,7 +137,6 @@ namespace QuoteHistoryGUI.Dialogs
         }
         private void worker_Upstreamed(object sender, RunWorkerCompletedEventArgs e)
         {
-            Upstreaming = false;
             MessageBox.Show("Upstream update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
             Close();
             UpstreamButton.IsEnabled = true;
