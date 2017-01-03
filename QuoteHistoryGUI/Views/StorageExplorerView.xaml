@@ -17,7 +17,7 @@
 
             <TreeView.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Copy" Command="{Binding CopyBtnClick}"/>
+                    <MenuItem Header="Export" Command="{Binding CopyBtnClick}"/>
                     <Separator/>
                     <MenuItem Header="Delete" Command="{Binding DeleteBtnClick}"/>
                     <MenuItem Header="Refresh" Command="{Binding RefreshBtnClick}"/>
@@ -71,7 +71,7 @@
                         <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center" Tag="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                             <TextBlock.ContextMenu>
                                 <ContextMenu>
-                                    <MenuItem Header="Copy" Command="{Binding Path=PlacementTarget.Tag.CopyBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Export" Command="{Binding Path=PlacementTarget.Tag.CopyBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <MenuItem Header="Upstream update" Command="{Binding Path=PlacementTarget.Tag.UpdateBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <Separator/>
                                     <MenuItem Header="Delete" Command="{Binding Path=PlacementTarget.Tag.DeleteBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
@@ -90,7 +90,7 @@
                         <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center" Tag="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                             <TextBlock.ContextMenu>
                                 <ContextMenu>
-                                    <MenuItem Header="Copy" Command="{Binding Path=PlacementTarget.Tag.CopyBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Export" Command="{Binding Path=PlacementTarget.Tag.CopyBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <Separator/>
                                     <MenuItem Header="Delete" Command="{Binding Path=PlacementTarget.Tag.DeleteBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <MenuItem Header="Refresh" Command="{Binding Path=PlacementTarget.Tag.RefreshBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
@@ -108,7 +108,7 @@
                         <TextBlock Text="{Binding Path=Name}" VerticalAlignment="Center" Tag="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}}">
                             <TextBlock.ContextMenu>
                                 <ContextMenu>
-                                    <MenuItem Header="Copy" Command="{Binding Path=PlacementTarget.Tag.CopyBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Export" Command="{Binding Path=PlacementTarget.Tag.CopyBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <Separator/>
                                     <MenuItem Header="Delete" Command="{Binding Path=PlacementTarget.Tag.DeleteBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <MenuItem Header="Refresh" Command="{Binding Path=PlacementTarget.Tag.RefreshBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>

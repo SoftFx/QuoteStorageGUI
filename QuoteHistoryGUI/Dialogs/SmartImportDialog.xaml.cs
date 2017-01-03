@@ -22,9 +22,9 @@ using System.Windows.Shapes;
 namespace QuoteHistoryGUI.Dialogs
 {
     /// <summary>
-    /// Interaction logic for ExportDialog.xaml
+    /// Interaction logic for SmartImportDialog.xaml
     /// </summary>
-    public partial class ExportDialog : Window
+    public partial class SmartImportDialog : Window
     {
         HistoryInteractor _interactor;
         ObservableCollection<StorageInstanceModel> _tabs;
@@ -35,7 +35,7 @@ namespace QuoteHistoryGUI.Dialogs
         SelectTemplateWorker temW;
         string templateText;
         bool isMove = false;
-        public ExportDialog(StorageInstanceModel source, ObservableCollection<StorageInstanceModel> tabs, HistoryInteractor interactor)
+        public SmartImportDialog(StorageInstanceModel source, ObservableCollection<StorageInstanceModel> tabs, HistoryInteractor interactor)
         {
 
             InitializeComponent();
@@ -59,7 +59,7 @@ namespace QuoteHistoryGUI.Dialogs
             _source = source;
         }
 
-        public ExportDialog()
+        public SmartImportDialog()
         {
             InitializeComponent();
         }
@@ -72,9 +72,9 @@ namespace QuoteHistoryGUI.Dialogs
                 CopyWorker = new BackgroundWorker();
                 _interactor.Source = _source;
 
-                if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
-                    Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
-                _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
+                if (!Directory.Exists(SourceBox.Text + "\\HistoryDB"))
+                    Directory.CreateDirectory(SourceBox.Text + "\\HistoryDB");
+                _destination = new StorageInstanceModel(SourceBox.Text, _interactor.Dispatcher);
                 _interactor.Destination = _destination;
 
 
@@ -103,11 +103,11 @@ namespace QuoteHistoryGUI.Dialogs
                 CopyWorker = new BackgroundWorker();
 
 
-                if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
-                    Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
-                _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
-                _interactor.Source = _source;
-                _interactor.Destination = _destination;
+                if (!Directory.Exists(SourceBox.Text + "\\HistoryDB"))
+                    Directory.CreateDirectory(SourceBox.Text + "\\HistoryDB");
+                _destination = new StorageInstanceModel(SourceBox.Text, _interactor.Dispatcher);
+                _interactor.Source = _destination;
+                _interactor.Destination = _source;
 
                 if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
                 {
@@ -138,6 +138,9 @@ namespace QuoteHistoryGUI.Dialogs
             }
             else
             {
+
+
+
                 foreach (var templ in templates)
                 {
                     worker.ReportProgress(1, "Template: " + templ);
@@ -150,10 +153,12 @@ namespace QuoteHistoryGUI.Dialogs
                         _interactor.Delete(matched);
                         _interactor.Dispatcher = null;
                     }
+
+
                 }
-                
+
             }
-            _interactor.Destination.Refresh();
+            _interactor.Source.Refresh();
         }
 
         private void worker_Export(object sender, DoWorkEventArgs e)
@@ -170,22 +175,21 @@ namespace QuoteHistoryGUI.Dialogs
             MessageBox.Show("Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
             Close();
             CopyButton.IsEnabled = true;
-            _interactor.Destination.HistoryStoreDB.Dispose();
+            _interactor.Source.HistoryStoreDB.Dispose();
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (CopyWorker != null && CopyWorker.IsBusy)
             {
                 CopyWorker.CancelAsync();
-                _interactor.Destination.HistoryStoreDB.Dispose();
+                _interactor.Source.HistoryStoreDB.Dispose();
                 MessageBox.Show("Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 _interactor.Destination.Refresh();
             }
         }
-
         private void templateHelpButton_Click(object sender, RoutedEventArgs e)
         {
-            HelpDialog.ShowHelp("export");
+            MessageBox.Show("Examples:\n\nAAABBB/2015/1/2/3;\nAAA*/*15/;\n*/*/*/1/M1*;\n*/2016/*/2*/*3/ticks file*;", "Template Help", MessageBoxButton.OK, MessageBoxImage.Question);
         }
 
         private void AllRadioButton_Checked(object sender, RoutedEventArgs e)
@@ -206,14 +210,13 @@ namespace QuoteHistoryGUI.Dialogs
         {
             var dlg = new System.Windows.Forms.FolderBrowserDialog
             { };
-            if (DestinationBox.Text != "")
-                dlg.SelectedPath = DestinationBox.Text;
+            if (SourceBox.Text != "")
+                dlg.SelectedPath = SourceBox.Text;
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                DestinationBox.Text = dlg.SelectedPath;
+                SourceBox.Text = dlg.SelectedPath;
             }
             CopyButton.IsEnabled = true;
         }
-
     }
 }

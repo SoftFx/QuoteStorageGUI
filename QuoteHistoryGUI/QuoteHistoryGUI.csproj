@@ -21,7 +21,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;/main</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -47,6 +47,9 @@
     <Reference Include="LevelDB.NET">
       <HintPath>..\lib\LevelDB\LevelDB.NET.dll</HintPath>
     </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\lib\Log4Net\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
@@ -69,6 +72,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Dialogs\HelpDialog.xaml.cs">
+      <DependentUpon>HelpDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\ExportDialog.xaml.cs">
       <DependentUpon>ExportDialog.xaml</DependentUpon>
     </Compile>
@@ -80,6 +86,9 @@
     </Compile>
     <Compile Include="Dialogs\CopyDialog.xaml.cs">
       <DependentUpon>CopyDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\SmartImportDialog.xaml.cs">
+      <DependentUpon>SmartImportDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\TemplateControl.xaml.cs">
       <DependentUpon>TemplateControl.xaml</DependentUpon>
@@ -98,11 +107,19 @@
     <Compile Include="Views\StorageExplorerView.xaml.cs">
       <DependentUpon>StorageExplorerView.xaml</DependentUpon>
     </Compile>
+    <Page Include="Dialogs\HelpDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\ExportDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\ImportDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\SmartImportDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -180,7 +197,9 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\closeFolder.png" />
@@ -203,6 +222,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\question.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="HelpDocumentation.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\export.png" />

@@ -23,8 +23,6 @@ namespace QuoteHistoryGUI.Dialogs
     /// </summary>
     public partial class ImportDialog : Window
     {
-        DB Source;
-        DB Destination;
         HistoryInteractor Interactor;
         BackgroundWorker Worker;
         bool Replace;
@@ -105,7 +103,6 @@ namespace QuoteHistoryGUI.Dialogs
                 if (Interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
                 {
                     throw (new Exception("Unable to import to storage opened in readonly mode"));
-                    return;
                 }
                 ReportBlock.Text = "Import starting...";
                 ImportBtn.IsEnabled = false;

@@ -59,7 +59,6 @@ namespace QuoteHistoryGUI.HistoryTools
         {
             List<byte[]> deleteList = new List<byte[]>();
             int copiedCnt = 0;
-            int copiedItemsCnt = 0;
             DateTime lastReport = DateTime.UtcNow;
 
 
@@ -87,7 +86,6 @@ namespace QuoteHistoryGUI.HistoryTools
         {
 
             int copiedCnt = 0;
-            int copiedItemsCnt = 0;
             DateTime lastReport = DateTime.UtcNow;
 
             foreach(var entry in matchedEntries)

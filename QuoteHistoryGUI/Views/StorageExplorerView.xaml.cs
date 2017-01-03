@@ -24,13 +24,11 @@ namespace QuoteHistoryGUI.Views
     /// </summary>
     public partial class StorageExplorerView : UserControl
     {
-        StorageInstanceModel storage;
         public StorageExplorerView()
         {
             InitializeComponent();
             var a = this.DataContext;
             this.treeView.AddHandler(TreeViewItem.KeyDownEvent, new KeyEventHandler(treeView_KeyDown), true);
-            //this.treeView.AddHandler(TreeViewItem.MouseLeftButtonDownEvent, new MouseButtonEventHandler(treeView_MouseLeftButtonDown), true);
         }
         private void treeView_Expanded(object sender, RoutedEventArgs e)
         {
@@ -253,7 +251,6 @@ namespace QuoteHistoryGUI.Views
                     {
                         var resources = treeView.Resources as ResourceDictionary;
                         resources[SystemColors.HighlightBrushKey] = SystemColors.ActiveCaptionBrush;
-                        MessageBox.Show("SystemColors.ActiveCaptionBrush");
                     }
                     else
                     {

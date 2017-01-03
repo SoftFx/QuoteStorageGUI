@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:QuoteHistoryGUI.Dialogs"
         mc:Ignorable="d"
         Title="ImportDialog" Height="140" Width="350"
+        Icon="../Icons/import.png"
         Background="#F2F0ED"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">

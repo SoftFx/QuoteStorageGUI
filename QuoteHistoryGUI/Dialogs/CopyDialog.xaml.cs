@@ -28,7 +28,6 @@ namespace QuoteHistoryGUI.Dialogs
         HistoryInteractor _interactor;
         ObservableCollection<StorageInstanceModel> _tabs;
         BackgroundWorker CopyWorker;
-        bool IsCopying = false;
         bool isMetaMatching = true;
         StorageInstanceModel _source;
         StorageInstanceModel _destination;
@@ -78,7 +77,6 @@ namespace QuoteHistoryGUI.Dialogs
             temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
             templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
 
-            IsCopying = true;
             isMetaMatching = this.MetaMatching.IsChecked.HasValue && this.MetaMatching.IsChecked.Value;
             CopyButton.IsEnabled = false;
             CopyWorker.WorkerReportsProgress=true;
@@ -120,12 +118,6 @@ namespace QuoteHistoryGUI.Dialogs
 
 
                 }
-                /*foreach (var match in matched)
-                {
-                    _interactor.AddToSelection(match);
-                }
-                */
-
             }
             _interactor.Destination.Refresh();
         }
@@ -135,7 +127,6 @@ namespace QuoteHistoryGUI.Dialogs
         }
         private void worker_Copied(object sender, RunWorkerCompletedEventArgs e)
         {
-            IsCopying = false;
             MessageBox.Show("Done!","Result",MessageBoxButton.OK,MessageBoxImage.Asterisk);
             Close();
             CopyButton.IsEnabled = true;
@@ -152,7 +143,7 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void templateHelpButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Examples:\n\nAAABBB/2015/1/2/3;\nAAA*/*15/;\n*/*/*/1/M1*;\n*/2016/*/2*/*3/ticks file*;", "Template Help",MessageBoxButton.OK,MessageBoxImage.Question);
+            HelpDialog.ShowHelp("copy_templates");
         }
     }
 }
