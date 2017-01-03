@@ -1,4 +1,5 @@
 ﻿using LevelDB;
+using log4net;
 using QuoteHistoryGUI.Dialogs;
 using QuoteHistoryGUI.HistoryTools;
 using System;
@@ -28,7 +29,8 @@ namespace QuoteHistoryGUI.Models
         public Dispatcher Dispatcher;
 
         private string _version;
-        public string Version {
+        public string Version
+        {
             get { return _version; }
             set
             {
@@ -49,7 +51,8 @@ namespace QuoteHistoryGUI.Models
         #endregion
 
         private ObservableCollection<StorageInstanceModel> _storageTabs;
-        public ObservableCollection<StorageInstanceModel> StorageTabs {
+        public ObservableCollection<StorageInstanceModel> StorageTabs
+        {
             get { return _storageTabs; }
             set
             {
@@ -57,7 +60,7 @@ namespace QuoteHistoryGUI.Models
                     return;
                 _storageTabs = value;
                 NotifyPropertyChanged("StorageTabs");
-                
+
             }
         }
 
@@ -70,7 +73,7 @@ namespace QuoteHistoryGUI.Models
 
         public int SelMasterIndex
         {
-            get { return MasterStorage.Count!=0?0:-1; }
+            get { return MasterStorage.Count != 0 ? 0 : -1; }
             set { }
         }
         public int SelSlaveIndex
@@ -112,8 +115,8 @@ namespace QuoteHistoryGUI.Models
             StorageTabs.Remove(st);
             MasterStorage.Remove(st);
             SlaveStorage.Remove(st);
-            
-            if(SlaveStorage.Count==1 && MasterStorage.Count == 0)
+
+            if (SlaveStorage.Count == 1 && MasterStorage.Count == 0)
             {
                 MasterStorage.Add(SlaveStorage[0]);
                 SlaveStorage.Clear();
@@ -150,10 +153,12 @@ namespace QuoteHistoryGUI.Models
                 NotifyPropertyChanged("SlaveStorage");
             }
         }
+        public static readonly ILog log = LogManager.GetLogger(typeof(QHAppWindowModel));
 
         public HistoryInteractor Interactor;
         public QHAppWindowModel(Dispatcher dispatcher)
         {
+            log4net.Config.XmlConfigurator.Configure();
             Interactor = new HistoryInteractor();
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
             ImportBtnClick = new SingleDelegateCommand(ImportDelegate);
@@ -167,14 +172,16 @@ namespace QuoteHistoryGUI.Models
             CopyContextBtnClick = new SingleDelegateCommand(CopyContextDelegate);
             Dispatcher = dispatcher;
             IsOpenedStorage = false;
-            try {
+            try
+            {
                 StreamReader r = File.OpenText("version.txt");
                 Version = "QuoteStorageGUI build: " + r.ReadLine();
             }
-            catch {
+            catch
+            {
                 Version = "QuoteStorageGUI";
             }
-
+            log.Info("QH GUI initialized");
         }
 
         public ICommand OpenBtnClick { get; private set; }
@@ -191,17 +198,34 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-                var dlg = new StorageSelectionDialog()
+                try
                 {
-                    Owner = Application.Current.MainWindow
-                };
-                dlg.ShowDialog();
-                if (dlg.StoragePath.Text != "")
+                    log.Info("Open storage");
+                    var dlg = new StorageSelectionDialog()
+                    {
+                        Owner = Application.Current.MainWindow
+                    };
+                    dlg.ShowDialog();
+                    if (dlg.StoragePath.Text != "")
+                    {
+                        var tab = new StorageInstanceModel(dlg.StoragePath.Text, this.Dispatcher, this.Interactor, (bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : StorageInstanceModel.OpenMode.ReadWrite);
+                        if (tab.Status == "Ok")
+                        {
+                            log.Info("Opened storage: " + dlg.StoragePath.Text);
+                            TryToAddStorage(tab);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
+                            log.Info("Can't open storage: " + dlg.StoragePath.Text + " reason: " + tab.Status);
+                        }
+                    }
+
+                }
+                catch (Exception ex)
                 {
-                    var tab = new StorageInstanceModel(dlg.StoragePath.Text,this.Dispatcher, this.Interactor,(bool)dlg.ReadOnlyBox.IsChecked?StorageInstanceModel.OpenMode.ReadOnly:StorageInstanceModel.OpenMode.ReadWrite);
-                    if (tab.Status == "Ok")
-                        TryToAddStorage(tab);
-                    else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
+                    log.Error(ex.Message);
+                    throw ex;
                 }
                 return true;
             }
@@ -214,22 +238,31 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-                if (MasterStorage.Count == 0)
+                try
                 {
-                    var dlg = new ImportDialog(MasterStorage.Count > 0 ? MasterStorage[0] : null, SlaveStorage.Count > 0 ? SlaveStorage[0] : null)
+                    log.Info("Import Dialog calling");
+                    if (MasterStorage.Count == 0)
                     {
-                        Owner = Application.Current.MainWindow
-                    };
-                    dlg.ShowDialog();
+                        var dlg = new ImportDialog(MasterStorage.Count > 0 ? MasterStorage[0] : null, SlaveStorage.Count > 0 ? SlaveStorage[0] : null)
+                        {
+                            Owner = Application.Current.MainWindow
+                        };
+                        dlg.ShowDialog();
+                    }
+                    else
+                    {
+                        var dlg = new SmartImportDialog(MasterStorage[0], StorageTabs, this.Interactor)
+                        {
+                            Owner = Application.Current.MainWindow
+                        };
+                        dlg.ShowDialog();
+                    }
+                    log.Info("Import Dialog closed");
                 }
-                else
+                catch (Exception ex)
                 {
-                    var dlg = new SmartImportDialog(MasterStorage[0], StorageTabs, this.Interactor)
-                    {
-                        Owner = Application.Current.MainWindow
-                    };
-                    dlg.ShowDialog();
-                    return true;
+                    log.Error(ex.Message);
+                    throw ex;
                 }
                 return true;
             }
@@ -242,11 +275,21 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-                var dlg = new ExportDialog(MasterStorage[0], StorageTabs, this.Interactor)
+                try
                 {
-                    Owner = Application.Current.MainWindow
-                };
-                dlg.ShowDialog();
+                    log.Info("Export Dialog calling");
+                    var dlg = new ExportDialog(MasterStorage[0], StorageTabs, this.Interactor)
+                    {
+                        Owner = Application.Current.MainWindow
+                    };
+                    dlg.ShowDialog();
+                    log.Info("Export Dialog closed");
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex.Message);
+                    throw ex;
+                }
                 return true;
             }
         }
@@ -257,14 +300,25 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-                Interactor.DiscardSelection();
-                MasterStorage[0].Selection.ForEach(t => { Interactor.AddToSelection(t); });
-                
-                var dlg = new UpstreamDialog(MasterStorage.Count > 0 ? MasterStorage[0] : null, Interactor)
+                try
                 {
-                    Owner = Application.Current.MainWindow
-                };
-                dlg.ShowDialog();
+                    log.Info("Upstream Dialog closed");
+
+                    Interactor.DiscardSelection();
+                    MasterStorage[0].Selection.ForEach(t => { Interactor.AddToSelection(t); });
+
+                    var dlg = new UpstreamDialog(MasterStorage.Count > 0 ? MasterStorage[0] : null, Interactor)
+                    {
+                        Owner = Application.Current.MainWindow
+                    };
+                    dlg.ShowDialog();
+                    log.Info("Upstream Dialog closed");
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex.Message);
+                    throw ex;
+                }
                 return true;
             }
         }
@@ -275,21 +329,30 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-                var dlg = new System.Windows.Forms.FolderBrowserDialog
-                { };
-
-                if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                try
                 {
-                    var path = dlg.SelectedPath;
-                    Directory.CreateDirectory(path + "\\HistoryDB");
-                    var historyStoreDB = new DB(path + "\\HistoryDB",
-                            new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
-                    historyStoreDB.Dispose();
-                    var tab = new StorageInstanceModel(path, this.Dispatcher, Interactor, StorageInstanceModel.OpenMode.ReadWrite);
-                    if (tab.Status == "Ok")
-                        TryToAddStorage(tab);
-                    else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
+                    var dlg = new System.Windows.Forms.FolderBrowserDialog
+                    { };
 
+                    if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        var path = dlg.SelectedPath;
+                        Directory.CreateDirectory(path + "\\HistoryDB");
+                        var historyStoreDB = new DB(path + "\\HistoryDB",
+                                new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
+                        historyStoreDB.Dispose();
+                        var tab = new StorageInstanceModel(path, this.Dispatcher, Interactor, StorageInstanceModel.OpenMode.ReadWrite);
+                        if (tab.Status == "Ok")
+                            TryToAddStorage(tab);
+                        else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
+
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex.Message);
+                    throw ex;
                 }
                 return true;
             }

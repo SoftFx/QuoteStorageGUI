@@ -118,12 +118,6 @@ namespace QuoteHistoryGUI.Dialogs
 
 
                 }
-                /*foreach (var match in matched)
-                {
-                    _interactor.AddToSelection(match);
-                }
-                */
-
             }
             _interactor.Destination.Refresh();
         }

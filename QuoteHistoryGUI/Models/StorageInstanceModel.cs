@@ -1,4 +1,5 @@
 ﻿using LevelDB;
+using log4net;
 using QuoteHistoryGUI.Dialogs;
 using QuoteHistoryGUI.HistoryTools;
 using QuoteHistoryGUI.HistoryTools.MetaStorage;
@@ -38,23 +39,30 @@ namespace QuoteHistoryGUI.Models
         #endregion
         public string Status = "";
         public HistoryEditor Editor;
-
+        public static readonly ILog log = LogManager.GetLogger(typeof(StorageInstanceModel));
         public StorageInstanceModel(string path, Dispatcher dispatcher, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite)
         {
-            _dispatcher = dispatcher;
-            openMode = mode;
-            StoragePath = path;
-            _dispatcher = dispatcher;
-            OpenBase(path);
-            MetaStorage = new MetaStorage(new HistoryLoader(_dispatcher, _historyStoreDB));
-            Interactor = inter;
-            Selection = new List<Folder>();
-            SaveBtnClick = new SingleDelegateCommand(SaveDelegate);
-            CopyBtnClick = new SingleDelegateCommand(CopyDelegate);
-            DeleteBtnClick = new SingleDelegateCommand(DeleteDelegate);
-            RefreshBtnClick = new SingleDelegateCommand(RefreshDelegate);
-            CloseBtnClick = new SingleDelegateCommand(CloseDelegate);
-            UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
+            //log4net.Config.XmlConfigurator.Configure();
+            try
+            {
+                _dispatcher = dispatcher;
+                openMode = mode;
+                StoragePath = path;
+                _dispatcher = dispatcher;
+                OpenBase(path);
+                MetaStorage = new MetaStorage(new HistoryLoader(_dispatcher, _historyStoreDB));
+                Interactor = inter;
+                Selection = new List<Folder>();
+                SaveBtnClick = new SingleDelegateCommand(SaveDelegate);
+                CopyBtnClick = new SingleDelegateCommand(CopyDelegate);
+                DeleteBtnClick = new SingleDelegateCommand(DeleteDelegate);
+                RefreshBtnClick = new SingleDelegateCommand(RefreshDelegate);
+                CloseBtnClick = new SingleDelegateCommand(CloseDelegate);
+                UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
+                log.Info("StorageInstance initialized: " + path);
+            }
+            catch (Exception ex)
+            { log.Error(ex.Message); throw ex; }
         }
 
 
@@ -153,6 +161,7 @@ namespace QuoteHistoryGUI.Models
             Folders = new ObservableCollection<Folder>();
             try
             {
+                log.Info("Opening database: " + path);
                 if (!Directory.Exists(path + "\\HistoryDB"))
                     throw new Exception("Cant't find a history database folder (HistoryDB) in folder: " + path);
                 _historyStoreDB = new DB(path + "\\HistoryDB",
@@ -160,10 +169,12 @@ namespace QuoteHistoryGUI.Models
                 Editor = new HistoryEditor(_historyStoreDB);
                 HistoryLoader hl = new HistoryLoader(_dispatcher, _historyStoreDB);
                 hl.ReadSymbols(Folders);
+                log.Info("Database opened and initialized: " + path);
             }
             catch (Exception ex)
             {
                 Status = ex.Message;
+                log.Warn(Status);
                 return;
             }
             FilePath = path;
@@ -188,56 +199,86 @@ namespace QuoteHistoryGUI.Models
 
         public void OpenChunk(ChunkFile f)
         {
-            var wind = Application.Current.MainWindow as QHAppWindowView;
-            wind.ShowLoading();
-            _currentFile = f;
-            var content = (Editor.ReadFromDB(_currentFile)).Value;
-            FileContent = ASCIIEncoding.ASCII.GetString(content);
-            string path = f.Name;
-            var par = f.Parent;
-            while (par.Parent != null)
+            try
             {
+                log.Info("Chunk opening... " + f.Name);
+                var wind = Application.Current.MainWindow as QHAppWindowView;
+                wind.ShowLoading();
+                _currentFile = f;
+                var content = (Editor.ReadFromDB(_currentFile)).Value;
+                FileContent = ASCIIEncoding.ASCII.GetString(content);
+                string path = f.Name;
+                var par = f.Parent;
+                while (par.Parent != null)
+                {
+                    path = par.Name + "/" + path;
+                    par = par.Parent;
+                }
                 path = par.Name + "/" + path;
-                par = par.Parent;
+                FilePath = path;
+                log.Info("Chunk opened: " + FilePath);
             }
-            path = par.Name + "/" + path;
-            FilePath = path;
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
 
         }
 
         public void OpenMeta(MetaFile f)
         {
-            var wind = Application.Current.MainWindow as QHAppWindowView;
-            _currentFile = f;
-            var content = Editor.ReadFromDB(_currentFile).Value;
-            FileContent = ASCIIEncoding.ASCII.GetString(content);
-            string path = f.Name;
-            var par = f.Parent;
-            while (par.Parent != null)
+            try
             {
+                log.Info("Meta opening... " + f.Name);
+                var wind = Application.Current.MainWindow as QHAppWindowView;
+                _currentFile = f;
+                var content = Editor.ReadFromDB(_currentFile).Value;
+                FileContent = ASCIIEncoding.ASCII.GetString(content);
+                string path = f.Name;
+                var par = f.Parent;
+                while (par.Parent != null)
+                {
+                    path = par.Name + "/" + path;
+                    par = par.Parent;
+                }
                 path = par.Name + "/" + path;
-                par = par.Parent;
+                FilePath = path;
+                log.Info("Meta opened: " + FilePath);
             }
-            path = par.Name + "/" + path;
-            FilePath = path;
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
 
         }
 
 
         public void SaveChunk()
         {
-            if (openMode == OpenMode.ReadOnly)
+            try
             {
-                MessageBox.Show("Unable to save in readonly mode", "Save", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                return;
+                log.Info("Chunk saving... ");
+                if (openMode == OpenMode.ReadOnly)
+                {
+                    MessageBox.Show("Unable to save in readonly mode", "Save", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    return;
+                }
+                var wind = Application.Current.MainWindow as QHAppWindowView;
+                wind.ShowLoading();
+                if (_currentFile as ChunkFile != null)
+                    Editor.SaveToDB(ASCIIEncoding.ASCII.GetBytes(FileContent), _currentFile as ChunkFile);
+                else MessageBox.Show("Meta file editing is not possible!", "hmm...", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                wind.HideLoading();
+                Application.Current.MainWindow.Activate();
+                log.Info("Chunk saved: " + FilePath);
             }
-            var wind = Application.Current.MainWindow as QHAppWindowView;
-            wind.ShowLoading();
-            if (_currentFile as ChunkFile != null)
-                Editor.SaveToDB(ASCIIEncoding.ASCII.GetBytes(FileContent), _currentFile as ChunkFile);
-            else MessageBox.Show("Meta file editing is not possible!", "hmm...", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-            wind.HideLoading();
-            Application.Current.MainWindow.Activate();
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
         }
 
         private bool SaveDelegate(object o, bool isCheckOnly)
@@ -256,19 +297,28 @@ namespace QuoteHistoryGUI.Models
             var MainModel = Application.Current.MainWindow.DataContext as QHAppWindowModel;
 
             if (isCheckOnly)
-                return MainModel.StorageTabs.Count > 1;
+                return true;
             else
             {
-
-                Interactor.DiscardSelection();
-                Selection.ForEach(t => { Interactor.AddToSelection(t); });
-
-
-                var dlg = new CopyDialog(this, MainModel.StorageTabs, Interactor)
+                try
                 {
-                    Owner = Application.Current.MainWindow
-                };
-                dlg.ShowDialog();
+                    log.Info("Copy context menu call... ");
+                    Interactor.DiscardSelection();
+                    Selection.ForEach(t => { Interactor.AddToSelection(t); });
+
+
+                    var dlg = new ExportDialog(this, MainModel.StorageTabs, Interactor)
+                    {
+                        Owner = Application.Current.MainWindow
+                    };
+                    dlg.ShowDialog();
+                    log.Info("Copy performed... ");
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex.Message);
+                    throw ex;
+                }
                 return true;
             }
         }
@@ -279,32 +329,41 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-
-                if (openMode == OpenMode.ReadOnly)
+                try
                 {
-                    MessageBox.Show("Unable to delete in readonly mode", "Delete", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    return true;
+                    log.Info("Delete context menu call... ");
+                    if (openMode == OpenMode.ReadOnly)
+                    {
+                        MessageBox.Show("Unable to delete in readonly mode", "Delete", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                        return true;
+                    }
+
+                    var MainModel = Application.Current.MainWindow.DataContext as QHAppWindowModel;
+                    var MainView = Application.Current.MainWindow as QHAppWindowView;
+
+                    var result = MessageBox.Show("Are you sure?", "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if (result == MessageBoxResult.No) return true;
+
+                    Interactor.DiscardSelection();
+                    Selection.ForEach(t => { Interactor.AddToSelection(t); });
+                    Selection.Clear();
+
+                    Interactor.Source = this;
+                    MainView.ShowLoading();
+                    var res = Interactor.Delete();
+                    MainView.HideLoading();
+
+                    if (res == 1)
+                        MessageBox.Show("Delete completed!", "Delete", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    Application.Current.MainWindow.Activate();
+                    log.Info("Delete performed... ");
                 }
-
-                var MainModel = Application.Current.MainWindow.DataContext as QHAppWindowModel;
-                var MainView = Application.Current.MainWindow as QHAppWindowView;
-
-                var result = MessageBox.Show("Are you sure?", "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (result == MessageBoxResult.No) return true;
-
-                Interactor.DiscardSelection();
-                Selection.ForEach(t => { Interactor.AddToSelection(t); });
-                Selection.Clear();
-
-                Interactor.Source = this;
-                MainView.ShowLoading();
-                var res = Interactor.Delete();
-                MainView.HideLoading();
-
-                if (res == 1)
-                    MessageBox.Show("Delete completed!", "Delete", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                Application.Current.MainWindow.Activate();
+                catch (Exception ex)
+                {
+                    log.Error(ex.Message);
+                    throw ex;
+                }
                 return true;
             }
         }
@@ -330,6 +389,7 @@ namespace QuoteHistoryGUI.Models
                 {
                     foreach (var sel in Selection)
                     {
+                        log.Info("context upstram for " + sel);
                         var chunk = sel as ChunkFile;
                         if (chunk != null)
                         {
@@ -354,6 +414,7 @@ namespace QuoteHistoryGUI.Models
                 }
                 catch (Exception ex)
                 {
+                    log.Error(ex.Message);
                     MessageBox.Show(ex.Message, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
 
@@ -428,9 +489,20 @@ namespace QuoteHistoryGUI.Models
                 return true;
             else
             {
-                var MainModel = Application.Current.MainWindow.DataContext as QHAppWindowModel;
-                MainModel.TryToRemoveStorage(this);
-                _historyStoreDB.Dispose();
+                try
+                {
+                    log.Info("Storage instance closing: " + StoragePath);
+                    var MainModel = Application.Current.MainWindow.DataContext as QHAppWindowModel;
+                    MainModel.TryToRemoveStorage(this);
+                    _historyStoreDB.Dispose();
+                    log.Info("Storage instance closed, database disposed: " + StoragePath);
+                    log.Info("Delete performed... ");
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex.Message);
+                    throw ex;
+                }
                 return true;
             }
         }

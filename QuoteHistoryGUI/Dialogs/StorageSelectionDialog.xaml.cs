@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Configuration;
 using System.ComponentModel;
+using log4net;
 
 namespace QuoteHistoryGUI.Dialogs
 {
@@ -25,47 +26,67 @@ namespace QuoteHistoryGUI.Dialogs
         private int _pathCount = 0;
         List<string> _pathList;
         bool _canceled = true;
-
+        public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
         private void SavePathes()
         {
-            if (!_pathList.Contains(StoragePath.Text))
+            try
             {
-                _pathList.Add(StoragePath.Text);
-                _pathCount++;
-            }
-            Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            for (int i = 0; i < _pathCount; i++)
-            {
-                if (config.AppSettings.Settings["path_" + i] == null)
-                    config.AppSettings.Settings.Add(new KeyValueConfigurationElement("path_" + i, _pathList[i]));
-                else
-                    config.AppSettings.Settings["path_" + i].Value = _pathList[i];
+                log.Info("Saving storage pathes...");
+                if (!_pathList.Contains(StoragePath.Text))
+                {
+                    _pathList.Add(StoragePath.Text);
+                    _pathCount++;
+                }
+                Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                for (int i = 0; i < _pathCount; i++)
+                {
+                    if (config.AppSettings.Settings["path_" + i] == null)
+                        config.AppSettings.Settings.Add(new KeyValueConfigurationElement("path_" + i, _pathList[i]));
+                    else
+                        config.AppSettings.Settings["path_" + i].Value = _pathList[i];
 
+                }
+                config.AppSettings.Settings["path_count"].Value = _pathCount.ToString();
+                config.Save();
+                log.Info("Storage pathes saved");
             }
-            config.AppSettings.Settings["path_count"].Value = _pathCount.ToString();
-            config.Save();
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
         }
         public StorageSelectionDialog()
         {
-            InitializeComponent();
-            this.Closing += Window_Closing;
-            Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            if (config.AppSettings.Settings["path_count"] == null)
-                config.AppSettings.Settings.Add(new KeyValueConfigurationElement("path_count", "0"));
-            _pathCount = int.Parse(config.AppSettings.Settings["path_count"].Value);
-            _pathList = new List<string>();
-            for(int i =0; i< _pathCount;i++)
+            try
             {
-                _pathList.Add(config.AppSettings.Settings["path_" + i].Value);
+                log.Info("Storage selection dialog initializing");
+                InitializeComponent();
+                this.Closing += Window_Closing;
+                Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                if (config.AppSettings.Settings["path_count"] == null)
+                    config.AppSettings.Settings.Add(new KeyValueConfigurationElement("path_count", "0"));
+                _pathCount = int.Parse(config.AppSettings.Settings["path_count"].Value);
+                _pathList = new List<string>();
+                for (int i = 0; i < _pathCount; i++)
+                {
+                    _pathList.Add(config.AppSettings.Settings["path_" + i].Value);
+                }
+                config.Save();
+                PathBox.ItemsSource = _pathList;
+                log.Info("Storage selection dialog initialized");
             }
-            config.Save();
-            PathBox.ItemsSource = _pathList;
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
         }
 
         private void Browse(object sender, RoutedEventArgs e)
         {
             var dlg = new System.Windows.Forms.FolderBrowserDialog
-            {};
+            { };
             if (StoragePath.Text != "")
                 dlg.SelectedPath = StoragePath.Text;
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -76,9 +97,19 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void Open(object sender, RoutedEventArgs e)
         {
-            SavePathes();
-            _canceled = false;
-            this.Close();
+            try
+            {
+                log.Info("Storage opening...");
+                SavePathes();
+                _canceled = false;
+                this.Close();
+                log.Info("Storage selection dialog closed");
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
         }
 
 
@@ -106,7 +137,7 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void PathBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (PathBox != null && e.Key==Key.Enter)
+            if (PathBox != null && e.Key == Key.Enter)
             {
                 SavePathes();
                 _canceled = false;
