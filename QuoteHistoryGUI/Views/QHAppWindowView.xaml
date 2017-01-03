@@ -23,9 +23,9 @@
         </Grid.RowDefinitions>
         <Rectangle Grid.Row="1" Fill="#DBDBDB"/>
         <Rectangle Grid.Row="3" Fill="#DBDBDB"/>
-        
-        
-            <Grid>
+
+
+        <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="80"/>
                 <ColumnDefinition Width="80"/>
@@ -48,13 +48,13 @@
                 </StackPanel>
             </Button>
             <!--<Button Name="СreateButton" Content="Сreate" Grid.Column="2"  Width="60"  Margin="5" Command="{Binding CreateBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left"  />-->
-            <Button Name="Export" Grid.Column="2"  Margin="2 5 2 5" Width="74" Command="{Binding ExportBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left">
+            <Button Name="Export" Grid.Column="2" IsEnabled="{Binding IsOpenedStorage}"  Margin="2 5 2 5" Width="74" Command="{Binding ExportBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="../Icons/export.png" Height="13"/>
                     <TextBlock Text=" Export"/>
                 </StackPanel>
             </Button>
-            <Button Name="UpstreamButton" Grid.Column="3" Margin="2 5 2 5" Width="74" Command="{Binding UpdateBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left" >
+            <Button Name="UpstreamButton" Grid.Column="3" Margin="2 5 2 5" Width="74" IsEnabled="{Binding IsOpenedStorage}" Command="{Binding UpdateBtnClick}" Background="Transparent" BorderBrush="#DBDBDB" HorizontalAlignment="Left" >
                 <StackPanel Orientation="Horizontal">
                     <Image Source="../Icons/upstream.png" Height="13"/>
                     <TextBlock Text=" Upstream"/>
