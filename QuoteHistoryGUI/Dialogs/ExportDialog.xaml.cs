@@ -41,7 +41,9 @@ namespace QuoteHistoryGUI.Dialogs
 
             InitializeComponent();
 
+            OperationTypeBox.IsEnabled = false;
             Source.Text = source.StoragePath;
+            CopyButton.IsEnabled = false;
             foreach (var tab in tabs)
             {
                 if (tab != source) _destination = tab;
@@ -100,6 +102,31 @@ namespace QuoteHistoryGUI.Dialogs
             else
             {
 
+                isMove = OperationTypeBox.SelectedIndex == 1;
+                CopyWorker = new BackgroundWorker();
+
+
+                if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
+                    Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
+                _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
+                _interactor.Source = _source;
+                _interactor.Destination = _destination;
+
+                if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
+                {
+                    MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    return;
+                }
+
+                IsCopying = true;
+
+                CopyButton.IsEnabled = false;
+                CopyWorker.WorkerReportsProgress = true;
+                CopyWorker.WorkerSupportsCancellation = true;
+                CopyWorker.DoWork += worker_Export;
+                CopyWorker.ProgressChanged += CopyProgressChanged;
+                CopyWorker.RunWorkerCompleted += worker_Copied;
+                CopyWorker.RunWorkerAsync(CopyWorker);
             }
         }
 
@@ -143,6 +170,12 @@ namespace QuoteHistoryGUI.Dialogs
             }
             _interactor.Destination.Refresh();
         }
+
+        private void worker_Export(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = e.Argument as BackgroundWorker;
+            _interactor.Import(true, worker);
+        }
         private void CopyProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             CopyStatusBlock.Text = e.UserState as string;
@@ -175,12 +208,14 @@ namespace QuoteHistoryGUI.Dialogs
         {
             if (TemplateExpander != null)
                 TemplateExpander.IsEnabled = false;
+            OperationTypeBox.IsEnabled = false;
         }
 
         private void TemplateRadioButton_Checked(object sender, RoutedEventArgs e)
         {
             if (TemplateExpander != null)
                 TemplateExpander.IsEnabled = true;
+            OperationTypeBox.IsEnabled = true;
         }
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
@@ -193,6 +228,8 @@ namespace QuoteHistoryGUI.Dialogs
             {
                 DestinationBox.Text = dlg.SelectedPath;
             }
+            CopyButton.IsEnabled = true;
         }
+
     }
 }

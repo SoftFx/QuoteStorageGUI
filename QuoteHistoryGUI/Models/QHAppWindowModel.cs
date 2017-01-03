@@ -61,6 +61,13 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
+        private bool isOpenedStorage;
+        public bool IsOpenedStorage
+        {
+            get { return isOpenedStorage; }
+            set { isOpenedStorage = value; NotifyPropertyChanged("IsOpenedStorage"); }
+        }
+
         public int SelMasterIndex
         {
             get { return MasterStorage.Count!=0?0:-1; }
@@ -93,6 +100,8 @@ namespace QuoteHistoryGUI.Models
                 if (StorageTabs.Count == 2)
                     SlaveStorage.Add(st);
             }
+            IsOpenedStorage = true;
+
             NotifyPropertyChanged("SelMasterIndex");
             NotifyPropertyChanged("SelSlaveIndex");
         }
@@ -108,6 +117,9 @@ namespace QuoteHistoryGUI.Models
                 MasterStorage.Add(SlaveStorage[0]);
                 SlaveStorage.Clear();
             }
+
+            IsOpenedStorage = false;
+
             NotifyPropertyChanged("SelMasterIndex");
             NotifyPropertyChanged("SelSlaveIndex");
         }
@@ -155,6 +167,7 @@ namespace QuoteHistoryGUI.Models
             SlaveStorage = new ObservableCollection<StorageInstanceModel>();
             CopyContextBtnClick = new SingleDelegateCommand(CopyContextDelegate);
             Dispatcher = dispatcher;
+            IsOpenedStorage = false;
             try {
                 StreamReader r = File.OpenText("version.txt");
                 Version = "QuoteStorageGUI build: " + r.ReadLine();

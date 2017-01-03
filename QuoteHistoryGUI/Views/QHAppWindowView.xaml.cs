@@ -51,7 +51,6 @@ namespace QuoteHistoryGUI.Views
                     else MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
                 }
             }
-
         }
         private LoadingDialog _loadingDlg; 
         public  void ShowLoading()

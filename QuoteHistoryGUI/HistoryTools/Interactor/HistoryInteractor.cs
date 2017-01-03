@@ -258,8 +258,10 @@ namespace QuoteHistoryGUI.HistoryTools
             var sourceIter = Source.HistoryStoreDB.CreateIterator();
             sourceIter.SeekToFirst();
             DateTime ReportTime = DateTime.Now;
+            int cnt = 0;
             while (sourceIter.IsValid())
             {
+                cnt++;
                 if (replace)
                 {
                     Destination.HistoryStoreDB.Put(sourceIter.GetKey(), sourceIter.GetValue());
@@ -272,9 +274,9 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                 }
 
-                if (worker != null && (DateTime.Now - ReportTime).Seconds > 1)
+                if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.5)
                 {
-                    worker.ReportProgress(1, sourceIter.GetKey());
+                    worker.ReportProgress(1, "Copied " + cnt + " items...");
                     ReportTime = DateTime.Now;
                 }
 
@@ -282,6 +284,7 @@ namespace QuoteHistoryGUI.HistoryTools
             }
             sourceIter.Dispose();
         }
+        
 
     }
 }
