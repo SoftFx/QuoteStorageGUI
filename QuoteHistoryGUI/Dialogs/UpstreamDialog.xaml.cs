@@ -1,4 +1,5 @@
-﻿using QuoteHistoryGUI.HistoryTools;
+﻿using log4net;
+using QuoteHistoryGUI.HistoryTools;
 using QuoteHistoryGUI.HistoryTools.Interactor;
 using QuoteHistoryGUI.Models;
 using System;
@@ -30,34 +31,53 @@ namespace QuoteHistoryGUI.Dialogs
         SelectTemplateWorker temW;
         string templateText;
         bool is2levelUpstream = false;
+        public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
 
         public UpstreamDialog(StorageInstanceModel source, HistoryInteractor interactor)
         {
-
-            InitializeComponent();
-            Level2Box.IsChecked = true;
-            TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
-                HistoryInteractor.GetTemplates(interactor.Selection));
-            _interactor = interactor;
-            _interactor.Selection.Clear();
-            _source = source;
+            try
+            {
+                log.Info("Upstream dialog initializing...");
+                InitializeComponent();
+                Level2Box.IsChecked = true;
+                TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
+                    HistoryInteractor.GetTemplates(interactor.Selection));
+                _interactor = interactor;
+                _interactor.Selection.Clear();
+                _source = source;
+                log.Info("Upstream dialog initialized");
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
         }
         private void UpstreamButton_Click(object sender, RoutedEventArgs e)
         {
-            UpstreamWorker = new BackgroundWorker();
-            _interactor.Source = _source;
-            is2levelUpstream = Level2Box.IsChecked.HasValue && Level2Box.IsChecked.Value;
+            try
+            {
+                log.Info("Upstream calling...");
+                UpstreamWorker = new BackgroundWorker();
+                _interactor.Source = _source;
+                is2levelUpstream = Level2Box.IsChecked.HasValue && Level2Box.IsChecked.Value;
 
-            temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
-            templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
+                temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
+                templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
 
-            UpstreamButton.IsEnabled = false;
-            UpstreamWorker.WorkerReportsProgress = true;
-            UpstreamWorker.WorkerSupportsCancellation = true;
-            UpstreamWorker.DoWork += worker_Upstream;
-            UpstreamWorker.ProgressChanged += CopyProgressChanged;
-            UpstreamWorker.RunWorkerCompleted += worker_Upstreamed;
-            UpstreamWorker.RunWorkerAsync(UpstreamWorker);
+                UpstreamButton.IsEnabled = false;
+                UpstreamWorker.WorkerReportsProgress = true;
+                UpstreamWorker.WorkerSupportsCancellation = true;
+                UpstreamWorker.DoWork += worker_Upstream;
+                UpstreamWorker.ProgressChanged += CopyProgressChanged;
+                UpstreamWorker.RunWorkerCompleted += worker_Upstreamed;
+                UpstreamWorker.RunWorkerAsync(UpstreamWorker);
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
         }
 
         private void worker_Upstream(object sender, DoWorkEventArgs e)
@@ -81,7 +101,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                         if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
                         {
-                            worker.ReportProgress(1, "Upstreaming : " + upstramCnt+", template processing: "+ templNum);
+                            worker.ReportProgress(1, "Upstreaming : " + upstramCnt + ", template processing: " + templNum);
                             lastReport = DateTime.UtcNow;
                         }
 
@@ -129,17 +149,19 @@ namespace QuoteHistoryGUI.Dialogs
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message+",\nStackTrace: "+ex.StackTrace, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message + ",\nStackTrace: " + ex.StackTrace, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             _interactor.Source.Refresh();
         }
         private void CopyProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             UpstreamStatusBlock.Text = e.UserState as string;
+            log.Info("Upstream progress report: " + e.UserState as string);
         }
         private void worker_Upstreamed(object sender, RunWorkerCompletedEventArgs e)
         {
             MessageBox.Show("Upstream update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+            log.Info("Upstream performed");
             Close();
             UpstreamButton.IsEnabled = true;
         }
@@ -149,6 +171,7 @@ namespace QuoteHistoryGUI.Dialogs
             {
                 UpstreamWorker.CancelAsync();
                 MessageBox.Show("Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                log.Info("Upstream canceled");
             }
         }
 

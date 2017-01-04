@@ -212,6 +212,13 @@ namespace QuoteHistoryGUI.Models
                         if (tab.Status == "Ok")
                         {
                             log.Info("Opened storage: " + dlg.StoragePath.Text);
+                            if (MasterStorage.Count > 0)
+                            {
+                                var storageInstance = MasterStorage[0];
+                                TryToRemoveStorage(storageInstance);
+                                if(storageInstance.HistoryStoreDB!=null)
+                                    storageInstance.HistoryStoreDB.Dispose();
+                            }
                             TryToAddStorage(tab);
                         }
                         else

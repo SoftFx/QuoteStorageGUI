@@ -125,6 +125,7 @@
                 <Style TargetType="{x:Type TreeViewItem}">
                     <Setter Property="BorderThickness" Value="1"/>
                     <EventSetter Event="MouseLeftButtonUp" Handler="treeViewItem_MouseLeftButtonUp"/>
+                    <EventSetter Event="MouseRightButtonUp" Handler="treeViewItem_MouseRightButtonUp"/>
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="BorderBrush" Value="#798aa0"/>
