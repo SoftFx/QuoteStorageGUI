@@ -40,7 +40,7 @@ namespace QuoteHistoryGUI.Models
         public string Status = "";
         public HistoryEditor Editor;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageInstanceModel));
-        public StorageInstanceModel(string path, Dispatcher dispatcher, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite)
+        public StorageInstanceModel(string path, Dispatcher dispatcher, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite, bool syncLoading = false)
         {
             //log4net.Config.XmlConfigurator.Configure();
             try
@@ -49,7 +49,7 @@ namespace QuoteHistoryGUI.Models
                 openMode = mode;
                 StoragePath = path;
                 _dispatcher = dispatcher;
-                OpenBase(path);
+                OpenBase(path, syncLoading);
                 MetaStorage = new MetaStorage(new HistoryLoader(_dispatcher, _historyStoreDB));
                 Interactor = inter;
                 Selection = new List<Folder>();
@@ -156,7 +156,7 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
-        private void OpenBase(string path)
+        private void OpenBase(string path, bool syncLoading = false)
         {
             Folders = new ObservableCollection<Folder>();
             try
@@ -168,7 +168,9 @@ namespace QuoteHistoryGUI.Models
                         new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
                 Editor = new HistoryEditor(_historyStoreDB);
                 HistoryLoader hl = new HistoryLoader(_dispatcher, _historyStoreDB);
+                if(!syncLoading)
                 hl.ReadSymbols(Folders);
+                else hl.ReadSymbolsSync(Folders);
                 log.Info("Database opened and initialized: " + path);
             }
             catch (Exception ex)

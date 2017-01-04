@@ -178,6 +178,8 @@ namespace QuoteHistoryGUI.Views
 
         private void treeViewItem_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
+            var item = sender as TreeViewItem;
+            if(item!=null && item.IsFocused)
             lock (selectedItemLock)
             {
                 var treeItem = sender as TreeViewItem;
@@ -200,6 +202,7 @@ namespace QuoteHistoryGUI.Views
                 }
                 (this.DataContext as StorageInstanceModel).Selection = new List<Folder>(selectedItems.Select(t => { return t.DataContext as Folder; }));
             }
+            
         }
 
 

@@ -18,6 +18,11 @@ namespace QuoteHistoryGUI.HistoryTools
         public Dispatcher Dispatcher;
         public List<Folder> Selection = new List<Folder>();
 
+        public HistoryInteractor(Dispatcher dispatcher = null) {
+            Dispatcher = dispatcher;
+        }
+
+
         public static IEnumerable<string> GetTemplates(IEnumerable<Folder> selection)
         {
             List<string> result = new List<string>();

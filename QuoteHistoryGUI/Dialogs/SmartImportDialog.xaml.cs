@@ -84,12 +84,13 @@ namespace QuoteHistoryGUI.Dialogs
                 {
                     isMove = OperationTypeBox.SelectedIndex == 1;
                     CopyWorker = new BackgroundWorker();
-                    _interactor.Source = _source;
+                    
 
                     if (!Directory.Exists(SourceBox.Text + "\\HistoryDB"))
                         Directory.CreateDirectory(SourceBox.Text + "\\HistoryDB");
-                    _destination = new StorageInstanceModel(SourceBox.Text, _interactor.Dispatcher);
-                    _interactor.Destination = _destination;
+                    _destination = new StorageInstanceModel(SourceBox.Text, _interactor.Dispatcher, null, StorageInstanceModel.OpenMode.ReadWrite, true);
+                    _interactor.Source = _destination;
+                    _interactor.Destination = _source;
 
 
 
@@ -132,7 +133,7 @@ namespace QuoteHistoryGUI.Dialogs
                     CopyButton.IsEnabled = false;
                     CopyWorker.WorkerReportsProgress = true;
                     CopyWorker.WorkerSupportsCancellation = true;
-                    CopyWorker.DoWork += worker_Export;
+                    CopyWorker.DoWork += worker_Import;
                     CopyWorker.ProgressChanged += CopyProgressChanged;
                     CopyWorker.RunWorkerCompleted += worker_Copied;
                     CopyWorker.RunWorkerAsync(CopyWorker);
@@ -178,13 +179,14 @@ namespace QuoteHistoryGUI.Dialogs
                 }
 
             }
-            _interactor.Source.Refresh();
+            _interactor.Destination.Refresh();
         }
 
-        private void worker_Export(object sender, DoWorkEventArgs e)
+        private void worker_Import(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = e.Argument as BackgroundWorker;
             _interactor.Import(true, worker);
+            _interactor.Destination.Refresh();
         }
         private void CopyProgressChanged(object sender, ProgressChangedEventArgs e)
         {

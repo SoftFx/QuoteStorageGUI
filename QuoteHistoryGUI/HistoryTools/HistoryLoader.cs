@@ -43,6 +43,13 @@ namespace QuoteHistoryGUI
             w.RunWorkerAsync();
         }
 
+        public void ReadSymbolsSync(ObservableCollection<Folder> folders)
+        {
+            _folders = folders;
+            var w = new BackgroundWorker();
+            ReadSymbolsWork(new object(), new DoWorkEventArgs(new object()));
+        }
+
         public IEnumerable<DBEntry> ReadMeta(string symbol, string period)
         {
             var key = HistoryDatabaseFuncs.SerealizeKey(symbol, "Meta", period, 2000, 1, 1, 0);
@@ -60,8 +67,9 @@ namespace QuoteHistoryGUI
 
         private void ReadSymbolsWork(object sender, DoWorkEventArgs e)
         {
-            _dispatcher.Invoke(delegate
-            { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
+            if (_dispatcher != null)
+                _dispatcher.Invoke(delegate
+                { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
             var it = _dbase.CreateIterator();
             it.SeekToFirst();
             while (it.IsValid())
@@ -75,14 +83,16 @@ namespace QuoteHistoryGUI
                     else break;
                 }
                 string sym = ASCIIEncoding.ASCII.GetString(nextKey.ToArray());
-                _dispatcher.Invoke(delegate
+                if (_dispatcher != null)
+                    _dispatcher.Invoke(delegate
                 { _folders.Insert(_folders.Count - 1, new Folder(sym)); _folders[_folders.Count - 2].Parent = null; });
                 for (int i = 0; i < 10; i++)
                     nextKey.Add(255);
                 it.Seek(nextKey.ToArray());
             }
             it.Dispose();
-            _dispatcher.Invoke(delegate { _folders.RemoveAt(_folders.Count - 1); });
+            if (_dispatcher != null)
+                _dispatcher.Invoke(delegate { _folders.RemoveAt(_folders.Count - 1); });
         }
 
         public void ReadDateTimesAsync(Folder folder, HistoryEditor editor = null)
