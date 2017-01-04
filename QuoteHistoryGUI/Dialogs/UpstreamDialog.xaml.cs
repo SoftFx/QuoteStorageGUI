@@ -77,7 +77,7 @@ namespace QuoteHistoryGUI.Dialogs
                     ChunkFile lastTicksFile = null;
                     foreach (var sel in matched)
                     {
-                        upstramCnt++;
+                        
 
                         if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
                         {
@@ -94,6 +94,7 @@ namespace QuoteHistoryGUI.Dialogs
                                 if (chunk.Parent.Parent != lastDay)
                                 {
                                     _interactor.Source.tickToM1Update(chunk, false);
+                                    upstramCnt++;
                                     lastDay = chunk.Parent.Parent;
                                 }
                             }
@@ -109,6 +110,7 @@ namespace QuoteHistoryGUI.Dialogs
                                         {
                                             if (lastTicksFile != null)
                                                 _interactor.Source.tickToM1Update(lastTicksFile, false);
+                                            upstramCnt++;
                                             lastDay = res.Key[0].Parent.Parent;
                                         }
                                         lastTicksFile = res.Key[0];
