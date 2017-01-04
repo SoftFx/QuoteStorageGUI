@@ -133,6 +133,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", f.Period, dateTime[0], dateTime[1], dateTime[2], hour, i));
                     if (cntnt != null)
                         result.AddRange(GetOrUnzip(cntnt));
+                    else break;
                 }
             }
             return result.ToArray();

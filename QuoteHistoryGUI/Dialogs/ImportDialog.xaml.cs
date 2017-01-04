@@ -1,4 +1,5 @@
 ﻿using LevelDB;
+using log4net;
 using QuoteHistoryGUI.HistoryTools;
 using QuoteHistoryGUI.Models;
 using System;
@@ -23,32 +24,44 @@ namespace QuoteHistoryGUI.Dialogs
     /// </summary>
     public partial class ImportDialog : Window
     {
+
         HistoryInteractor Interactor;
         BackgroundWorker Worker;
         bool Replace;
         bool isUIVersion = true;
+        public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
         public ImportDialog(StorageInstanceModel Destination = null, StorageInstanceModel Source = null)
         {
-            
-            Worker = new BackgroundWorker();
-            Interactor = new HistoryInteractor();
-            InitializeComponent();
-            
-            Interactor.Destination = Destination;
-            Interactor.Source = Source;
-            if (Destination != null) {
-                DestinationPath.Text = Destination.StoragePath;
-                DestinationBut.IsEnabled = false;
-            }
-            if (Source != null)
+            try
             {
-                SourcePath.Text = Source.StoragePath;
-                SourceBut.IsEnabled = false;
-            }
+                log.Info("Import dialog initializing...");
+                Worker = new BackgroundWorker();
+                Interactor = new HistoryInteractor();
+                InitializeComponent();
 
-            if (Interactor.Source != null && Interactor.Destination != null)
-                ImportBtn.IsEnabled = true;
-            else ImportBtn.IsEnabled = false;
+                Interactor.Destination = Destination;
+                Interactor.Source = Source;
+                if (Destination != null)
+                {
+                    DestinationPath.Text = Destination.StoragePath;
+                    DestinationBut.IsEnabled = false;
+                }
+                if (Source != null)
+                {
+                    SourcePath.Text = Source.StoragePath;
+                    SourceBut.IsEnabled = false;
+                }
+
+                if (Interactor.Source != null && Interactor.Destination != null)
+                    ImportBtn.IsEnabled = true;
+                else ImportBtn.IsEnabled = false;
+                log.Info("Import dialog initialized");
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
 
         }
 
@@ -56,13 +69,13 @@ namespace QuoteHistoryGUI.Dialogs
         {
             var dlg = new System.Windows.Forms.FolderBrowserDialog
             { };
-            
+
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 SourcePath.Text = dlg.SelectedPath;
                 Interactor.Source = new StorageInstanceModel(dlg.SelectedPath, Owner.Dispatcher, Interactor);
             }
-            if (Interactor.Source!=null && Interactor.Source.Status != "Ok")
+            if (Interactor.Source != null && Interactor.Source.Status != "Ok")
             {
                 MessageBox.Show(Interactor.Source.Status, "Open Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 this.Close();
@@ -97,9 +110,13 @@ namespace QuoteHistoryGUI.Dialogs
             DoImport();
         }
 
-        public void DoImport(bool isUiVersion = true) {
+        public void DoImport(bool isUiVersion = true)
+        {
             try
             {
+                log.Info("Import calling...");
+                
+
                 if (Interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
                 {
                     throw (new Exception("Unable to import to storage opened in readonly mode"));
@@ -109,6 +126,8 @@ namespace QuoteHistoryGUI.Dialogs
 
                 if (Interactor.Source != null && Interactor.Destination != null)
                 {
+                    log.Info("Import source: " + Interactor.Source.StoragePath);
+                    log.Info("Import destination: " + Interactor.Destination.StoragePath);
                     this.isUIVersion = isUiVersion;
                     Replace = (bool)ReplaceBox.IsChecked;
                     Worker.DoWork += ImportWork;
@@ -123,11 +142,12 @@ namespace QuoteHistoryGUI.Dialogs
                     throw (new Exception("Source/Destination not specified"));
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 if (isUiVersion)
                     MessageBox.Show(e.Message, "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 else Console.Out.WriteLine(e.Message);
+                log.Warn(e.Message);
             }
 
         }
@@ -146,6 +166,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (isUIVersion)
                 MessageBox.Show("Import Completed", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
             else Console.Out.WriteLine("Import Completed!");
+            log.Info("Import performed...");
             this.Close();
         }
 
@@ -153,8 +174,9 @@ namespace QuoteHistoryGUI.Dialogs
         {
             var key = e.UserState as byte[];
             var entry = HistoryDatabaseFuncs.DeserealizeKey(key);
-            ReportBlock.Text = entry.Symbol + " "+entry.Time.ToString();
-            if(!isUIVersion) Console.Write("\r{0}", ReportBlock.Text);
+            ReportBlock.Text = entry.Symbol + " " + entry.Time.ToString();
+            log.Info("Import progresss report: "+ entry.Symbol + " " + entry.Time.ToString());
+            if (!isUIVersion) Console.Write("\r{0}", ReportBlock.Text);
         }
     }
 }

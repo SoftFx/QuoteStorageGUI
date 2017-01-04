@@ -1,4 +1,5 @@
-﻿using QuoteHistoryGUI.HistoryTools;
+﻿using log4net;
+using QuoteHistoryGUI.HistoryTools;
 using QuoteHistoryGUI.HistoryTools.Interactor;
 using QuoteHistoryGUI.Models;
 using QuoteHistoryGUI.Views;
@@ -35,28 +36,38 @@ namespace QuoteHistoryGUI.Dialogs
         SelectTemplateWorker temW;
         string templateText;
         bool isMove = false;
+        public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
         public ExportDialog(StorageInstanceModel source, ObservableCollection<StorageInstanceModel> tabs, HistoryInteractor interactor)
         {
-
-            InitializeComponent();
-
-            OperationTypeBox.IsEnabled = false;
-            Source.Text = source.StoragePath;
-            CopyButton.IsEnabled = false;
-            foreach (var tab in tabs)
+            try
             {
-                if (tab != source) _destination = tab;
+                log.Info("Export dialog initializing...");
+                InitializeComponent();
+
+                OperationTypeBox.IsEnabled = false;
+                Source.Text = source.StoragePath;
+                CopyButton.IsEnabled = false;
+                foreach (var tab in tabs)
+                {
+                    if (tab != source) _destination = tab;
+                }
+
+                var win = Application.Current.MainWindow as QHAppWindowView;
+
+                _interactor = interactor;
+
+                TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
+                    HistoryInteractor.GetTemplates(interactor.Selection));
+                _interactor.Selection.Clear();
+                _tabs = tabs;
+                _source = source;
+                log.Info("Export dialog initialized");
             }
-
-            var win = Application.Current.MainWindow as QHAppWindowView;
-
-            _interactor = interactor;
-
-            TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
-                HistoryInteractor.GetTemplates(interactor.Selection));
-            _interactor.Selection.Clear();
-            _tabs = tabs;
-            _source = source;
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
         }
 
         public ExportDialog()
@@ -66,62 +77,72 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (TemplateRadioButton.IsChecked.Value == true)
+            try
             {
-                isMove = OperationTypeBox.SelectedIndex == 1;
-                CopyWorker = new BackgroundWorker();
-                _interactor.Source = _source;
-
-                if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
-                    Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
-                _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
-                _interactor.Destination = _destination;
-
-
-
-                if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
+                log.Info("Export calling...");
+                if (TemplateRadioButton.IsChecked.Value == true)
                 {
-                    MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    return;
+                    isMove = OperationTypeBox.SelectedIndex == 1;
+                    CopyWorker = new BackgroundWorker();
+                    _interactor.Source = _source;
+
+                    if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
+                        Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
+                    _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
+                    _interactor.Destination = _destination;
+
+
+
+                    if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
+                    {
+                        MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                        return;
+                    }
+
+                    temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
+                    templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
+
+                    CopyButton.IsEnabled = false;
+                    CopyWorker.WorkerReportsProgress = true;
+                    CopyWorker.WorkerSupportsCancellation = true;
+                    CopyWorker.DoWork += worker_Copy;
+                    CopyWorker.ProgressChanged += CopyProgressChanged;
+                    CopyWorker.RunWorkerCompleted += worker_Copied;
+                    CopyWorker.RunWorkerAsync(CopyWorker);
                 }
+                else
+                {
 
-                temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
-                templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
+                    isMove = OperationTypeBox.SelectedIndex == 1;
+                    CopyWorker = new BackgroundWorker();
 
-                CopyButton.IsEnabled = false;
-                CopyWorker.WorkerReportsProgress = true;
-                CopyWorker.WorkerSupportsCancellation = true;
-                CopyWorker.DoWork += worker_Copy;
-                CopyWorker.ProgressChanged += CopyProgressChanged;
-                CopyWorker.RunWorkerCompleted += worker_Copied;
-                CopyWorker.RunWorkerAsync(CopyWorker);
+
+                    if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
+                        Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
+                    _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
+                    _interactor.Source = _source;
+                    _interactor.Destination = _destination;
+
+                    if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
+                    {
+                        MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                        return;
+                    }
+
+                    CopyButton.IsEnabled = false;
+                    CopyWorker.WorkerReportsProgress = true;
+                    CopyWorker.WorkerSupportsCancellation = true;
+                    CopyWorker.DoWork += worker_Export;
+                    CopyWorker.ProgressChanged += CopyProgressChanged;
+                    CopyWorker.RunWorkerCompleted += worker_Copied;
+                    CopyWorker.RunWorkerAsync(CopyWorker);
+                }
+                log.Info("Export performed");
             }
-            else
+            catch (Exception ex)
             {
-
-                isMove = OperationTypeBox.SelectedIndex == 1;
-                CopyWorker = new BackgroundWorker();
-
-
-                if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
-                    Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
-                _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
-                _interactor.Source = _source;
-                _interactor.Destination = _destination;
-
-                if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
-                {
-                    MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    return;
-                }
-
-                CopyButton.IsEnabled = false;
-                CopyWorker.WorkerReportsProgress = true;
-                CopyWorker.WorkerSupportsCancellation = true;
-                CopyWorker.DoWork += worker_Export;
-                CopyWorker.ProgressChanged += CopyProgressChanged;
-                CopyWorker.RunWorkerCompleted += worker_Copied;
-                CopyWorker.RunWorkerAsync(CopyWorker);
+                log.Error(ex.Message);
+                throw ex;
             }
         }
 
@@ -151,7 +172,7 @@ namespace QuoteHistoryGUI.Dialogs
                         _interactor.Dispatcher = null;
                     }
                 }
-                
+
             }
             _interactor.Destination.Refresh();
         }
@@ -164,6 +185,7 @@ namespace QuoteHistoryGUI.Dialogs
         private void CopyProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             CopyStatusBlock.Text = e.UserState as string;
+            log.Info("Export progress report: "+ e.UserState as string);
         }
         private void worker_Copied(object sender, RunWorkerCompletedEventArgs e)
         {

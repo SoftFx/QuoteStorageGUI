@@ -175,55 +175,31 @@ namespace QuoteHistoryGUI.Views
             */
         }
 
-        private void treeView_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+
+        private void treeViewItem_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) || Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+            lock (selectedItemLock)
             {
-                lock (selectedItemLock)
-                {
-                    var treeItem = e.OriginalSource as TreeViewItem;
+                var treeItem = sender as TreeViewItem;
 
-                    if (selectedItems.Contains(treeItem) && isShiftSelect)
-                    {
-                        treeItem.Background = SystemColors.WindowBrush;
-                        selectedItems.Remove(treeItem);
-                    }
-                    else
-                    {
-                        treeItem.Background = SystemColors.ActiveCaptionBrush;
-                        selectedItems.Add(treeItem);
-                        isShiftSelect = true;
-                    }
-                    if (selectedItems.Select(t => { return t.Header as Folder; }).Contains(treeView.SelectedItem as Folder))
-                    {
-                        var resources = treeView.Resources as ResourceDictionary;
-                        resources[SystemColors.HighlightBrushKey] = SystemColors.ActiveCaptionBrush;
-                    }
-                    else
-                    {
-                        var resources = treeView.Resources as ResourceDictionary;
-                        resources[SystemColors.HighlightBrushKey] = new LinearGradientBrush(new Color() { A = 255, R = 217, G = 244, B = 255 }, new Color() { A = 255, R = 155, G = 221, B = 251 }, new Point(0, 0), new Point(0, 1));
-                    }
+                if (!selectedItems.Contains(treeItem))
+                {
+                    treeItem.Background = SystemColors.ActiveCaptionBrush;
+                    selectedItems.Add(treeItem);
                 }
-            }
-            else
-            {
-                lock (selectedItemLock)
+                
+                if (selectedItems.Select(t => { return t.Header as Folder; }).Contains(treeView.SelectedItem as Folder))
                 {
-
-                    isShiftSelect = false;
-                    var treeItem = e.OriginalSource as TreeViewItem;
-                    foreach (var t in selectedItems)
-                    {
-                        t.Background = SystemColors.WindowBrush;
-                    }
-                    selectedItems.Clear();
+                    var resources = treeView.Resources as ResourceDictionary;
+                    resources[SystemColors.HighlightBrushKey] = SystemColors.ActiveCaptionBrush;
+                }
+                else
+                {
                     var resources = treeView.Resources as ResourceDictionary;
                     resources[SystemColors.HighlightBrushKey] = new LinearGradientBrush(new Color() { A = 255, R = 217, G = 244, B = 255 }, new Color() { A = 255, R = 155, G = 221, B = 251 }, new Point(0, 0), new Point(0, 1));
-                    //selectedItems.Add(treeItem);
                 }
+                (this.DataContext as StorageInstanceModel).Selection = new List<Folder>(selectedItems.Select(t => { return t.DataContext as Folder; }));
             }
-            (this.DataContext as StorageInstanceModel).Selection = new List<Folder>(selectedItems.Select(t => { return t.DataContext as Folder; }));
         }
 
 
@@ -272,8 +248,16 @@ namespace QuoteHistoryGUI.Views
                     }
                     selectedItems.Clear();
                     var resources = treeView.Resources as ResourceDictionary;
-                    //resources[SystemColors.HighlightBrushKey] = new LinearGradientBrush(new Color() { A = 255, R = 217, G = 244, B = 255 }, new Color() { A = 255, R = 155, G = 221, B = 251 }, new Point(0, 0), new Point(0, 1));
-                    //selectedItems.Add(treeItem);
+                    if (selectedItems.Select(t => { return t.Header as Folder; }).Contains(treeView.SelectedItem as Folder))
+                    {
+                        resources = treeView.Resources as ResourceDictionary;
+                        resources[SystemColors.HighlightBrushKey] = SystemColors.ActiveCaptionBrush;
+                    }
+                    else
+                    {
+                        resources = treeView.Resources as ResourceDictionary;
+                        resources[SystemColors.HighlightBrushKey] = new LinearGradientBrush(new Color() { A = 255, R = 217, G = 244, B = 255 }, new Color() { A = 255, R = 155, G = 221, B = 251 }, new Point(0, 0), new Point(0, 1));
+                    }
                 }
             }
             (this.DataContext as StorageInstanceModel).Selection = new List<Folder>(selectedItems.Select(t => { return t.DataContext as Folder; }));
