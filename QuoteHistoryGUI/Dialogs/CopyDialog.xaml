@@ -35,14 +35,14 @@
         <TextBlock Name="Destination" Margin="5" Grid.Row="1" Grid.Column="1"></TextBlock>
         <Button Name ="CopyButton" Content="Start" Background="#F2F0ED" Width="80" HorizontalAlignment="Right"  BorderBrush="#7F6E53" Click="Button_Click" Grid.Row="2" Grid.Column="2" Margin="4,2" ></Button>
         <TextBlock Name="CopyStatusBlock" Grid.Row="2" Grid.Column="1" Margin="4,2"/>
+        <Button Name="templateHelpButton" Width="16" Height="16" Click="templateHelpButton_Click" Grid.Column="0" Grid.Row="2">
+            <Image Source="../Icons/question.png" Height="10" Width="10"/>
+        </Button>
         <Expander Name="TemplateExpander"   Grid.Row="3" Grid.ColumnSpan="3" Grid.Column="0" Height="auto" Margin="2,2,2,4">
             <Expander.Header>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Copy templates:"/>
                     <Grid MinWidth="304"/>
-                    <Button Name="templateHelpButton" Width="16" Height="16" Click="templateHelpButton_Click">
-                        <Image Source="../Icons/question.png" Height="10" Width="10"/>
-                    </Button>
                 </StackPanel>
             </Expander.Header>
             <local:TemplateControl x:Name="TemplateBox"/>
