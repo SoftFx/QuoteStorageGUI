@@ -435,10 +435,11 @@ namespace QuoteHistoryGUI.Models
             var parent = chunk.Parent;
             List<Folder> deleteList = new List<Folder>();
             foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
-            deleteList.ForEach(t => _dispatcher.Invoke(() => parent.Folders.Remove(t)));
+            
             var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
             var partCnt = Editor.SaveToDBParted(ticks, tickChunk, true, showMessages);
             List<ChunkFile> chunks = new List<ChunkFile>();
+            deleteList.ForEach(t => _dispatcher.Invoke(() => parent.Folders.Remove(t)));
             for (int i = partCnt; i >= 0; i--)
             {
                 var Chunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Part = i, Parent = parent };
@@ -473,11 +474,12 @@ namespace QuoteHistoryGUI.Models
             _dispatcher.Invoke(() => parent.Folders.Add(bidChunk));
             var bidMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
             _dispatcher.Invoke(() => parent.Folders.Add(bidMeta));
-            Editor.SaveToDBParted(bars.Key, bidChunk, true, showMessages);
+            
             var askChunk = new ChunkFile() { Name = "M1 ask file", Period = "M1 ask", Parent = parent };
             _dispatcher.Invoke(() => parent.Folders.Add(askChunk));
             var askMeta = new MetaFile() { Name = "M1 ask meta", Period = "M1 ask", Parent = parent };
             _dispatcher.Invoke(() => parent.Folders.Add(askMeta));
+            Editor.SaveToDBParted(bars.Key, bidChunk, true, showMessages);
             Editor.SaveToDBParted(bars.Value, askChunk, true, showMessages);
             return bars;
 

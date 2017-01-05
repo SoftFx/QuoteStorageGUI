@@ -222,8 +222,11 @@ namespace QuoteHistoryGUI.Models
                                 TryToRemoveStorage(storageInstance);
                                 if(storageInstance.HistoryStoreDB!=null)
                                     storageInstance.HistoryStoreDB.Dispose();
+                                log.Info("Perious strage removed");
                             }
+                            
                             TryToAddStorage(tab);
+                            log.Info("New storage tab added");
                         }
                         else
                         {

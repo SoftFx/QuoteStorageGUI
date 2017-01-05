@@ -11,11 +11,12 @@ using System.Windows;
 using QuoteHistoryGUI.HistoryTools;
 using static QuoteHistoryGUI.HistoryTools.HistoryDatabaseFuncs;
 using QuoteHistoryGUI.Models;
-
+using log4net;
 namespace QuoteHistoryGUI
 {
     public class HistoryLoader
     {
+        public static readonly ILog log = LogManager.GetLogger(typeof(StorageInstanceModel));
 
         public static List<KeyValuePair<int, int>> MinMaxDateTime = new List<KeyValuePair<int, int>> { new KeyValuePair<int, int>(2000, 2030),
             new KeyValuePair<int, int>(1, 12),
@@ -29,10 +30,11 @@ namespace QuoteHistoryGUI
         Folder _folder;
         HistoryEditor _editor;
 
-        public HistoryLoader(Dispatcher dispatcher, DB dbase)
+        public HistoryLoader(Dispatcher dispatcher, DB dbase, HistoryEditor editor = null)
         {
             _dispatcher = dispatcher;
             _dbase = dbase;
+            _editor = editor;
         }
 
 
@@ -69,11 +71,14 @@ namespace QuoteHistoryGUI
 
         private void ReadSymbolsWork(object sender, DoWorkEventArgs e)
         {
-            throw new Exception("test exception");
+            log.Info("Read symbols work started");
+
             if (_dispatcher != null)
                 _dispatcher.Invoke(delegate
                 { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
+            log.Info("Read symbols iterator creating...");
             var it = _dbase.CreateIterator();
+            log.Info("Read symbols iterator created");
             it.SeekToFirst();
             while (it.IsValid())
             {
@@ -93,9 +98,11 @@ namespace QuoteHistoryGUI
                     nextKey.Add(255);
                 it.Seek(nextKey.ToArray());
             }
+            log.Info("Read symbols work performed");
             it.Dispose();
             if (_dispatcher != null)
                 _dispatcher.Invoke(delegate { _folders.RemoveAt(_folders.Count - 1); });
+            log.Info("Read symbols iterator disposed");
         }
 
         public void ReadDateTimesAsync(Folder folder, HistoryEditor editor = null)
@@ -240,27 +247,32 @@ namespace QuoteHistoryGUI
                     {
                         while (true)
                         {
+                            var part = -1;
                             if (HistoryDatabaseFuncs.ValidateKeyByKey(getedKey, keys[i], true, path.Count - 1, true, true) && it.IsValid())
                             {
 
                                 if (i == 0 || i == 2)
                                 {
-                                    var chunk = new ChunkFile(names[i] + " file" + (getedKey.Last() > 0 ? ("." + getedKey.Last() + "") : ""), names[i], getedKey[getedKey.Length - 2]);
+                                    var chunk = new ChunkFile(names[i] + " file" + (getedKey[getedKey.Length - 2] > 0 ? ("." + getedKey[getedKey.Length - 2] + "") : ""), names[i], getedKey[getedKey.Length - 2]);
                                     chunk.Parent = _folder;
                                     _dispatcher.Invoke(delegate { _folder.Folders?.Add(chunk); });
-
+                                    if (part == getedKey[getedKey.Length - 2])
+                                        break;
+                                    part = getedKey[getedKey.Length - 2];
                                     if (_editor != null)
+                                    {
                                         _editor.RebuildMeta(chunk);
-
-                                    it = _dbase.CreateIterator();
-                                    it.Seek(getedKey);
-                                    _dispatcher.Invoke(delegate { Application.Current.MainWindow.Activate(); });
+                                        it.Dispose();
+                                        it = _dbase.CreateIterator();
+                                        it.Seek(getedKey);
+                                    }
+                                    //_dispatcher.Invoke(delegate { Application.Current.MainWindow.Activate(); });
                                 }
                                 else _dispatcher.Invoke(delegate
                                 {
                                     if (_folder.Folders != null)
                                     {
-                                        _folder.Folders.Add(new MetaFile(names[i] + " meta" + (getedKey.Last() > 0 ? ("." + getedKey.Last() + "") : ""), names[i], getedKey.Last()));
+                                        _folder.Folders.Add(new MetaFile(names[i] + " meta" + (getedKey[getedKey.Length - 2] > 0 ? ("." + getedKey[getedKey.Length - 2] + "") : ""), names[i], getedKey[getedKey.Length - 2]));
                                         _folder.Folders[_folder.Folders.Count - 1].Parent = _folder;
                                     }
                                 });
