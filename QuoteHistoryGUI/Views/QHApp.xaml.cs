@@ -1,4 +1,5 @@
-﻿using QuoteHistoryGUI.Dialogs;
+﻿using log4net;
+using QuoteHistoryGUI.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -24,22 +25,31 @@ namespace QuoteHistoryGUI.Views
 
         public string Source;
         public string Destination;
+        public static readonly ILog log = LogManager.GetLogger(typeof(QHApp));
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
             var args = Environment.GetCommandLineArgs();
+            try
+            {
+                switch (ApplicationMode)
+                {
+                    case AppMode.ImportDialog:
+                        new ImportDialog().Show();
+                        break;
+                    case AppMode.Console:
+                        new ImportDialog(new Models.StorageInstanceModel(Destination, this.Dispatcher), new Models.StorageInstanceModel(Source, this.Dispatcher)).DoImport(false);
+                        break;
+                    default:
 
-            switch (ApplicationMode) {
-                case AppMode.ImportDialog:
-                    new ImportDialog().Show();
-                    break;
-                case AppMode.Console:
-                    new ImportDialog(new Models.StorageInstanceModel(Destination, this.Dispatcher), new Models.StorageInstanceModel(Source, this.Dispatcher)).DoImport(false);
-                    break;
-                default:
-                    new QHAppWindowView().ShowDialog();
-                    break;         
-        }
+                        new QHAppWindowView().ShowDialog();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message + ",\nStack trace: "+ex.StackTrace);
+            }
         }
     }
 }

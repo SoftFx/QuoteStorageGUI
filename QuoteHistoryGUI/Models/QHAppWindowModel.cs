@@ -24,7 +24,11 @@ namespace QuoteHistoryGUI.Models
     {
 
         #region INotifyPropertyChanged
-
+        public static void throwExceptions(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null)
+                throw new Exception(e.Error.Message + ";\t\nStack trace: "+e.Error.StackTrace);
+        }
         public event PropertyChangedEventHandler PropertyChanged;
         public Dispatcher Dispatcher;
 

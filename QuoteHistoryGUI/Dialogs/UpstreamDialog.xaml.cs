@@ -71,6 +71,7 @@ namespace QuoteHistoryGUI.Dialogs
                 UpstreamWorker.DoWork += worker_Upstream;
                 UpstreamWorker.ProgressChanged += CopyProgressChanged;
                 UpstreamWorker.RunWorkerCompleted += worker_Upstreamed;
+                UpstreamWorker.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
                 UpstreamWorker.RunWorkerAsync(UpstreamWorker);
             }
             catch (Exception ex)
