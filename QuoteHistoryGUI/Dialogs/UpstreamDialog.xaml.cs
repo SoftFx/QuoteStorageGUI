@@ -32,7 +32,7 @@ namespace QuoteHistoryGUI.Dialogs
         string templateText;
         bool is2levelUpstream = false;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
-
+        bool canceled = false;
         public UpstreamDialog(StorageInstanceModel source, HistoryInteractor interactor)
         {
             try
@@ -46,6 +46,7 @@ namespace QuoteHistoryGUI.Dialogs
                 _interactor.Selection.Clear();
                 _source = source;
                 log.Info("Upstream dialog initialized");
+                this.Closed += OnWindowClosing;
             }
             catch (Exception ex)
             {
@@ -57,6 +58,7 @@ namespace QuoteHistoryGUI.Dialogs
         {
             try
             {
+                canceled = false;
                 log.Info("Upstream calling...");
                 UpstreamWorker = new BackgroundWorker();
                 _interactor.Source = _source;
@@ -98,17 +100,25 @@ namespace QuoteHistoryGUI.Dialogs
                     ChunkFile lastTicksFile = null;
                     foreach (var sel in matched)
                     {
-                        
-
-                        if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
-                        {
-                            worker.ReportProgress(1, "Upstreaming : " + upstramCnt + ", template processing: " + templNum);
-                            lastReport = DateTime.UtcNow;
-                        }
 
                         var chunk = sel as ChunkFile;
+
+                        if(worker.CancellationPending == true)
+                        {
+                            return;
+                        }
+                        
                         if (chunk != null)
                         {
+
+                            if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
+                            {
+                                var path = HistoryDatabaseFuncs.GetPath(chunk);
+                                string strPath = "";
+                                for (int i = 0; i < path.Count;i++) strPath += ((strPath.Length==0?"":"/")+path[i].Name);
+                                worker.ReportProgress(1, "[" + upstramCnt + "] " + strPath);
+                                lastReport = DateTime.UtcNow;
+                            }
 
                             if (chunk.Period == "ticks")
                             {
@@ -161,24 +171,31 @@ namespace QuoteHistoryGUI.Dialogs
         }
         private void worker_Upstreamed(object sender, RunWorkerCompletedEventArgs e)
         {
-            MessageBox.Show("Upstream update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-            log.Info("Upstream performed");
+            if (!canceled)
+            {
+                MessageBox.Show("Upstream update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                log.Info("Upstream performed");
+            }
             Close();
             UpstreamButton.IsEnabled = true;
         }
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+
+
+        private void templateHelpButton_Click(object sender, RoutedEventArgs e)
+        {
+            HelpDialog.ShowHelp("upstream");
+        }
+
+        public void OnWindowClosing(object sender, EventArgs e)
         {
             if (UpstreamWorker != null && UpstreamWorker.IsBusy)
             {
+                canceled = true;
                 UpstreamWorker.CancelAsync();
                 MessageBox.Show("Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 log.Info("Upstream canceled");
             }
         }
 
-        private void templateHelpButton_Click(object sender, RoutedEventArgs e)
-        {
-            HelpDialog.ShowHelp("upstream");
-        }
     }
 }

@@ -69,10 +69,9 @@ namespace QuoteHistoryGUI.HistoryTools
 
             if (selection == null)
                 selection = Selection;
-            int num = 0;
             foreach (var fold in selection)
             {
-                num++;
+                //num++;
                 var files = Source.Editor.EnumerateFilesInFolder(fold);
                 foreach (var file in files)
                 {
@@ -80,7 +79,8 @@ namespace QuoteHistoryGUI.HistoryTools
                     copiedCnt++;
                     if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 0.5)
                     {
-                        worker.ReportProgress(1, "Copied " + copiedCnt + "items , processing " + num + " matched folder or file");
+                        var dbentry = DeserealizeKey(file.Key);
+                        worker.ReportProgress(1,"[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
                         lastReport = DateTime.UtcNow;
                     }
                 }
@@ -279,7 +279,8 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.5)
                 {
-                    worker.ReportProgress(1, "Copied " + cnt + " items...");
+                    var dbentry = DeserealizeKey(sourceIter.GetKey());
+                    worker.ReportProgress(1, "[" + cnt + "] "+ dbentry.Symbol+": "+ dbentry.Time+" - "+dbentry.Period);
                     ReportTime = DateTime.Now;
                 }
 

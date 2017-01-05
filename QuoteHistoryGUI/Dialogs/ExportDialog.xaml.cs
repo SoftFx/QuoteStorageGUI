@@ -194,7 +194,9 @@ namespace QuoteHistoryGUI.Dialogs
             MessageBox.Show("Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
             Close();
             CopyButton.IsEnabled = true;
+            if(_interactor.Destination!=null)
             _interactor.Destination.HistoryStoreDB.Dispose();
+            _interactor.Source.Refresh();
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -203,7 +205,7 @@ namespace QuoteHistoryGUI.Dialogs
                 CopyWorker.CancelAsync();
                 _interactor.Destination.HistoryStoreDB.Dispose();
                 MessageBox.Show("Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-                _interactor.Destination.Refresh();
+                _interactor.Source.Refresh();
             }
         }
 
