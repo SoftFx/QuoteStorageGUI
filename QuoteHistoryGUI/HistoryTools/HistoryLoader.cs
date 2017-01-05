@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using QuoteHistoryGUI.HistoryTools;
 using static QuoteHistoryGUI.HistoryTools.HistoryDatabaseFuncs;
+using QuoteHistoryGUI.Models;
 
 namespace QuoteHistoryGUI
 {
@@ -40,6 +41,7 @@ namespace QuoteHistoryGUI
             _folders = folders;
             var w = new BackgroundWorker();
             w.DoWork += ReadSymbolsWork;
+            w.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
             w.RunWorkerAsync();
         }
 
@@ -67,6 +69,7 @@ namespace QuoteHistoryGUI
 
         private void ReadSymbolsWork(object sender, DoWorkEventArgs e)
         {
+            throw new Exception("test exception");
             if (_dispatcher != null)
                 _dispatcher.Invoke(delegate
                 { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
@@ -101,6 +104,7 @@ namespace QuoteHistoryGUI
             _folder = folder;
             var w = new BackgroundWorker();
             w.DoWork += ReadFoldersAndFiles;
+            w.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
             w.RunWorkerAsync();
         }
 
@@ -120,6 +124,7 @@ namespace QuoteHistoryGUI
             _folders = folders;
             var w = new BackgroundWorker();
             w.DoWork += Refresh;
+            w.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
             w.RunWorkerAsync();
         }
         private void LoadFolders()
@@ -302,10 +307,7 @@ namespace QuoteHistoryGUI
         }
 
 
-
-        private void RefreshRecursiveExpand(Folder oldExpandedFolder, Folder newFolder, ObservableCollection<Folder> newFolderCollection)
-        {
-
-        }
+        
+        
     }
 }

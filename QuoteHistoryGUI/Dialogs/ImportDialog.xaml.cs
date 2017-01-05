@@ -135,6 +135,7 @@ namespace QuoteHistoryGUI.Dialogs
                     Worker.WorkerSupportsCancellation = true;
                     Worker.ProgressChanged += ImportProgressChanged;
                     Worker.RunWorkerCompleted += ImportCompleted;
+                    Worker.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
                     Worker.RunWorkerAsync();
                 }
                 else

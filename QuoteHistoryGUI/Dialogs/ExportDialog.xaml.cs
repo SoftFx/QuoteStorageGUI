@@ -108,6 +108,7 @@ namespace QuoteHistoryGUI.Dialogs
                     CopyWorker.DoWork += worker_Copy;
                     CopyWorker.ProgressChanged += CopyProgressChanged;
                     CopyWorker.RunWorkerCompleted += worker_Copied;
+                    CopyWorker.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
                     CopyWorker.RunWorkerAsync(CopyWorker);
                 }
                 else
@@ -135,6 +136,7 @@ namespace QuoteHistoryGUI.Dialogs
                     CopyWorker.DoWork += worker_Export;
                     CopyWorker.ProgressChanged += CopyProgressChanged;
                     CopyWorker.RunWorkerCompleted += worker_Copied;
+                    CopyWorker.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
                     CopyWorker.RunWorkerAsync(CopyWorker);
                 }
                 log.Info("Export performed");
