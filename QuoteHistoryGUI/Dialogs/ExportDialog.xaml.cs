@@ -37,7 +37,7 @@ namespace QuoteHistoryGUI.Dialogs
         string templateText;
         bool isMove = false;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
-        public ExportDialog(StorageInstanceModel source, ObservableCollection<StorageInstanceModel> tabs, HistoryInteractor interactor)
+        public ExportDialog(StorageInstanceModel source, HistoryInteractor interactor)
         {
             try
             {
@@ -47,20 +47,18 @@ namespace QuoteHistoryGUI.Dialogs
                 OperationTypeBox.IsEnabled = false;
                 Source.Text = source.StoragePath;
                 CopyButton.IsEnabled = false;
-                foreach (var tab in tabs)
-                {
-                    if (tab != source) _destination = tab;
-                }
 
                 var win = Application.Current.MainWindow as QHAppWindowView;
 
                 _interactor = interactor;
 
                 TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
-                    HistoryInteractor.GetTemplates(interactor.Selection));
+                    HistoryInteractor.GetTemplates(source.Selection));
                 _interactor.Selection.Clear();
-                _tabs = tabs;
                 _source = source;
+
+                DestinationBox.ItemsSource = AppConfigManager.GetPathes();
+
                 log.Info("Export dialog initialized");
             }
             catch (Exception ex)
@@ -80,6 +78,7 @@ namespace QuoteHistoryGUI.Dialogs
             try
             {
                 log.Info("Export calling...");
+                AppConfigManager.SavePathes(DestinationBox.Text);
                 if (TemplateRadioButton.IsChecked.Value == true)
                 {
                     isMove = OperationTypeBox.SelectedIndex == 1;
@@ -241,5 +240,9 @@ namespace QuoteHistoryGUI.Dialogs
             CopyButton.IsEnabled = true;
         }
 
+        private void DestinationBox_Selected(object sender, RoutedEventArgs e)
+        {
+            CopyButton.IsEnabled = true;
+        }
     }
 }

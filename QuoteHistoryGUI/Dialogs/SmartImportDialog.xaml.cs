@@ -58,6 +58,9 @@ namespace QuoteHistoryGUI.Dialogs
 
                 TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
                     HistoryInteractor.GetTemplates(interactor.Selection));
+
+                SourceBox.ItemsSource = AppConfigManager.GetPathes();
+
                 _interactor.Selection.Clear();
                 _tabs = tabs;
                 _source = source;
@@ -80,6 +83,7 @@ namespace QuoteHistoryGUI.Dialogs
             try
             {
                 log.Info("Import calling...");
+                AppConfigManager.SavePathes(SourceBox.Text);
                 if (TemplateRadioButton.IsChecked.Value == true)
                 {
                     isMove = OperationTypeBox.SelectedIndex == 1;
@@ -242,6 +246,11 @@ namespace QuoteHistoryGUI.Dialogs
             {
                 SourceBox.Text = dlg.SelectedPath;
             }
+            CopyButton.IsEnabled = true;
+        }
+
+        private void SourceBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
             CopyButton.IsEnabled = true;
         }
     }

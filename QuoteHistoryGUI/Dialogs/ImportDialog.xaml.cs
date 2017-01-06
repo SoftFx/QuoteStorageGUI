@@ -55,6 +55,9 @@ namespace QuoteHistoryGUI.Dialogs
                 if (Interactor.Source != null && Interactor.Destination != null)
                     ImportBtn.IsEnabled = true;
                 else ImportBtn.IsEnabled = false;
+
+
+
                 log.Info("Import dialog initialized");
             }
             catch (Exception ex)

@@ -309,7 +309,7 @@ namespace QuoteHistoryGUI.Models
                     Selection.ForEach(t => { Interactor.AddToSelection(t); });
 
 
-                    var dlg = new ExportDialog(this, MainModel.StorageTabs, Interactor)
+                    var dlg = new ExportDialog(this, Interactor)
                     {
                         Owner = Application.Current.MainWindow
                     };

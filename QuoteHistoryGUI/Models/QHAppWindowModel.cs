@@ -292,7 +292,7 @@ namespace QuoteHistoryGUI.Models
                 try
                 {
                     log.Info("Export Dialog calling");
-                    var dlg = new ExportDialog(MasterStorage[0], StorageTabs, this.Interactor)
+                    var dlg = new ExportDialog(MasterStorage[0], this.Interactor)
                     {
                         Owner = Application.Current.MainWindow
                     };

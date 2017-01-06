@@ -104,6 +104,7 @@
     <Compile Include="HistoryTools\Interactor\SelectTemplateWorker.cs" />
     <Compile Include="HistoryTools\MetaStorage\MetaStorage.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="AppConfigManager.cs" />
     <Compile Include="Views\StorageExplorerView.xaml.cs">
       <DependentUpon>StorageExplorerView.xaml</DependentUpon>
     </Compile>
@@ -227,6 +228,8 @@
     <Content Include="HelpDocumentation.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="HelpFiles\console_import.jpg" />
+    <Resource Include="HelpFiles\console_import.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\export.png" />
