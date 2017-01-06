@@ -9,8 +9,16 @@ using System.Windows;
 
 namespace QuoteHistoryGUI
 {
-    class Startup
+    static class Startup
     {
+        private const string HelpText =
+            "Usage of Quote History:\n" +
+            "-h[elp]                          - get help.\n" +
+            "-i[mport]                        - open import dialog.\n" +
+            "-i[mport] <Destination> <Source> - import storage from Source to Destination.\n\n" +
+            "Example:\n" +
+            "QuoteHistoryGUI.exe -import \"C:\\Quotes History\" \"C:\\New Quotes History\"";
+
 
         [DllImport("kernel32.dll")]
         static extern bool AttachConsole(int dwProcessId);
@@ -27,27 +35,29 @@ namespace QuoteHistoryGUI
                 {
                     case "-h":
                     case "-help":
-                        Console.Out.WriteLine("\n");
-                        Console.Out.WriteLine("Quote History GUI");
-                        Console.Out.WriteLine(" ");
-                        Console.Out.WriteLine("-h or -help \t get help");
-                        Console.Out.WriteLine("-i or -import \t open import dialog");
-                        Console.Out.WriteLine("<-i or -import> <Destination> <Source>  \t import storage");
+                        ShowUsage();
                         break;
                     case "-i":
                     case "-import":
                         try
                         {
-                            QHApp myConsoleApp = new QHApp();
-                            myConsoleApp.ApplicationMode = QHApp.AppMode.ImportDialog;
-                            if (args.Count() == 3)
+                            QHApp myConsoleApp = new QHApp {ApplicationMode = QHApp.AppMode.ImportDialog};
+
+                            if (args.Length == 2 || args.Length > 3)
                             {
-                                Console.Out.WriteLine("");
-                                Console.Out.WriteLine("Importing from " + args[2] + " to " + args[1]);
+                                Console.Out.WriteLine("\nIncorrect arguments. See usage:");
+                                ShowUsage();
+                                return;
+                            }
+
+                            if (args.Length == 3)
+                            {
+                                Console.Out.WriteLine($"\nImporting from \"{args[2]}\" to \"{args[1]}\"");
                                 myConsoleApp.ApplicationMode = QHApp.AppMode.Console;
                                 myConsoleApp.Source = args[2];
                                 myConsoleApp.Destination = args[1];
                             }
+
                             myConsoleApp.Run();
                         }
                         catch (Exception e)
@@ -61,6 +71,12 @@ namespace QuoteHistoryGUI
                 }
             }
             else new QHApp().Run();
+        }
+
+        private static void ShowUsage()
+        {
+            Console.Out.WriteLine();
+            Console.Out.WriteLine(HelpText);
         }
     }
 }
