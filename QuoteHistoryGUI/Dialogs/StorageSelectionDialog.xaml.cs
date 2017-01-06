@@ -24,7 +24,6 @@ namespace QuoteHistoryGUI.Dialogs
     /// </summary>
     public partial class StorageSelectionDialog : Window
     {
-        private int _pathCount = 0;
 
         bool _canceled = true;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));

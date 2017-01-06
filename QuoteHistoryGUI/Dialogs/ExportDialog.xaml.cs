@@ -28,7 +28,6 @@ namespace QuoteHistoryGUI.Dialogs
     public partial class ExportDialog : Window
     {
         HistoryInteractor _interactor;
-        ObservableCollection<StorageInstanceModel> _tabs;
         BackgroundWorker CopyWorker;
         bool isMetaMatching = false;
         StorageInstanceModel _source;
