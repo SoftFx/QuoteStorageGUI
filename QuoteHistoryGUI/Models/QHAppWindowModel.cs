@@ -222,7 +222,7 @@ namespace QuoteHistoryGUI.Models
                                 TryToRemoveStorage(storageInstance);
                                 if(storageInstance.HistoryStoreDB!=null)
                                     storageInstance.HistoryStoreDB.Dispose();
-                                log.Info("Perious strage removed");
+                                log.Info("Previous storage removed");
                             }
                             
                             TryToAddStorage(tab);

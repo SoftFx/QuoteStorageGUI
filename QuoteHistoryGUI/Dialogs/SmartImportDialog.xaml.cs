@@ -159,7 +159,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (isMetaMatching)
             {
                 var templList = new List<string>(templates);
-                var matchEnum = temW.GetFromMetaByMatch(templList, _source, worker).ToArray();
+                var matchEnum = temW.GetFromMetaByMatch(templList, _source, worker);
                 _interactor.Copy(matchEnum, worker);
                 _interactor.Copy(matchEnum, worker, true);
             }
