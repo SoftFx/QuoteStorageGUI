@@ -116,6 +116,11 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public static bool ValidateKeyByKey(byte[] key1, byte[] key2, bool validateSymbol = true, int validationDateLevel = 1, bool validateType = false, bool validatePeriod = false, bool validatePart = false, bool validateFlushPart = true)
         {
+            if (key1.Length == 13)
+                key1 = key1.Concat(new byte[] { 0 }).ToArray();
+            if (key2.Length == 13)
+                key2 = key2.Concat(new byte[] { 0 }).ToArray();
+
             List<byte> sym1Bytes = new List<byte>();
             for (int i = 0; i < key1.Length; i++)
             {

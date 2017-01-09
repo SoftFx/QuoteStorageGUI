@@ -20,20 +20,22 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="30"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <Button Grid.Column="1" Margin="4" Content="Upstream" Click="UpstreamButton_Click" Name="UpstreamButton" MinWidth="75"/>
+        <Button Grid.Column="2" Margin="4" Content="Upstream" Click="UpstreamButton_Click" Name="UpstreamButton" MinWidth="75"/>
         <TextBlock Name="UpstreamStatusBlock" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="4"/>
-        <CheckBox Name="Level2Box" Grid.Column="0" Grid.Row="0" Content=":Ticks to M1 update for ticks obtained from level2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="3" FlowDirection="RightToLeft" />
-        <Expander Name="TemplateExpander"   Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="0" Margin="4">
+        <TextBlock Text="Ticks to M1 update for ticks obtained from level2:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+        <CheckBox Name="Level2Box" Grid.Column="1" Grid.Row="0"  VerticalAlignment="Center"  Margin="3" HorizontalAlignment="Center" />
+        <Button Name="templateHelpButton" Width="16" Height="16" Click="templateHelpButton_Click" Grid.Column="2" Grid.Row="1">
+            <Image Source="../Icons/question.png" Height="10" Width="10"/>
+        </Button>
+        <Expander Name="TemplateExpander"   Grid.Row="2" Grid.ColumnSpan="3" Grid.Column="0" Margin="4">
             <Expander.Header>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Copy templates:"/>
                     <Grid MinWidth="374"/>
-                    <Button Name="templateHelpButton" Width="16" Height="16" Click="templateHelpButton_Click">
-                        <Image Source="../Icons/question.png" Height="10" Width="10"/>
-                    </Button>
                 </StackPanel>
             </Expander.Header>
             <local:TemplateControl Height="200" x:Name="TemplateBox"/>
