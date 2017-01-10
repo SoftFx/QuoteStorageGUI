@@ -17,6 +17,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace QuoteHistoryGUI.Dialogs
 {
@@ -33,12 +34,16 @@ namespace QuoteHistoryGUI.Dialogs
         bool is2levelUpstream = false;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
         bool canceled = false;
+        Dispatcher _dispatcher;
         public UpstreamDialog(StorageInstanceModel source, HistoryInteractor interactor)
         {
             try
             {
                 log.Info("Upstream dialog initializing...");
                 InitializeComponent();
+
+                _dispatcher = this.Dispatcher;
+
                 Level2Box.IsChecked = true;
                 TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
                     HistoryInteractor.GetTemplates(interactor.Selection));
@@ -173,7 +178,8 @@ namespace QuoteHistoryGUI.Dialogs
         {
             if (!canceled)
             {
-                MessageBox.Show("Upstream update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                _dispatcher.Invoke(delegate
+                { MessageBox.Show("Upstream update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
                 log.Info("Upstream performed");
             }
             Close();
@@ -192,7 +198,9 @@ namespace QuoteHistoryGUI.Dialogs
             {
                 canceled = true;
                 UpstreamWorker.CancelAsync();
-                MessageBox.Show("Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                _dispatcher.Invoke(delegate
+                { MessageBox.Show("Canceled!", "Close message", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+                
                 log.Info("Upstream canceled");
             }
         }

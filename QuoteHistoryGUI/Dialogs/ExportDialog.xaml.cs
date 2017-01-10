@@ -19,6 +19,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace QuoteHistoryGUI.Dialogs
 {
@@ -35,7 +36,9 @@ namespace QuoteHistoryGUI.Dialogs
         SelectTemplateWorker temW;
         string templateText;
         bool isMove = false;
+        bool canceled = false;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
+        Dispatcher _dispatcher;
         public ExportDialog(StorageInstanceModel source, HistoryInteractor interactor)
         {
             try
@@ -43,6 +46,9 @@ namespace QuoteHistoryGUI.Dialogs
                 log.Info("Export dialog initializing...");
                 InitializeComponent();
 
+                _dispatcher = this.Dispatcher;
+
+                this.Closing += Window_Closing;
                 OperationTypeBox.IsEnabled = false;
                 Source.Text = source.StoragePath;
                 CopyButton.IsEnabled = false;
@@ -187,25 +193,43 @@ namespace QuoteHistoryGUI.Dialogs
             CopyStatusBlock.Text = e.UserState as string;
             log.Info("Export progress report: "+ e.UserState as string);
         }
+
+
+
         private void worker_Copied(object sender, RunWorkerCompletedEventArgs e)
         {
-            MessageBox.Show("Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+            if (canceled)
+            {
+                _dispatcher.Invoke(delegate
+                { MessageBox.Show("Canceled!", "Close message", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+            }
+            else
+            {
+                _dispatcher.Invoke(delegate
+                { MessageBox.Show("Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+            }
             Close();
-            CopyButton.IsEnabled = true;
-            if(_interactor.Destination!=null)
-            _interactor.Destination.HistoryStoreDB.Dispose();
-            _interactor.Source.Refresh();
         }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (CopyWorker != null && CopyWorker.IsBusy)
             {
+                canceled = true;
                 CopyWorker.CancelAsync();
-                _interactor.Destination.HistoryStoreDB.Dispose();
-                MessageBox.Show("Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-                _interactor.Source.Refresh();
+                e.Cancel = true;
             }
+            else
+            {
+                if (_interactor.Destination != null)
+                    _interactor.Destination.HistoryStoreDB.Dispose();
+                if (_interactor.Source != null)
+                    _interactor.Source.Refresh();
+            }
+
         }
+
+
 
         private void templateHelpButton_Click(object sender, RoutedEventArgs e)
         {

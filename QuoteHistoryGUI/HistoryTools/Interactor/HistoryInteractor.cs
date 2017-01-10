@@ -75,6 +75,10 @@ namespace QuoteHistoryGUI.HistoryTools
                 var files = Source.Editor.EnumerateFilesInFolder(fold);
                 foreach (var file in files)
                 {
+                    if (worker.CancellationPending == true)
+                    {
+                        return;
+                    }
                     Destination.HistoryStoreDB.Put(file.Key, file.Value);
                     copiedCnt++;
                     if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 0.5)
@@ -264,6 +268,12 @@ namespace QuoteHistoryGUI.HistoryTools
             int cnt = 0;
             while (sourceIter.IsValid())
             {
+                if (worker.CancellationPending == true)
+                {
+                    sourceIter.Dispose();
+                    return;
+                }
+
                 cnt++;
                 if (replace)
                 {

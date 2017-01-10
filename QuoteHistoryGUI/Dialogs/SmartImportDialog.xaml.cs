@@ -19,6 +19,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace QuoteHistoryGUI.Dialogs
 {
@@ -36,13 +37,19 @@ namespace QuoteHistoryGUI.Dialogs
         SelectTemplateWorker temW;
         string templateText;
         bool isMove = false;
+        bool canceled = false;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
+        Dispatcher _dispatcher;
         public SmartImportDialog(StorageInstanceModel source, ObservableCollection<StorageInstanceModel> tabs, HistoryInteractor interactor)
         {
             try
             {
                 log.Info("Import dialog initializing...");
                 InitializeComponent();
+
+                _dispatcher = this.Dispatcher;
+
+                this.Closing += Window_Closing;
 
                 OperationTypeBox.IsEnabled = false;
                 Source.Text = source.StoragePath;
@@ -201,21 +208,34 @@ namespace QuoteHistoryGUI.Dialogs
         }
         private void worker_Copied(object sender, RunWorkerCompletedEventArgs e)
         {
-            MessageBox.Show("Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+            if (canceled)
+            {
+                _dispatcher.Invoke(delegate
+                { MessageBox.Show("Canceled!", "Close message", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+            }
+            else
+            {
+                _dispatcher.Invoke(delegate
+                { MessageBox.Show("Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+            }
             Close();
-            CopyButton.IsEnabled = true;
-            _interactor.Source.HistoryStoreDB.Dispose();
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (CopyWorker != null && CopyWorker.IsBusy)
             {
+                canceled = true;
                 CopyWorker.CancelAsync();
-                _interactor.Source.HistoryStoreDB.Dispose();
-                MessageBox.Show("Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-                log.Info("Import canceled");
-                _interactor.Destination.Refresh();
+                e.Cancel = true;
             }
+            else
+            {
+                if(_interactor.Source!=null)
+                    _interactor.Source.HistoryStoreDB.Dispose();
+                if (_interactor.Destination != null)
+                    _interactor.Destination.Refresh();
+            }
+            
         }
         private void templateHelpButton_Click(object sender, RoutedEventArgs e)
         {

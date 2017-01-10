@@ -83,6 +83,11 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                 int templateSize = wordTemplates.Count();
                 while (matchingStack.Count != 0)
                 {
+                    if(worker!=null && worker.CancellationPending)
+                    {
+                        yield break;
+                    }
+
                     if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
                     {
                         worker.ReportProgress(1, "Matched files and folders count: " + matchedCnt);
