@@ -94,8 +94,9 @@ namespace QuoteHistoryGUI
                 if (_dispatcher != null)
                     _dispatcher.Invoke(delegate
                 { _folders.Insert(_folders.Count - 1, new Folder(sym)); _folders[_folders.Count - 2].Parent = null; });
-                for (int i = 0; i < 10; i++)
-                    nextKey.Add(255);
+
+                nextKey.Add(3);
+
                 it.Seek(nextKey.ToArray());
             }
             log.Info("Read symbols work performed");
