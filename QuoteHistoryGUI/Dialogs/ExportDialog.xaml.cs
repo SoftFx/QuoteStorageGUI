@@ -155,7 +155,7 @@ namespace QuoteHistoryGUI.Dialogs
         private void worker_Copy(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = e.Argument as BackgroundWorker;
-            var templates = templateText.Split(new char[] { ';', ',', '\n', '\r' });
+            var templates = templateText.Split(new[] { ";\n"}, StringSplitOptions.None);
             if (isMetaMatching)
             {
                 var templList = new List<string>(templates);

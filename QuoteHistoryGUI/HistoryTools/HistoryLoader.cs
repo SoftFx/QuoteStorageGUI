@@ -318,9 +318,5 @@ namespace QuoteHistoryGUI
                 ReadSymbols(_folders);
             else ReadDateTimes(oldFolders[0].Parent);
         }
-
-
-        
-        
     }
 }

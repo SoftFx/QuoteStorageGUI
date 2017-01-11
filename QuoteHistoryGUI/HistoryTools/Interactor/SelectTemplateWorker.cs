@@ -7,9 +7,61 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static QuoteHistoryGUI.HistoryTools.HistoryDatabaseFuncs;
+using System.Text.RegularExpressions;
 
 namespace QuoteHistoryGUI.HistoryTools.Interactor
 {
+
+    class SubStrNode
+    {
+        public string Str;
+        public List<SubStrNode> ChildList;
+        public SubStrNode Parent;
+        public bool used;
+
+        public SubStrNode()
+        {
+            ChildList = new List<SubStrNode>();
+        }
+        public SubStrNode(SubStrNode parent) : this()
+        {
+            Parent = parent;
+        }
+
+    }
+
+    class SmartTemplate
+    {
+        SubStrNode startNode;
+
+        public SmartTemplate(string strTemplate)
+        {
+            int curInd = 0;
+            int bufInd = 0;
+
+            startNode = new SubStrNode();
+            var currentNode = new SubStrNode(startNode);
+            startNode.ChildList.Add(currentNode);
+
+            for (int i = 0; i < strTemplate.Length; i++)
+            {
+                if (strTemplate[i] == '(')
+                {
+
+                }
+                else if (strTemplate[i] == ')')
+                {
+
+                }
+                else if (strTemplate[i] == '|')
+                {
+
+                }
+            }
+
+        }
+    }
+
     class SelectTemplateWorker
     {
         IEnumerable<Folder> _sourceTree;
@@ -59,108 +111,80 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
 
         public IEnumerable<Folder> GetByMatch(string itemplate, BackgroundWorker worker = null, bool fillToTicksPath = false)
         {
-            var templates = GetORTemplates(itemplate);
+            //var templates = GetORTemplates(itemplate);
             var res = new List<Folder>();
             DateTime lastReport = DateTime.UtcNow;
             int matchedCnt = 0;
-            foreach (var template in templates)
+            StringBuilder builder = new StringBuilder();
+
+            foreach (var sym in itemplate)
             {
-
-                var result = new List<Folder>();
-                var wordTemplates = new List<string>(template.Split(new char[] { '/', '\\', ';', '\t' }));
-                if (fillToTicksPath)
-                {
-                    while (wordTemplates.Count != 6)
-                        wordTemplates.Add("*");
-                }
-
-                var matchedFolders = new List<Folder>(_sourceTree);
-                var matchedFiles = new List<HistoryFile>();
-                var n_matchedFolders = new List<Folder>();
-                Stack<KeyValuePair<Folder, int>> matchingStack = new Stack<KeyValuePair<Folder, int>>();
-                foreach (var fold in _sourceTree)
-                    matchingStack.Push(new KeyValuePair<Folder, int>(fold, 0));
-                int templateSize = wordTemplates.Count();
-                while (matchingStack.Count != 0)
-                {
-                    if(worker!=null && worker.CancellationPending)
-                    {
-                        yield break;
-                    }
-
-                    if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
-                    {
-                        worker.ReportProgress(1, "Matched files and folders count: " + matchedCnt);
-                        lastReport = DateTime.UtcNow;
-                    }
-
-                    var currentPair = matchingStack.Pop();
-                    var fold = currentPair.Key;
-                    var level = currentPair.Value;
-                    if (Match(fold.Name, wordTemplates[level])){
-                        if(level == templateSize - 1)
-                        {
-                            matchedCnt++;
-                            yield return currentPair.Key;
-                        }
-                        else
-                        {
-                            if (!fold.Loaded)
-                            {
-                                if (fold as ChunkFile == null && fold as MetaFile == null)
-                                    _loader.ReadDateTimes(fold);
-                                fold.Loaded = true;
-                            }
-                            if (fold.Folders != null)
-                                foreach (var child_folder in fold.Folders)
-                                {
-                                    matchingStack.Push(new KeyValuePair<Folder, int>(child_folder, level+1));
-                                }
-                        }
-                    }
-                }
-                /*
-                foreach (var wordTemplate in wordTemplates)
-                {
-                    n_matchedFolders = new List<Folder>();
-                    foreach (var folder in matchedFolders)
-                    {
-                        if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
-                        {
-                            worker.ReportProgress(1, "Matching template : " + template + mes);
-                            if (mes.Length < 3) mes += "."; else mes = "";
-                            lastReport = DateTime.UtcNow;
-                        }
-                        if (Match(folder.Name, wordTemplate))
-                        {
-                            n_matchedFolders.Add(folder);
-                        }
-                    }
-                    matchedFolders = new List<Folder>();
-                    foreach (var folder in n_matchedFolders)
-                    {
-                        if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
-                        {
-                            worker.ReportProgress(1, "Matching template : " + template + mes);
-                            if (mes.Length < 3) mes += "."; else mes = "";
-                            lastReport = DateTime.UtcNow;
-                        }
-                        if (!folder.Loaded)
-                        {
-                            if (folder as ChunkFile == null && folder as MetaFile == null)
-                                _loader.ReadDateTimes(folder);
-                            folder.Loaded = true;
-                        }
-                        if (folder.Folders != null)
-                            foreach (var child_folder in folder.Folders)
-                            {
-                                matchedFolders.Add(child_folder);
-                            }
-                    }
-                }
-                res.AddRange(n_matchedFolders);*/
+                if(sym=='*')
+                    builder.Append('.');
+                builder.Append(sym);
             }
-            //return res;
+            var template = builder.ToString();
+            
+
+            var result = new List<Folder>();
+            var wordTemplates = new List<string>(template.Split(new char[] { '/', '\\', ';', '\t' }));
+            var templateExp = new List<Regex>();
+            if (fillToTicksPath)
+            {
+                while (wordTemplates.Count != 6)
+                    wordTemplates.Add(".*");
+            }
+
+            foreach (var word in wordTemplates)
+                templateExp.Add(new Regex(word));
+
+
+            var matchedFolders = new List<Folder>(_sourceTree);
+            var matchedFiles = new List<HistoryFile>();
+            var n_matchedFolders = new List<Folder>();
+            Stack<KeyValuePair<Folder, int>> matchingStack = new Stack<KeyValuePair<Folder, int>>();
+            foreach (var fold in _sourceTree)
+                matchingStack.Push(new KeyValuePair<Folder, int>(fold, 0));
+            int templateSize = wordTemplates.Count();
+            while (matchingStack.Count != 0)
+            {
+                if (worker != null && worker.CancellationPending)
+                {
+                    yield break;
+                }
+
+                if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
+                {
+                    worker.ReportProgress(1, "Matched files and folders count: " + matchedCnt);
+                    lastReport = DateTime.UtcNow;
+                }
+
+                var currentPair = matchingStack.Pop();
+                var fold = currentPair.Key;
+                var level = currentPair.Value;
+                if (templateExp[level].Match(fold.Name).Success) //Match(fold.Name, wordTemplates[level]))
+                {
+                    if (level == templateSize - 1)
+                    {
+                        matchedCnt++;
+                        yield return currentPair.Key;
+                    }
+                    else
+                    {
+                        if (!fold.Loaded)
+                        {
+                            if (fold as ChunkFile == null && fold as MetaFile == null)
+                                _loader.ReadDateTimes(fold);
+                            fold.Loaded = true;
+                        }
+                        if (fold.Folders != null)
+                            foreach (var child_folder in fold.Folders)
+                            {
+                                matchingStack.Push(new KeyValuePair<Folder, int>(child_folder, level + 1));
+                            }
+                    }
+                }
+            }
         }
 
         List<string> getPathFromMetaEntry(DBEntry entry)
@@ -205,7 +229,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
             }
             bool add = true;
 
-            
+
 
             foreach (var symbol in symbols)
             {
@@ -220,7 +244,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                         cnt++;
                         if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 1)
                         {
-                            worker.ReportProgress(1, "Matching and Copying files : " + symbol+" "+ cnt+"/"+ allCnt);
+                            worker.ReportProgress(1, "Matching and Copying files : " + symbol + " " + cnt + "/" + allCnt);
                             lastReport = DateTime.UtcNow;
                         }
                         foreach (var template in wordTemplates)
@@ -229,7 +253,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                             add = true;
                             for (int i = 0; i < template.Count(); i++)
                             {
-                                if(!Match(pathWords[i], template[i]))
+                                if (!Match(pathWords[i], template[i]))
                                 {
                                     add = false;
                                     break;
