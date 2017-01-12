@@ -138,6 +138,7 @@ namespace QuoteHistoryGUI.Dialogs
                             if (chunk.Period == "ticks level2")
                             {
                                 var res = _interactor.Source.tick2ToTickUpdate(chunk, false);
+                                upstramCnt++;
                                 if (is2levelUpstream)
                                 {
                                     if (res.Key.Length != 0)

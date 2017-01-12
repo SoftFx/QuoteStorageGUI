@@ -15,7 +15,7 @@ namespace QuoteHistoryGUI.HistoryTools
         public DateTime Time;
         public abstract byte[] Serialize();
     }
-    public class QHBar: QHItem
+    public class QHBar : QHItem
     {
         public decimal Open;
         public decimal High;
@@ -70,11 +70,11 @@ namespace QuoteHistoryGUI.HistoryTools
 
     public class QHTickLevel2 : QHItem
     {
-        public KeyValuePair<decimal,decimal>[] Bids;
+        public KeyValuePair<decimal, decimal>[] Bids;
         public KeyValuePair<decimal, decimal>[] Asks;
-        public KeyValuePair<decimal, decimal> BestBid { get { return Bids.Count()>0?Bids.Last():new KeyValuePair<decimal, decimal>(); } }
-        public KeyValuePair<decimal, decimal> BestAsk { get { return Asks.Count() > 0 ? Asks.First() : new KeyValuePair<decimal, decimal>();} }
-        public int Part=0;
+        public KeyValuePair<decimal, decimal> BestBid { get { return Bids.Count() > 0 ? Bids.Last() : new KeyValuePair<decimal, decimal>(); } }
+        public KeyValuePair<decimal, decimal> BestAsk { get { return Asks.Count() > 0 ? Asks.First() : new KeyValuePair<decimal, decimal>(); } }
+        public int Part = 0;
         public override byte[] Serialize()
         {
             throw new NotImplementedException();
@@ -87,7 +87,7 @@ namespace QuoteHistoryGUI.HistoryTools
         {
             if (content == null)
                 return new List<QHItem>();
-            if(period == "ticks")
+            if (period == "ticks")
             {
                 return DeserializeTicks(content);
             }
@@ -111,12 +111,17 @@ namespace QuoteHistoryGUI.HistoryTools
             while (!reader.EndOfStream)
             {
                 var splittedLine = reader.ReadLine().Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (splittedLine.Count() == 0)
+                {
+                    throw new InvalidDataException("Blank line not at the end of the file is not allowed.");
+                }
                 QHBar bar = new QHBar();
-                bar.Time = DateTime.Parse(splittedLine[0]+" "+ splittedLine[1], CultureInfo.InvariantCulture);
+                bar.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
                 bar.Open = decimal.Parse(splittedLine[2], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
                 bar.High = decimal.Parse(splittedLine[3], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
                 bar.Low = decimal.Parse(splittedLine[4], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
                 bar.Close = decimal.Parse(splittedLine[5], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+                bar.Volume = decimal.Parse(splittedLine[6], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
                 res.Add(bar);
             }
             return res;
@@ -130,6 +135,10 @@ namespace QuoteHistoryGUI.HistoryTools
             while (!reader.EndOfStream)
             {
                 var splittedLine = reader.ReadLine().Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (splittedLine.Count() == 0)
+                {
+                    throw new InvalidDataException("Blank line not at the end of the file is not allowed.");
+                }
                 QHTick tick = new QHTick();
                 var dateAndPartStr = splittedLine[1].Split('-');
                 if (dateAndPartStr.Count() == 2)
@@ -153,44 +162,48 @@ namespace QuoteHistoryGUI.HistoryTools
             StreamReader reader = new StreamReader(new MemoryStream(content));
             while (!reader.EndOfStream)
             {
-                    var splittedLine = reader.ReadLine().Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    QHTickLevel2 tick = new QHTickLevel2();
-                    var dateAndPartStr = splittedLine[1].Split('-');
-                    if (dateAndPartStr.Count() == 2)
+                var splittedLine = reader.ReadLine().Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (splittedLine.Count() == 0)
+                {
+                    throw new InvalidDataException("Blank line not at the end of the file is not allowed.");
+                }
+                QHTickLevel2 tick = new QHTickLevel2();
+                var dateAndPartStr = splittedLine[1].Split('-');
+                if (dateAndPartStr.Count() == 2)
+                {
+                    tick.Part = int.Parse(dateAndPartStr[1]);
+                    splittedLine[1] = dateAndPartStr[0];
+                }
+                tick.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
+                List<KeyValuePair<decimal, decimal>> Bids = new List<KeyValuePair<decimal, decimal>>();
+                List<KeyValuePair<decimal, decimal>> Asks = new List<KeyValuePair<decimal, decimal>>();
+                int i = 2;
+                if (i < splittedLine.Count() && splittedLine[i] == "bid")
+                {
+                    i++;
+                    while (i < splittedLine.Count() && splittedLine[i] != "ask")
                     {
-                        tick.Part = int.Parse(dateAndPartStr[1]);
-                        splittedLine[1] = dateAndPartStr[0];
+                        Bids.Add(new KeyValuePair<decimal, decimal>(decimal.Parse(splittedLine[i], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture),
+                            decimal.Parse(splittedLine[i + 1], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture)));
+                        i += 2;
                     }
-                    tick.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
-                    List<KeyValuePair<decimal, decimal>> Bids = new List<KeyValuePair<decimal, decimal>>();
-                    List<KeyValuePair<decimal, decimal>> Asks = new List<KeyValuePair<decimal, decimal>>();
-                    int i = 2;
-                    if (i < splittedLine.Count() && splittedLine[i] == "bid")
+                }
+                if (i < splittedLine.Count() && splittedLine[i] == "ask")
+                {
+                    i++;
+                    while (i < splittedLine.Count())
                     {
-                        i++;
-                        while (i < splittedLine.Count() && splittedLine[i] != "ask")
-                        {
-                            Bids.Add(new KeyValuePair<decimal, decimal>(decimal.Parse(splittedLine[i], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture), 
-                                decimal.Parse(splittedLine[i + 1], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture)));
-                            i += 2;
-                        }
+                        Asks.Add(new KeyValuePair<decimal, decimal>(decimal.Parse(splittedLine[i], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture),
+                            decimal.Parse(splittedLine[i + 1], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture)));
+                        i += 2;
                     }
-                    if (i < splittedLine.Count() && splittedLine[i] == "ask")
-                    {
-                        i++;
-                        while (i < splittedLine.Count())
-                        {
-                            Asks.Add(new KeyValuePair<decimal, decimal>(decimal.Parse(splittedLine[i], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture),
-                                decimal.Parse(splittedLine[i + 1], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture)));
-                            i += 2;
-                        }
-                    }
+                }
 
 
-                    tick.Bids = Bids.ToArray();
-                    tick.Asks = Asks.ToArray();
+                tick.Bids = Bids.ToArray();
+                tick.Asks = Asks.ToArray();
 
-                    res.Add(tick);
+                res.Add(tick);
 
             }
             return res;
@@ -199,7 +212,7 @@ namespace QuoteHistoryGUI.HistoryTools
         internal static byte[] Serialize(List<QHItem> chunk)
         {
             List<byte> res = new List<byte>();
-            foreach(var it in chunk)
+            foreach (var it in chunk)
             {
                 res.AddRange(it.Serialize());
             }
@@ -209,8 +222,8 @@ namespace QuoteHistoryGUI.HistoryTools
         public static byte[] Serialize(IEnumerable<QHBar> bars)
         {
             MemoryStream stream = new MemoryStream();
-            List<string> res = new List<string>(); 
-                        foreach(var bar in bars)
+            List<string> res = new List<string>();
+            foreach (var bar in bars)
             {
                 string barStr = "";
                 barStr += bar.Time.ToString(CultureInfo.InvariantCulture);

@@ -170,10 +170,15 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 HistorySerializer.Deserialize(f.Period, content);
             }
+            catch(InvalidDataException ex)
+            {
+                MessageBox.Show("There is a syntax error! Unable to save.\n\n"+ex.Message, "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             catch
             {
                 
-                MessageBox.Show("There is a syntax error! Unable to save.", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("There is a syntax error! Unable to save.\n\n"+ "Check the numeric format and punctuation", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.MainWindow.Activate();
                 return;
             }
@@ -238,42 +243,48 @@ namespace QuoteHistoryGUI.HistoryTools
                 GettedEntry[4] = 1;
             if (Type == "Text")
                 GettedEntry[4] = 2;
-
-            if (!it.IsValid() || (!HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), metaKey, true, 4, true, true, true)))
+            if (showMessages)
             {
-                string pathStr = "";
-                foreach(var path_part in path)
-                {
-                    pathStr += (path_part.Name + "/");
-                }
-                pathStr += (file.Name + "." + file.Part + "");
-
-                MetaCorruptionMessage = "Meta for file " + pathStr + "was not found.\nMeta was recalculated";
-            }
-            else
-            {
-                var metaEntry = it.GetValue();
-                Crc32 hashFromDB = new Crc32();
-                hashFromDB.Value = (BitConverter.ToUInt32(metaEntry, 0));
-                var metaStr = hashFromDB.Value.ToString("X8", CultureInfo.InvariantCulture);
-                metaStr += '\t';
-                if (metaEntry[4] == 1)
-                    metaStr += "Zip";
-                if (metaEntry[4] == 2)
-                    metaStr += "Text";
-
-
-                var contStr = hash.Value.ToString("X8", CultureInfo.InvariantCulture);
-                contStr += ('\t'+Type);
-                if(metaStr != contStr)
+                if (!it.IsValid() || (!HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), metaKey, true, 4, true, true, true)))
                 {
                     string pathStr = "";
                     foreach (var path_part in path)
                     {
-                        pathStr += (path_part.Name + "/");
+                        if (pathStr != "")
+                            pathStr += "/";
+                        pathStr += (path_part.Name);
                     }
-                    pathStr += (file.Name + "." + file.Part + "");
-                    MetaCorruptionMessage = "Meta for file " + pathStr + " was recalculated";
+                    pathStr += ("." + file.Part + "");
+
+                    MetaCorruptionMessage = "Meta for file " + pathStr + "was not found.\nMeta was recalculated";
+                }
+                else
+                {
+                    var metaEntry = it.GetValue();
+                    Crc32 hashFromDB = new Crc32();
+                    hashFromDB.Value = (BitConverter.ToUInt32(metaEntry, 0));
+                    var metaStr = hashFromDB.Value.ToString("X8", CultureInfo.InvariantCulture);
+                    metaStr += '\t';
+                    if (metaEntry[4] == 1)
+                        metaStr += "Zip";
+                    if (metaEntry[4] == 2)
+                        metaStr += "Text";
+
+
+                    var contStr = hash.Value.ToString("X8", CultureInfo.InvariantCulture);
+                    contStr += ('\t' + Type);
+                    if (metaStr != contStr)
+                    {
+                        string pathStr = "";
+                        foreach (var path_part in path)
+                        {
+                            if (pathStr != "")
+                                pathStr += "/";
+                            pathStr += (path_part.Name);
+                        }
+                        pathStr += ("." + file.Part + "");
+                        MetaCorruptionMessage = "Meta for file " + pathStr + " was recalculated";
+                    }
                 }
             }
             _dbase.Put(metaKey, GettedEntry);
