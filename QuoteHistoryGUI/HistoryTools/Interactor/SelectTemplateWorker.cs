@@ -11,56 +11,56 @@ using System.Text.RegularExpressions;
 
 namespace QuoteHistoryGUI.HistoryTools.Interactor
 {
+    /*
+   class SubStrNode
+   {
+       public string Str;
+       public List<SubStrNode> ChildList;
+       public SubStrNode Parent;
+       public bool used;
 
-    class SubStrNode
-    {
-        public string Str;
-        public List<SubStrNode> ChildList;
-        public SubStrNode Parent;
-        public bool used;
+       public SubStrNode()
+       {
+           ChildList = new List<SubStrNode>();
+       }
+       public SubStrNode(SubStrNode parent) : this()
+       {
+           Parent = parent;
+       }
 
-        public SubStrNode()
-        {
-            ChildList = new List<SubStrNode>();
-        }
-        public SubStrNode(SubStrNode parent) : this()
-        {
-            Parent = parent;
-        }
+   }
 
-    }
+  class SmartTemplate
+   {
+       SubStrNode startNode;
 
-    class SmartTemplate
-    {
-        SubStrNode startNode;
+       public SmartTemplate(string strTemplate)
+       {
+           int curInd = 0;
+           int bufInd = 0;
 
-        public SmartTemplate(string strTemplate)
-        {
-            int curInd = 0;
-            int bufInd = 0;
+           startNode = new SubStrNode();
+           var currentNode = new SubStrNode(startNode);
+           startNode.ChildList.Add(currentNode);
 
-            startNode = new SubStrNode();
-            var currentNode = new SubStrNode(startNode);
-            startNode.ChildList.Add(currentNode);
+           for (int i = 0; i < strTemplate.Length; i++)
+           {
+               if (strTemplate[i] == '(')
+               {
 
-            for (int i = 0; i < strTemplate.Length; i++)
-            {
-                if (strTemplate[i] == '(')
-                {
+               }
+               else if (strTemplate[i] == ')')
+               {
 
-                }
-                else if (strTemplate[i] == ')')
-                {
+               }
+               else if (strTemplate[i] == '|')
+               {
 
-                }
-                else if (strTemplate[i] == '|')
-                {
+               }
+           }
 
-                }
-            }
-
-        }
-    }
+       }
+   }*/
 
     class SelectTemplateWorker
     {
