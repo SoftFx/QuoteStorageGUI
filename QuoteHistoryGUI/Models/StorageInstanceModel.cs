@@ -168,8 +168,8 @@ namespace QuoteHistoryGUI.Models
                         new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
                 Editor = new HistoryEditor(_historyStoreDB);
                 HistoryLoader hl = new HistoryLoader(_dispatcher, _historyStoreDB);
-                if(!syncLoading)
-                hl.ReadSymbols(Folders);
+                if (!syncLoading)
+                    hl.ReadSymbols(Folders);
                 else hl.ReadSymbolsSync(Folders);
                 log.Info("Database opened and initialized: " + path);
             }
@@ -343,23 +343,28 @@ namespace QuoteHistoryGUI.Models
                     var MainModel = Application.Current.MainWindow.DataContext as QHAppWindowModel;
                     var MainView = Application.Current.MainWindow as QHAppWindowView;
 
-                    var result = MessageBox.Show("Are you sure?", "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    string DeleteMessage = "";
+
+                    if (Selection.Count == 1)
+                    {
+                        var path = HistoryDatabaseFuncs.GetPath(Selection[0]);
+
+                        for (int i = 0; i < path.Count; i++) DeleteMessage += ((DeleteMessage.Length == 0 ? "" : "/") + path[i].Name);
+
+                        DeleteMessage = "\n\n" + DeleteMessage + " ?";
+                    }
+                    else
+                        DeleteMessage = Selection.Count + " items ?";
+
+                  var result = MessageBox.Show("Are you sure to delete "+ DeleteMessage, "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
                     if (result == MessageBoxResult.No) return true;
-
-                    Interactor.DiscardSelection();
-                    Selection.ForEach(t => { Interactor.AddToSelection(t); });
-                    Selection.Clear();
-
                     Interactor.Source = this;
-                    MainView.ShowLoading();
-                    var res = Interactor.Delete();
-                    MainView.HideLoading();
+                    DeleteProgressDialog dlg = new DeleteProgressDialog(Interactor, Selection, _dispatcher)
+                    {
+                        Owner = MainView
+                    };
 
-                    if (res == 1)
-                        MessageBox.Show("Delete completed!", "Delete", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    Application.Current.MainWindow.Activate();
-                    log.Info("Delete performed... ");
+                    dlg.ShowDialog();
                 }
                 catch (Exception ex)
                 {
@@ -435,7 +440,7 @@ namespace QuoteHistoryGUI.Models
             var parent = chunk.Parent;
             List<Folder> deleteList = new List<Folder>();
             foreach (var f in parent.Folders) if (f.Name.Length >= 10 && (f.Name.Substring(0, 10) == "ticks file" || f.Name.Substring(0, 10) == "ticks meta")) deleteList.Add(f);
-            
+
             var tickChunk = new ChunkFile() { Name = "ticks file", Period = "ticks", Parent = parent };
             var partCnt = Editor.SaveToDBParted(ticks, tickChunk, true, showMessages);
             List<ChunkFile> chunks = new List<ChunkFile>();
@@ -474,7 +479,7 @@ namespace QuoteHistoryGUI.Models
             _dispatcher.Invoke(() => parent.Folders.Add(bidChunk));
             var bidMeta = new MetaFile() { Name = "M1 bid meta", Period = "M1 bid", Parent = parent };
             _dispatcher.Invoke(() => parent.Folders.Add(bidMeta));
-            
+
             var askChunk = new ChunkFile() { Name = "M1 ask file", Period = "M1 ask", Parent = parent };
             _dispatcher.Invoke(() => parent.Folders.Add(askChunk));
             var askMeta = new MetaFile() { Name = "M1 ask meta", Period = "M1 ask", Parent = parent };

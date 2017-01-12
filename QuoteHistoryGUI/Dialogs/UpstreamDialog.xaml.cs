@@ -99,7 +99,7 @@ namespace QuoteHistoryGUI.Dialogs
                 {
                     templNum++;
                     var matched = temW.GetByMatch(templ, worker, true);
-                    DateTime lastReport = DateTime.UtcNow;
+                    DateTime lastReport = DateTime.UtcNow.AddSeconds(-2);
                     int upstramCnt = 0;
                     Folder lastDay = null;
                     ChunkFile lastTicksFile = null;

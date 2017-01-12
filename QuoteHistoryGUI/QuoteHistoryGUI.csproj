@@ -88,6 +88,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Dialogs\DeleteProgressDialog.xaml.cs">
+      <DependentUpon>DeleteProgressDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\HelpDialog.xaml.cs">
       <DependentUpon>HelpDialog.xaml</DependentUpon>
     </Compile>
@@ -124,6 +127,10 @@
     <Compile Include="Views\StorageExplorerView.xaml.cs">
       <DependentUpon>StorageExplorerView.xaml</DependentUpon>
     </Compile>
+    <Page Include="Dialogs\DeleteProgressDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\HelpDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -244,6 +251,7 @@
     <Content Include="HelpDocumentation.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Icons\delete.png" />
     <EmbeddedResource Include="HelpFiles\m1_checkbox.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>

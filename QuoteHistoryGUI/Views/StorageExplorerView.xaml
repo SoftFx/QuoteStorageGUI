@@ -23,7 +23,7 @@
                     <MenuItem Header="Refresh" Command="{Binding RefreshBtnClick}"/>
                 </ContextMenu>
             </TreeView.ContextMenu>
-            
+
             <TreeView.Resources>
 
                 <LinearGradientBrush   x:Key="{x:Static SystemColors.HighlightBrushKey}" EndPoint="0,1" StartPoint="0,0">
@@ -41,8 +41,8 @@
 
 
                 <Style x:Key="ExpandingFolderStyle" TargetType="{x:Type Image}">
-                    
-                    
+
+
                     <Setter Property="Source" Value="../Icons/closeFolder.png"/>
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=TreeViewItem}, Path=IsExpanded}" Value="True">
@@ -51,7 +51,7 @@
                     </Style.Triggers>
 
                 </Style>
-                
+
                 <DataTemplate DataType="{x:Type vs:LoadingFolder}">
                     <StackPanel Orientation="Horizontal" >
 
@@ -163,7 +163,7 @@
                     <ColumnDefinition Width="80"/>
                 </Grid.ColumnDefinitions>
                 <Rectangle Grid.Column="0" Grid.ColumnSpan="2" Fill="#DBDBDB"/>
-                <TextBlock Name="FilePath" FontFamily="Consolas" Margin="3" Text="{Binding Path=FilePath}"/>
+                <TextBox Background="Transparent" BorderThickness="0" IsReadOnly="True" TextWrapping="Wrap" Name="FilePath" FontFamily="Consolas" Margin="3" Text="{Binding Path=FilePath}"/>
                 <Button Name="SaveButton" Background="Transparent" Content="Save" Command="{Binding SaveBtnClick}" Margin="3" Grid.Column="1"/>
             </Grid>
         </Grid>

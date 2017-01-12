@@ -84,6 +84,14 @@ namespace QuoteHistoryGUI.Dialogs
             {
                 log.Info("Export calling...");
                 AppConfigManager.SavePathes(DestinationBox.Text);
+
+                if (_source.FilePath == DestinationBox.Text)
+                {
+                    MessageBox.Show("Unavailable to export to the same storage ", "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    log.Info("Export canceled");
+                    return;
+                }
+
                 if (TemplateRadioButton.IsChecked.Value == true)
                 {
                     isMove = OperationTypeBox.SelectedIndex == 1;

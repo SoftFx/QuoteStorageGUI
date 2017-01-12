@@ -81,7 +81,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                     Destination.HistoryStoreDB.Put(file.Key, file.Value);
                     copiedCnt++;
-                    if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 0.5)
+                    if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 0.25)
                     {
                         var dbentry = DeserealizeKey(file.Key);
                         worker.ReportProgress(1,"[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
@@ -95,7 +95,7 @@ namespace QuoteHistoryGUI.HistoryTools
         {
 
             int copiedCnt = 0;
-            DateTime lastReport = DateTime.UtcNow;
+            DateTime lastReport = DateTime.UtcNow.AddSeconds(-2);
 
             foreach(var entry in matchedEntries)
             {
@@ -133,8 +133,10 @@ namespace QuoteHistoryGUI.HistoryTools
             }
         }
 
-        public int Delete(IEnumerable<Folder> selection = null)
+        public int Delete(IEnumerable<Folder> selection = null, BackgroundWorker worker = null)
         {
+            int deleteCnt = 0;
+            DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
             if(selection == null)
              selection = Selection;
             /*if (selection.Count() == 0)
@@ -147,6 +149,7 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 if (fold as ChunkFile == null && fold as MetaFile == null)
                 {
+                    
                     if (fold.Parent == null)
                     {
                         if (Dispatcher != null)
@@ -176,6 +179,19 @@ namespace QuoteHistoryGUI.HistoryTools
 
                             while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true))
                             {
+                                deleteCnt++;
+
+                                if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
+                                {
+                                    var dbentry = DeserealizeKey(key);
+                                    worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                                    ReportTime = DateTime.Now;
+                                }
+                                if (worker?.CancellationPending == true)
+                                {
+                                    it.Dispose();
+                                    return 0;
+                                }
                                 Source.HistoryStoreDB.Delete(it.GetKey());
                                 it.Next();
                             }
@@ -189,6 +205,9 @@ namespace QuoteHistoryGUI.HistoryTools
                     int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
                     if (fold as ChunkFile != null)
                     {
+
+
+
                         ChunkFile chunk = fold as ChunkFile;
                         key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", chunk.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], chunk.Part);
                         it.Seek(key);
@@ -198,6 +217,19 @@ namespace QuoteHistoryGUI.HistoryTools
                                 Dispatcher.Invoke((Action)delegate () { fold.Parent.Folders.Remove(fold); });
                             else fold.Parent.Folders.Remove(fold);
                             Source.HistoryStoreDB.Delete(it.GetKey());
+
+                            if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
+                            {
+                                var dbentry = DeserealizeKey(key);
+                                worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                                ReportTime = DateTime.Now;
+                            }
+                            if (worker?.CancellationPending == true)
+                            {
+                                it.Dispose();
+                                return 0;
+                            }
+
                         }
 
                         it = Source.HistoryStoreDB.CreateIterator();
@@ -218,7 +250,19 @@ namespace QuoteHistoryGUI.HistoryTools
                                             Dispatcher.Invoke((Action)delegate () { fold.Parent.Folders.Remove(meta); });
                                         else fold.Parent.Folders.Remove(meta);
                                         Source.HistoryStoreDB.Delete(it.GetKey());
+
+                                        if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
+                                        {
+                                            var dbentry = DeserealizeKey(key);
+                                            worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                                            ReportTime = DateTime.Now;
+                                        }
                                         break;
+                                    }
+                                    if (worker?.CancellationPending == true)
+                                    {
+                                        it.Dispose();
+                                        return 0;
                                     }
                                 }
                             }
@@ -249,6 +293,18 @@ namespace QuoteHistoryGUI.HistoryTools
                             {
                                 fold.Parent.Folders.Remove(metaFile);
                                 Source.HistoryStoreDB.Delete(it.GetKey());
+
+                                if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
+                                {
+                                    var dbentry = DeserealizeKey(key);
+                                    worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                                    ReportTime = DateTime.Now;
+                                }
+                                if (worker?.CancellationPending == true)
+                                {
+                                    it.Dispose();
+                                    return 0;
+                                }
                             }
                         }
                     }
@@ -264,7 +320,7 @@ namespace QuoteHistoryGUI.HistoryTools
         {
             var sourceIter = Source.HistoryStoreDB.CreateIterator();
             sourceIter.SeekToFirst();
-            DateTime ReportTime = DateTime.Now;
+            DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
             int cnt = 0;
             while (sourceIter.IsValid())
             {
@@ -287,7 +343,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                 }
 
-                if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.5)
+                if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
                 {
                     var dbentry = DeserealizeKey(sourceIter.GetKey());
                     worker.ReportProgress(1, "[" + cnt + "] "+ dbentry.Symbol+": "+ dbentry.Time+" - "+dbentry.Period);

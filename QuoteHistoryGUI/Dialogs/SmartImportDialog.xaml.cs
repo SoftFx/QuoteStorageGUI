@@ -91,6 +91,14 @@ namespace QuoteHistoryGUI.Dialogs
             {
                 log.Info("Import calling...");
                 AppConfigManager.SavePathes(SourceBox.Text);
+
+                if (_source.FilePath == SourceBox.Text)
+                {
+                    MessageBox.Show("Unavailable to import from the same storage ", "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    log.Info("Import canceled");
+                    return;
+                }
+
                 if (TemplateRadioButton.IsChecked.Value == true)
                 {
                     isMove = OperationTypeBox.SelectedIndex == 1;
@@ -126,6 +134,8 @@ namespace QuoteHistoryGUI.Dialogs
                 else
                 {
 
+                    
+
                     isMove = OperationTypeBox.SelectedIndex == 1;
                     CopyWorker = new BackgroundWorker();
 
@@ -138,7 +148,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                     if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
                     {
-                        MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                        MessageBox.Show("Unable to modify storage opened in readonly mode", "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                         return;
                     }
 

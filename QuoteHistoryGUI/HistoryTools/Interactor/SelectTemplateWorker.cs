@@ -113,7 +113,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
         {
             //var templates = GetORTemplates(itemplate);
             var res = new List<Folder>();
-            DateTime lastReport = DateTime.UtcNow;
+            DateTime lastReport = DateTime.UtcNow.AddSeconds(-2);
             int matchedCnt = 0;
             StringBuilder builder = new StringBuilder();
 
@@ -204,7 +204,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
 
         public IEnumerable<DBEntry> GetFromMetaByMatch(List<string> itemplates, StorageInstanceModel source, BackgroundWorker worker = null, bool fillToTicksPath = false)
         {
-            DateTime lastReport = DateTime.UtcNow;
+            DateTime lastReport = DateTime.UtcNow.AddSeconds(-2);
             var templates = new List<string>();
             foreach (var orTemplate in itemplates)
             {
