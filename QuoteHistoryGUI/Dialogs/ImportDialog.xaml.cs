@@ -169,7 +169,7 @@ namespace QuoteHistoryGUI.Dialogs
             ReportBlock.Text = "\nImport Completed";
             if (isUIVersion)
                 MessageBox.Show("Import Completed", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
-            else Console.Out.WriteLine("Import Completed!");
+            else Console.Out.WriteLine("\n\nImport Completed!");
             log.Info("Import performed...");
             this.Close();
         }
