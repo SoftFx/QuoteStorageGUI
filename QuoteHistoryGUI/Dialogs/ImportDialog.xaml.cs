@@ -176,11 +176,11 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void ImportProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            var key = e.UserState as byte[];
-            var entry = HistoryDatabaseFuncs.DeserealizeKey(key);
-            ReportBlock.Text = entry.Symbol + " " + entry.Time.ToString();
-            log.Info("Import progresss report: "+ entry.Symbol + " " + entry.Time.ToString());
+            var message = e.UserState as string;
+            ReportBlock.Text = message;
             if (!isUIVersion) Console.Write("\r{0}", ReportBlock.Text);
+            log.Info("Import progresss report: " + message);
+            
         }
     }
 }
