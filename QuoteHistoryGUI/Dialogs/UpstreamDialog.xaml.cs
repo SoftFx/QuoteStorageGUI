@@ -217,7 +217,7 @@ namespace QuoteHistoryGUI.Dialogs
                 List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListBids = new List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>>();
                 List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListAsks = new List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>>();
 
-                List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update = new List<HistoryDatabaseFuncs.DBEntry>(); ;
+                List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update = new List<HistoryDatabaseFuncs.DBEntry>(); 
                 foreach (var templ in templates)
                 {
                     templNum++;
@@ -248,6 +248,7 @@ namespace QuoteHistoryGUI.Dialogs
                             }
                         }
                         ticksToM1Work(worker, entriesForM1Update, ref upstramCnt, ref flushCnt, ref lastReport, saveListBids, saveListAsks);
+                        entriesForM1Update.Clear();
                     }
 
                     FlushWork(worker, saveListBids, ref flushCnt, ref lastReport);
