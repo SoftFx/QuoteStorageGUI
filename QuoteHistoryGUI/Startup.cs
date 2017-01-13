@@ -1,4 +1,5 @@
-﻿using QuoteHistoryGUI.Views;
+﻿using log4net;
+using QuoteHistoryGUI.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,8 @@ namespace QuoteHistoryGUI
             "-i[mport] <Destination> <Source> - import storage from Source to Destination.\n\n" +
             "Example:\n" +
             "QuoteHistoryGUI.exe -import \"C:\\Quotes History\" \"C:\\New Quotes History\"";
+
+        public static readonly ILog log = LogManager.GetLogger(typeof(Startup));
 
 
         [DllImport("kernel32.dll")]
@@ -63,6 +66,7 @@ namespace QuoteHistoryGUI
                         catch (Exception e)
                         {
                             Console.Out.WriteLine(e.Message);
+                            log.Error(e.Message+"\r\n"+e.StackTrace);
                         }
                         break;
                     default:

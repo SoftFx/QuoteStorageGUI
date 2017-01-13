@@ -138,7 +138,7 @@ namespace QuoteHistoryGUI.Dialogs
                 var entry = HistoryDatabaseFuncs.DeserealizeKey(file.Key);
                 if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.5)
                 {
-                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
+                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Month+ "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
                     lastReport = DateTime.UtcNow;
                 }
                 var items = HistorySerializer.Deserialize("ticks level2", _interactor.Source.Editor.GetOrUnzip(file.Value));
@@ -172,7 +172,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                 if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.5)
                 {
-                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
+                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/"+entry.Time.Month+"/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
                     lastReport = DateTime.UtcNow;
                 }
                 if (worker?.CancellationPending == true)
