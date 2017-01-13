@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Windows;
 
+
 namespace QuoteHistoryGUI.HistoryTools
 {
     public class HistoryEditor
@@ -139,6 +140,35 @@ namespace QuoteHistoryGUI.HistoryTools
             return result.ToArray();
         }
 
+        public byte[] ReadAllPart(HistoryDatabaseFuncs.DBEntry entry, hourReadMode hm = hourReadMode.oneDate)
+        {
+            
+            List<byte> result = new List<byte>();
+            int hstart;
+            int hend;
+            if (hm == hourReadMode.oneDate)
+            {
+                hstart = entry.Time.Hour;
+                hend = entry.Time.Hour + 1;
+            }
+            else
+            {
+                hstart = 0;
+                hend = 24;
+            }
+            for (int hour = hstart; hour < hend; hour++)
+            {
+                for (int i = 0; i < 30; i++)
+                {
+                    var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, hour, i));
+                    if (cntnt != null)
+                        result.AddRange(GetOrUnzip(cntnt));
+                    else break;
+                }
+            }
+            return result.ToArray();
+        }
+
         public int SaveToDBParted(IEnumerable<QHItem> items, ChunkFile file, bool rebuildMeta = true, bool showMessages = true)
         {
             ChunkFile f = new ChunkFile(file.Name,file.Period, 0, file.Parent);
@@ -220,6 +250,59 @@ namespace QuoteHistoryGUI.HistoryTools
             _dbase.Put(key, value);
 
             RebuildMeta(f, showMessages);
+        }
+
+        public KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>> GetChunkMetaForDB(byte[] content, HistoryDatabaseFuncs.DBEntry entry)
+        {
+            var meta = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Meta",entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part));
+            var key = HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part);
+            byte[] value = { };
+            string type = "Zip";
+            if (meta?[4] == 2)
+            {
+                type = "Text";
+                value = content;
+            }
+            else
+            {
+                MemoryStream contentMemStream = new MemoryStream(content);
+                MemoryStream outputMemStream = new MemoryStream();
+                ZipOutputStream zipStream = new ZipOutputStream(outputMemStream);
+
+                zipStream.SetLevel(3); //0-9, 9 being the highest level of compression
+
+                ZipEntry newEntry = new ZipEntry(entry.Period + ".txt");
+                newEntry.DateTime = DateTime.Now;
+
+                zipStream.PutNextEntry(newEntry);
+
+                StreamUtils.Copy(contentMemStream, zipStream, new byte[4096]);
+                zipStream.CloseEntry();
+
+                zipStream.IsStreamOwner = false;    // False stops the Close also Closing the underlying stream.
+                zipStream.Close();          // Must finish the ZipOutputStream before using outputMemStream.
+
+                outputMemStream.Position = 0;
+                value = outputMemStream.ToArray();
+            }
+            var metaPair = GetRebuildedMeta(content, type, entry);
+            KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>> res = new KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>(new KeyValuePair<byte[], byte[]>(key, value), new KeyValuePair<byte[], byte[]>(metaPair.Key, metaPair.Value));
+            return res;  
+        }
+
+
+        public KeyValuePair<byte[],byte[]> GetRebuildedMeta(byte[] TextContent, string type, HistoryDatabaseFuncs.DBEntry entry)
+        {
+            Crc32 hash = new Crc32();
+            hash.Update(TextContent);
+            var metaKey = HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Meta", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part);
+            byte[] GettedEntry = new byte[5];
+            BitConverter.GetBytes((UInt32)(hash.Value)).CopyTo(GettedEntry, 0);
+            if (type == "Zip")
+                GettedEntry[4] = 1;
+            if (type == "Text")
+                GettedEntry[4] = 2;
+            return new KeyValuePair<byte[], byte[]>(metaKey, GettedEntry);
         }
 
 
@@ -393,8 +476,13 @@ namespace QuoteHistoryGUI.HistoryTools
             RebuildMeta(chunk);
         }
 
-        public IEnumerable<KeyValuePair<byte[], byte[]>> EnumerateFilesInFolder(Folder fold)
+        public IEnumerable<KeyValuePair<byte[], byte[]>> EnumerateFilesInFolder(Folder fold, List<string> periods = null, List<string> types = null)
         {
+            if (periods == null)
+                periods = new List<string>();
+            if (types == null)
+                types = new List<string>();
+
             var it = _dbase.CreateIterator();
 
             if (fold as ChunkFile == null && fold as MetaFile == null)
@@ -408,15 +496,19 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 foreach (var period in HistoryDatabaseFuncs.periodicityDict)
                 {
+                    if(periods.Contains(period.Key))
                     foreach (var type in HistoryDatabaseFuncs.typeDict)
                     {
-                        var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
-                        it.Seek(key);
-                        while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true))
-                        {
-                            yield return new KeyValuePair<byte[], byte[]>(it.GetKey(), it.GetValue());
-                            it.Next();
-                        }
+                            if (types.Contains(type.Key))
+                            {
+                                var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
+                                it.Seek(key);
+                                while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true))
+                                {
+                                    yield return new KeyValuePair<byte[], byte[]>(it.GetKey(), it.GetValue());
+                                    it.Next();
+                                }
+                            }
                     }
                 }
             }

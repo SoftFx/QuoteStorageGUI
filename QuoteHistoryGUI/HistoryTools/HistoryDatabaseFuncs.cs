@@ -30,6 +30,15 @@ namespace QuoteHistoryGUI.HistoryTools
             public string Type;
             public int Part;
             public int FlushPart;
+            public DBEntry(string symbol, DateTime time, string period, string type, int part, int flushPart = 0)
+            {
+                Symbol = symbol;
+                Time = time;
+                Period = period;
+                Type = type;
+                Part = part;
+                FlushPart = flushPart;
+            }
         }
 
         public static DBEntry DeserealizeKey(byte[] key)

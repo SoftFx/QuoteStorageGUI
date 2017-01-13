@@ -457,10 +457,8 @@ namespace QuoteHistoryGUI.Models
                 _dispatcher.Invoke(() => parent.Folders.Add(Meta));
             }
             return new KeyValuePair<ChunkFile[], QHTick[]>(chunks.ToArray(), ticks);
-
-
-
         }
+
 
         public KeyValuePair<QHBar[], QHBar[]> tickToM1Update(ChunkFile chunk, bool showMessages = true)
         {

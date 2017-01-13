@@ -209,7 +209,7 @@ namespace QuoteHistoryGUI.HistoryTools
             return res;
         }
 
-        internal static byte[] Serialize(List<QHItem> chunk)
+        internal static byte[] Serialize(IEnumerable<QHItem> chunk)
         {
             List<byte> res = new List<byte>();
             foreach (var it in chunk)
@@ -219,49 +219,6 @@ namespace QuoteHistoryGUI.HistoryTools
             return res.ToArray();
         }
 
-        public static byte[] Serialize(IEnumerable<QHBar> bars)
-        {
-            MemoryStream stream = new MemoryStream();
-            List<string> res = new List<string>();
-            foreach (var bar in bars)
-            {
-                string barStr = "";
-                barStr += bar.Time.ToString(CultureInfo.InvariantCulture);
-                barStr += "\t";
-                barStr += bar.Open.ToString(CultureInfo.InvariantCulture);
-                barStr += "\t";
-                barStr += bar.High.ToString(CultureInfo.InvariantCulture);
-                barStr += "\t";
-                barStr += bar.Low.ToString(CultureInfo.InvariantCulture);
-                barStr += "\t";
-                barStr += bar.Close.ToString(CultureInfo.InvariantCulture);
-                barStr += "\t";
-                barStr += bar.Volume.ToString(CultureInfo.InvariantCulture);
-                barStr += "\r\n";
-                res.Add(barStr);
-            }
-            return ASCIIEncoding.ASCII.GetBytes(string.Concat(res));
-        }
-        public static byte[] Serialize(IEnumerable<QHTick> ticks)
-        {
-            MemoryStream stream = new MemoryStream();
-            List<string> res = new List<string>();
-            foreach (var tick in ticks)
-            {
-                string tickStr = "";
-                tickStr += tick.Time.ToString(CultureInfo.InvariantCulture);
-                tickStr += "\t";
-                tickStr += tick.Bid.ToString(CultureInfo.InvariantCulture);
-                tickStr += "\t";
-                tickStr += tick.BidVolume.ToString(CultureInfo.InvariantCulture);
-                tickStr += "\t";
-                tickStr += tick.Ask.ToString(CultureInfo.InvariantCulture);
-                tickStr += "\t";
-                tickStr += tick.AskVolume.ToString(CultureInfo.InvariantCulture);
-                tickStr += "\r\n";
-                res.Add(tickStr);
-            }
-            return ASCIIEncoding.ASCII.GetBytes(string.Concat(res));
-        }
+        
     }
 }
