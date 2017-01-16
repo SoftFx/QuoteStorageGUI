@@ -30,6 +30,8 @@ namespace QuoteHistoryGUI
         [STAThread]
         public static void Main(string[] args)
         {
+            log4net.Config.XmlConfigurator.Configure();
+
             AttachConsole(ATTACH_PARENT_PROCESS);
 
             if (args.Length > 0)

@@ -162,7 +162,7 @@ namespace QuoteHistoryGUI.Models
         public HistoryInteractor Interactor;
         public QHAppWindowModel(Dispatcher dispatcher)
         {
-            log4net.Config.XmlConfigurator.Configure();
+
             Interactor = new HistoryInteractor(dispatcher);
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
             ImportBtnClick = new SingleDelegateCommand(ImportDelegate);
