@@ -481,9 +481,9 @@ namespace QuoteHistoryGUI.HistoryTools
             int time = 0;
             Stopwatch w = new Stopwatch();
             if (periods == null)
-                periods = new List<string>();
+                periods = new List<string>() { "ticks", "ticks level2", "M1 ask", "M1 bid" };
             if (types == null)
-                types = new List<string>();
+                types = new List<string>() { "Meta", "Chunk" };
 
             var it = _dbase.CreateIterator();
 
