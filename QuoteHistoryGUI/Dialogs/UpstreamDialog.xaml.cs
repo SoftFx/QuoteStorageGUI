@@ -143,6 +143,7 @@ namespace QuoteHistoryGUI.Dialogs
                     worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Month+ "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
                     lastReport = DateTime.UtcNow;
                 }
+
                 var items = HistorySerializer.Deserialize("ticks level2", _interactor.Source.Editor.GetOrUnzip(file.Value), degreeOfParallelism);
                 var itemsList = new List<QHItem>();
                 var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
@@ -225,7 +226,8 @@ namespace QuoteHistoryGUI.Dialogs
                     var textBlock = item.Content as TextBlock;
                     degreeOfParallelism = int.Parse(textBlock.Text); });
                 
-                List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update = new List<HistoryDatabaseFuncs.DBEntry>(); ;
+
+                List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update = new List<HistoryDatabaseFuncs.DBEntry>(); 
                 foreach (var templ in templates)
                 {
                     templNum++;
@@ -237,6 +239,7 @@ namespace QuoteHistoryGUI.Dialogs
                     foreach (var sel in matched)
                     {
                         var files = _interactor.Source.Editor.EnumerateFilesInFolder(sel, new List<string>() { "ticks level2" }, new List<string>() { "Chunk" });
+
 
                         level2ToTicksWork(worker, files, ref upstramCnt, ref flushCnt, ref lastReport, saveListTicks, entriesForM1Update, degreeOfParallelism);
 
@@ -256,6 +259,7 @@ namespace QuoteHistoryGUI.Dialogs
                             }
                         }
                         ticksToM1Work(worker, entriesForM1Update, ref upstramCnt, ref flushCnt, ref lastReport, saveListBids, saveListAsks);
+                        entriesForM1Update.Clear();
                     }
 
                     FlushWork(worker, saveListBids, ref flushCnt, ref lastReport);
