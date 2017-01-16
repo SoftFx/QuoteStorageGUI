@@ -149,7 +149,7 @@ namespace QuoteHistoryGUI.Dialogs
             catch (Exception e)
             {
                 if (isUiVersion)
-                    MessageBox.Show(e.Message, "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show("Check pathes and close storages!\n\nError: "+e.Message, "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 else Console.Out.WriteLine(e.Message);
                 log.Warn(e.Message);
             }
@@ -178,7 +178,10 @@ namespace QuoteHistoryGUI.Dialogs
         {
             var message = e.UserState as string;
             ReportBlock.Text = message;
-            if (!isUIVersion) Console.Write("\r{0}", ReportBlock.Text);
+            
+            if (!isUIVersion) {
+                Console.Write("\r{0}", new string(' ', Console.BufferWidth - Console.CursorLeft));
+                Console.Write("\r{0}", ReportBlock.Text); }
             log.Info("Import progresss report: " + message);
             
         }
