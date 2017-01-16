@@ -83,7 +83,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
     class HistorySerializer
     {
-        public static IEnumerable<QHItem> Deserialize(string period, byte[] content)
+        public static IEnumerable<QHItem> Deserialize(string period, byte[] content, int degreeOfParallelism = 4)
         {
             if (content == null)
                 return new List<QHItem>();
@@ -93,7 +93,7 @@ namespace QuoteHistoryGUI.HistoryTools
             }
             else if (period == "ticks level2")
             {
-                return DeserializeTicksLevel2(content);
+                return DeserializeTicksLevel2(content, degreeOfParallelism);
             }
             else if (period == "M1 ask" || period == "M1 bid")
             {
@@ -156,56 +156,64 @@ namespace QuoteHistoryGUI.HistoryTools
             return res;
         }
 
-        public static IEnumerable<QHTickLevel2> DeserializeTicksLevel2(byte[] content)
+        public static IEnumerable<QHTickLevel2> DeserializeTicksLevel2(byte[] content, int degreeOfParallelism = 4)
         {
             List<QHTickLevel2> res = new List<QHTickLevel2>();
             StreamReader reader = new StreamReader(new MemoryStream(content));
+            List<string> lines = new List<string>();
             while (!reader.EndOfStream)
             {
-                var splittedLine = reader.ReadLine().Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                if (splittedLine.Count() == 0)
-                {
-                    throw new InvalidDataException("Blank line not at the end of the file is not allowed.");
-                }
-                QHTickLevel2 tick = new QHTickLevel2();
-                var dateAndPartStr = splittedLine[1].Split('-');
-                if (dateAndPartStr.Count() == 2)
-                {
-                    tick.Part = int.Parse(dateAndPartStr[1]);
-                    splittedLine[1] = dateAndPartStr[0];
-                }
-                tick.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
-                List<KeyValuePair<decimal, decimal>> Bids = new List<KeyValuePair<decimal, decimal>>();
-                List<KeyValuePair<decimal, decimal>> Asks = new List<KeyValuePair<decimal, decimal>>();
-                int i = 2;
-                if (i < splittedLine.Count() && splittedLine[i] == "bid")
-                {
-                    i++;
-                    while (i < splittedLine.Count() && splittedLine[i] != "ask")
-                    {
-                        Bids.Add(new KeyValuePair<decimal, decimal>(decimal.Parse(splittedLine[i], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture),
-                            decimal.Parse(splittedLine[i + 1], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture)));
-                        i += 2;
-                    }
-                }
-                if (i < splittedLine.Count() && splittedLine[i] == "ask")
-                {
-                    i++;
-                    while (i < splittedLine.Count())
-                    {
-                        Asks.Add(new KeyValuePair<decimal, decimal>(decimal.Parse(splittedLine[i], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture),
-                            decimal.Parse(splittedLine[i + 1], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture)));
-                        i += 2;
-                    }
-                }
-
-
-                tick.Bids = Bids.ToArray();
-                tick.Asks = Asks.ToArray();
-
-                res.Add(tick);
-
+                lines.Add(reader.ReadLine());
+                res.Add(null);
             }
+
+            Parallel.ForEach(lines, new ParallelOptions { MaxDegreeOfParallelism = degreeOfParallelism }, (line, state, index) =>
+             {
+
+                 var splittedLine = line.Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                 if (splittedLine.Count() == 0)
+                 {
+                     throw new InvalidDataException("Blank line not at the end of the file is not allowed.");
+                 }
+                 QHTickLevel2 tick = new QHTickLevel2();
+                 var dateAndPartStr = splittedLine[1].Split('-');
+                 if (dateAndPartStr.Count() == 2)
+                 {
+                     tick.Part = int.Parse(dateAndPartStr[1]);
+                     splittedLine[1] = dateAndPartStr[0];
+                 }
+                 tick.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
+                 List<KeyValuePair<decimal, decimal>> Bids = new List<KeyValuePair<decimal, decimal>>();
+                 List<KeyValuePair<decimal, decimal>> Asks = new List<KeyValuePair<decimal, decimal>>();
+                 int i = 2;
+                 int linPartCnt = splittedLine.Count();
+                 if (i < linPartCnt && splittedLine[i] == "bid")
+                 {
+                     i++;
+                     while (i < linPartCnt && splittedLine[i] != "ask")
+                     {
+                         Bids.Add(new KeyValuePair<decimal, decimal>(decimal.Parse(splittedLine[i], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture),
+                             decimal.Parse(splittedLine[i + 1], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture)));
+                         i += 2;
+                     }
+                 }
+                 if (i < linPartCnt && splittedLine[i] == "ask")
+                 {
+                     i++;
+                     while (i < linPartCnt)
+                     {
+                         Asks.Add(new KeyValuePair<decimal, decimal>(decimal.Parse(splittedLine[i], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture),
+                             decimal.Parse(splittedLine[i + 1], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture)));
+                         i += 2;
+                     }
+                 }
+
+                 tick.Bids = Bids.ToArray();
+                 tick.Asks = Asks.ToArray();
+
+                 res[(int)index] = tick;
+             });
+            
             return res;
         }
 

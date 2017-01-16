@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.Windows;
-
+using System.Diagnostics;
 
 namespace QuoteHistoryGUI.HistoryTools
 {
@@ -478,6 +478,8 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public IEnumerable<KeyValuePair<byte[], byte[]>> EnumerateFilesInFolder(Folder fold, List<string> periods = null, List<string> types = null)
         {
+            int time = 0;
+            Stopwatch w = new Stopwatch();
             if (periods == null)
                 periods = new List<string>();
             if (types == null)
@@ -503,11 +505,21 @@ namespace QuoteHistoryGUI.HistoryTools
                             {
                                 var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
                                 it.Seek(key);
+                                List<KeyValuePair<byte[], byte[]>> resList = new List<KeyValuePair<byte[], byte[]>>();
                                 while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true))
                                 {
-                                    yield return new KeyValuePair<byte[], byte[]>(it.GetKey(), it.GetValue());
+                                    if (resList.Count < 128)
+                                        resList.Add(new KeyValuePair<byte[], byte[]>(it.GetKey(), it.GetValue()));
+                                    else
+                                    {
+                                        foreach (var pair in resList)
+                                            yield return pair;
+                                        resList = new List<KeyValuePair<byte[], byte[]>>();
+                                    }
                                     it.Next();
                                 }
+                                foreach (var pair in resList)
+                                    yield return pair;
                             }
                     }
                 }

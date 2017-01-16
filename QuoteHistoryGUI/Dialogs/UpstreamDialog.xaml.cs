@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,6 +36,7 @@ namespace QuoteHistoryGUI.Dialogs
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
         bool canceled = false;
         Dispatcher _dispatcher;
+        int _degreeOfParallelism = 8;
         public UpstreamDialog(StorageInstanceModel source, HistoryInteractor interactor)
         {
             try
@@ -123,9 +125,9 @@ namespace QuoteHistoryGUI.Dialogs
             saveList.Clear();
         }
 
-
+        object listAddLock = new object();
         void level2ToTicksWork(BackgroundWorker worker, IEnumerable<KeyValuePair<byte[], byte[]>> files, ref int upstramCnt, ref int flushCnt, ref DateTime lastReport,
-            List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListTicks, List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update)
+            List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListTicks, List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update, int degreeOfParallelism = 4)
         {
             foreach (var file in files)
             {
@@ -134,14 +136,14 @@ namespace QuoteHistoryGUI.Dialogs
                     canceled = true;
                     return;
                 }
-                upstramCnt++;
+                Interlocked.Increment(ref upstramCnt);
                 var entry = HistoryDatabaseFuncs.DeserealizeKey(file.Key);
                 if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.5)
                 {
                     worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Month+ "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
                     lastReport = DateTime.UtcNow;
                 }
-                var items = HistorySerializer.Deserialize("ticks level2", _interactor.Source.Editor.GetOrUnzip(file.Value));
+                var items = HistorySerializer.Deserialize("ticks level2", _interactor.Source.Editor.GetOrUnzip(file.Value), degreeOfParallelism);
                 var itemsList = new List<QHItem>();
                 var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
                 var ticks = _interactor.Source.Editor.GetTicksFromLevel2(ticksLevel2);
@@ -216,7 +218,13 @@ namespace QuoteHistoryGUI.Dialogs
                 List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListTicks = new List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>>();
                 List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListBids = new List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>>();
                 List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListAsks = new List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>>();
-
+                int degreeOfParallelism = 1;
+                _dispatcher.Invoke(delegate
+                {
+                    var item = DegreeBox.SelectedItem as ComboBoxItem;
+                    var textBlock = item.Content as TextBlock;
+                    degreeOfParallelism = int.Parse(textBlock.Text); });
+                
                 List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update = new List<HistoryDatabaseFuncs.DBEntry>(); ;
                 foreach (var templ in templates)
                 {
@@ -230,7 +238,7 @@ namespace QuoteHistoryGUI.Dialogs
                     {
                         var files = _interactor.Source.Editor.EnumerateFilesInFolder(sel, new List<string>() { "ticks level2" }, new List<string>() { "Chunk" });
 
-                        level2ToTicksWork(worker, files, ref upstramCnt, ref flushCnt, ref lastReport, saveListTicks, entriesForM1Update);
+                        level2ToTicksWork(worker, files, ref upstramCnt, ref flushCnt, ref lastReport, saveListTicks, entriesForM1Update, degreeOfParallelism);
 
                         FlushWork(worker, saveListTicks, ref flushCnt, ref lastReport);
 

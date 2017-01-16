@@ -19,19 +19,43 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="180"/>
             <ColumnDefinition Width="30"/>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="140"/>
+            <ColumnDefinition Width="50"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Button Grid.Column="2" Margin="4" Content="Upstream" Click="UpstreamButton_Click" Name="UpstreamButton" MinWidth="75"/>
-        <TextBlock Name="UpstreamStatusBlock" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="4"/>
-        <TextBlock Text="Ticks to M1 update for ticks obtained from level2:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+        <Button Grid.Column="4" Margin="4" Content="Upstream" Click="UpstreamButton_Click" Name="UpstreamButton" MinWidth="75"/>
+        <TextBlock Name="UpstreamStatusBlock" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" Margin="4"/>
+        <TextBlock Text="Recursive (level2->ticks->M1): " HorizontalAlignment="Right" VerticalAlignment="Center"/>
         <CheckBox Name="Level2Box" Grid.Column="1" Grid.Row="0"  VerticalAlignment="Center"  Margin="3" HorizontalAlignment="Center" />
-        <Button Name="templateHelpButton" Width="16" Height="16" Click="templateHelpButton_Click" Grid.Column="2" Grid.Row="1">
+        <TextBlock Text="DegreeOfParallelism: " Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+        <ComboBox Name="DegreeBox" Margin="5" Grid.Column="3" SelectedIndex="3">
+            <ComboBoxItem>
+                    <TextBlock Text="1"/>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <TextBlock Text="2"/>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <TextBlock Text="4"/>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <TextBlock Text="8"/>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <TextBlock Text="16"/>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <TextBlock Text="32"/>
+            </ComboBoxItem>
+        </ComboBox>
+        <Button Name="templateHelpButton" Width="16" Height="16" Click="templateHelpButton_Click" Grid.Column="4" Grid.Row="1">
             <Image Source="../Icons/question.png" Height="10" Width="10"/>
         </Button>
-        <Expander Name="TemplateExpander"   Grid.Row="2" Grid.ColumnSpan="3" Grid.Column="0" Margin="4">
+        <Expander Name="TemplateExpander"   Grid.Row="2" Grid.ColumnSpan="5" Grid.Column="0" Margin="4">
             <Expander.Header>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Copy templates:"/>
