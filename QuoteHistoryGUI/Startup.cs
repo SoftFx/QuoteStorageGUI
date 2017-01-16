@@ -67,8 +67,8 @@ namespace QuoteHistoryGUI
                         }
                         catch (Exception e)
                         {
-                            Console.Out.WriteLine(e.Message);
-                            log.Error(e.Message+"\r\n"+e.StackTrace);
+                            Console.Out.WriteLine("Check pathes and close storages!\r\nError: " + e.Message);
+                            log.Error("Check pathes and close storages!\r\nError: "+e.Message+"\r\n"+e.StackTrace);
                         }
                         break;
                     default:

@@ -167,10 +167,19 @@ namespace QuoteHistoryGUI.Dialogs
         private void ImportCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             ReportBlock.Text = "\nImport Completed";
+            if(e.Error!=null)
+                ReportBlock.Text = "\nImport Aborted";
             if (isUIVersion)
-                MessageBox.Show("Import Completed", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
-            else Console.Out.WriteLine("\n\nImport Completed!");
+            {
+                if (e.Error == null)
+                    MessageBox.Show("Import Completed", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
+                else
+                    MessageBox.Show("Import Aborted", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else Console.Out.WriteLine("\n"+ ReportBlock.Text+"!");
+            if(e.Error != null)
             log.Info("Import performed...");
+            else log.Warn("Import aborted...");
             this.Close();
         }
 
