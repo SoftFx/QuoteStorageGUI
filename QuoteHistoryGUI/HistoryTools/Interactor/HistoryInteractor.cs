@@ -139,8 +139,6 @@ namespace QuoteHistoryGUI.HistoryTools
             DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
             if(selection == null)
              selection = Selection;
-            /*if (selection.Count() == 0)
-            { MessageBox.Show("Nothing to delete.", "Delete", MessageBoxButton.OK, MessageBoxImage.Information); return 0; }*/
 
             var it = Source.HistoryStoreDB.CreateIterator();
 
@@ -183,7 +181,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
                                 if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
                                 {
-                                    var dbentry = DeserealizeKey(key);
+                                    var dbentry = DeserealizeKey(it.GetKey());
                                     worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
                                     ReportTime = DateTime.Now;
                                 }
@@ -220,7 +218,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
                             if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
                             {
-                                var dbentry = DeserealizeKey(key);
+                                var dbentry = DeserealizeKey(it.GetKey());
                                 worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
                                 ReportTime = DateTime.Now;
                             }

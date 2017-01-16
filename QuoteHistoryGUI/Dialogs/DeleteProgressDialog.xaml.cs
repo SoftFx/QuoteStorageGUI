@@ -103,8 +103,8 @@ namespace QuoteHistoryGUI.Dialogs
             }
             else
             {
-                if (_interactor.Source != null)
-                    _interactor.Source.Refresh();
+               // if (_interactor.Source != null)
+               //     _interactor.Source.Refresh();
             }
 
         }
