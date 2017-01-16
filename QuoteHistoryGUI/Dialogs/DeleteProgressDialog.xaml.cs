@@ -103,8 +103,10 @@ namespace QuoteHistoryGUI.Dialogs
             }
             else
             {
-               // if (_interactor.Source != null)
-               //     _interactor.Source.Refresh();
+                if (canceled)
+                {
+                    _interactor.Source.Refresh();
+                }
             }
 
         }
