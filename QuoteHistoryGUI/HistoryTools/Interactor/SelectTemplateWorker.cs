@@ -113,7 +113,6 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
         {
             if (itemplate == "")
                 yield break;
-            //var templates = GetORTemplates(itemplate);
             var res = new List<Folder>();
             DateTime lastReport = DateTime.UtcNow.AddSeconds(-2);
             int matchedCnt = 0;
@@ -164,7 +163,8 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                 var currentPair = matchingStack.Pop();
                 var fold = currentPair.Key;
                 var level = currentPair.Value;
-                if (templateExp[level].Match(fold.Name).Success) //Match(fold.Name, wordTemplates[level]))
+                var match = templateExp[level].Match(fold.Name);
+                if (match.Success && fold.Name.Length == match.Length) //Match(fold.Name, wordTemplates[level]))
                 {
                     if (level == templateSize - 1)
                     {
