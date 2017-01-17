@@ -176,21 +176,37 @@ namespace QuoteHistoryGUI.Dialogs
                 else
                     MessageBox.Show("Import Aborted", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            else Console.Out.WriteLine("\n"+ ReportBlock.Text+"!");
+            else Console.Out.WriteLine(ReportBlock.Text+"!");
             if(e.Error != null)
             log.Info("Import performed...");
             else log.Warn("Import aborted...");
+            lastConsoleOutputLen = -1;
             this.Close();
         }
 
+        int lastConsoleOutputLen = -1;
+        KeyValuePair<int, int> cursorPos = new KeyValuePair<int, int>();
         private void ImportProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             var message = e.UserState as string;
             ReportBlock.Text = message;
             
+            if(lastConsoleOutputLen>=0)
+            {
+                Console.CursorLeft = cursorPos.Key;
+                Console.CursorTop = cursorPos.Value;
+                Console.Write(new string(' ', lastConsoleOutputLen));
+                Console.CursorLeft = cursorPos.Key;
+                Console.CursorTop = cursorPos.Value;
+            }
+            else
+            {
+                cursorPos = new KeyValuePair<int, int>(Console.CursorLeft, Console.CursorTop);
+            }
+
             if (!isUIVersion) {
-                Console.Write("\r{0}", new string(' ', Console.BufferWidth - Console.CursorLeft));
-                Console.Write("\r{0}", ReportBlock.Text); }
+                Console.WriteLine(ReportBlock.Text); }
+            lastConsoleOutputLen = ReportBlock.Text.Length;
             log.Info("Import progresss report: " + message);
             
         }
