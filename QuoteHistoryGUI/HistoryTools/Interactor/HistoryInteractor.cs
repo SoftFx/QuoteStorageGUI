@@ -71,7 +71,6 @@ namespace QuoteHistoryGUI.HistoryTools
                 selection = Selection;
             foreach (var fold in selection)
             {
-                //num++;
                 var files = Source.Editor.EnumerateFilesInFolder(fold);
                 foreach (var file in files)
                 {
@@ -89,6 +88,8 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                 }
             }
+
+            worker.ReportProgress(1, "[" + copiedCnt + "] files copied");
         }
 
         public void Copy(IEnumerable<DBEntry> matchedEntries, BackgroundWorker worker = null, bool copyChunk = false)
@@ -131,23 +132,26 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
 
             }
+
+                worker.ReportProgress(1, "[" + copiedCnt + "] files copied");
         }
 
         public int Delete(IEnumerable<Folder> selection = null, BackgroundWorker worker = null, bool forsed = false)
         {
             int deleteCnt = 0;
             DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
-            if(selection == null)
-             selection = Selection;
+            if (selection == null)
+                selection = Selection;
 
-            var it = Source.HistoryStoreDB.CreateIterator();
+            
 
             HistoryEditor editor = new HistoryEditor(Source.HistoryStoreDB);
             foreach (var fold in selection)
             {
+                var it = Source.HistoryStoreDB.CreateIterator();
                 if (fold as ChunkFile == null && fold as MetaFile == null)
                 {
-                    
+
                     if (fold.Parent == null)
                     {
                         if (Dispatcher != null)
@@ -162,6 +166,9 @@ namespace QuoteHistoryGUI.HistoryTools
                         else fold.Parent.Folders.Remove(fold);
                     }
 
+
+
+
                     var path = HistoryDatabaseFuncs.GetPath(fold);
                     int[] dateTime = { 2000, 1, 1, 0 };
                     for (int i = 1; i < path.Count; i++)
@@ -174,17 +181,11 @@ namespace QuoteHistoryGUI.HistoryTools
                         {
                             var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
                             it.Seek(key);
-
-                            while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true))
+                            while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true, false, false))
                             {
                                 deleteCnt++;
 
-                                if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
-                                {
-                                    var dbentry = DeserealizeKey(it.GetKey());
-                                    worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
-                                    ReportTime = DateTime.Now;
-                                }
+                                DeleteWorkerReport(worker, ref ReportTime, ref deleteCnt, it.GetKey());
                                 if (worker?.CancellationPending == true)
                                 {
                                     it.Dispose();
@@ -203,9 +204,6 @@ namespace QuoteHistoryGUI.HistoryTools
                     int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
                     if (fold as ChunkFile != null)
                     {
-
-
-
                         ChunkFile chunk = fold as ChunkFile;
                         key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", chunk.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], chunk.Part);
                         it.Seek(key);
@@ -214,20 +212,15 @@ namespace QuoteHistoryGUI.HistoryTools
                             if (Dispatcher != null)
                                 Dispatcher.Invoke((Action)delegate () { fold.Parent.Folders.Remove(fold); });
                             else fold.Parent.Folders.Remove(fold);
+                            deleteCnt++;
                             Source.HistoryStoreDB.Delete(it.GetKey());
 
-                            if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
-                            {
-                                var dbentry = DeserealizeKey(it.GetKey());
-                                worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
-                                ReportTime = DateTime.Now;
-                            }
+                            DeleteWorkerReport(worker, ref ReportTime, ref deleteCnt, it.GetKey());
                             if (worker?.CancellationPending == true)
                             {
                                 it.Dispose();
                                 return 0;
                             }
-
                         }
 
                         it = Source.HistoryStoreDB.CreateIterator();
@@ -247,14 +240,10 @@ namespace QuoteHistoryGUI.HistoryTools
                                         if (Dispatcher != null)
                                             Dispatcher.Invoke((Action)delegate () { fold.Parent.Folders.Remove(meta); });
                                         else fold.Parent.Folders.Remove(meta);
+                                        deleteCnt++;
                                         Source.HistoryStoreDB.Delete(it.GetKey());
 
-                                        if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
-                                        {
-                                            var dbentry = DeserealizeKey(key);
-                                            worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
-                                            ReportTime = DateTime.Now;
-                                        }
+                                        DeleteWorkerReport(worker, ref ReportTime, ref deleteCnt, key);
                                         break;
                                     }
                                     if (worker?.CancellationPending == true)
@@ -264,56 +253,64 @@ namespace QuoteHistoryGUI.HistoryTools
                                     }
                                 }
                             }
-
                         }
-
                     }
                     if (fold as MetaFile != null)
                     {
                         MetaFile metaFile = fold as MetaFile;
-
-                        key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
-                        it.Seek(key);
-                        if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                        if (forsed)
                         {
-                            if (!forsed) { 
+                            key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
+                            deleteCnt++;
+                            Source.HistoryStoreDB.Delete(key);
+                        }
+                        else
+                        {
+                            key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
+                            it.Seek(key);
+                            if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                            {
                                 MessageBox.Show("Unable to delete Meta when Chunk file exists. Delete Chunk File and Meta will be deleted too.", "Delete error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 it.Dispose();
                                 return -1;
                             }
                             else
                             {
-                                Source.HistoryStoreDB.Delete(it.GetKey());
-                            }
-                        }
-                        else
-                        {
-                            key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
-                            it.Seek(key);
-                            if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
-                            {
-                                fold.Parent.Folders.Remove(metaFile);
-                                Source.HistoryStoreDB.Delete(it.GetKey());
+                                key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
+                                it.Seek(key);
+                                if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                                {
+                                    fold.Parent.Folders.Remove(metaFile);
+                                    deleteCnt++;
+                                    Source.HistoryStoreDB.Delete(it.GetKey());
 
-                                if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
-                                {
-                                    var dbentry = DeserealizeKey(key);
-                                    worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
-                                    ReportTime = DateTime.Now;
-                                }
-                                if (worker?.CancellationPending == true)
-                                {
-                                    it.Dispose();
-                                    return 0;
+                                    DeleteWorkerReport(worker, ref ReportTime, ref deleteCnt, key);
+                                    if (worker?.CancellationPending == true)
+                                    {
+                                        it.Dispose();
+                                        return 0;
+                                    }
                                 }
                             }
                         }
                     }
-
                 }
+                it.Dispose();
             }
-            it.Dispose();
+
+            worker.ReportProgress(1, "[" + deleteCnt + "] files deleted");
+            
             return 1;
+        }
+
+        void DeleteWorkerReport(BackgroundWorker worker, ref DateTime ReportTime, ref int deleteCnt, byte[] key)
+        {
+            if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
+            {
+                var dbentry = DeserealizeKey(key);
+                worker.ReportProgress(1, "[" + deleteCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                ReportTime = DateTime.Now;
+            }
         }
 
 

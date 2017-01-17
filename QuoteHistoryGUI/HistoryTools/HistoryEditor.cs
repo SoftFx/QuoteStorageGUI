@@ -476,7 +476,7 @@ namespace QuoteHistoryGUI.HistoryTools
             RebuildMeta(chunk);
         }
 
-        public IEnumerable<KeyValuePair<byte[], byte[]>> EnumerateFilesInFolder(Folder fold, List<string> periods = null, List<string> types = null)
+        public IEnumerable<KeyValuePair<byte[], byte[]>> EnumerateFilesInFolder(Folder fold, List<string> periods = null, List<string> types = null, bool onlyKeys = false)
         {
             int time = 0;
             Stopwatch w = new Stopwatch();
@@ -506,10 +506,10 @@ namespace QuoteHistoryGUI.HistoryTools
                                 var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
                                 it.Seek(key);
                                 List<KeyValuePair<byte[], byte[]>> resList = new List<KeyValuePair<byte[], byte[]>>();
-                                while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true))
+                                while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true, false, false))
                                 {
                                     if (resList.Count < 128)
-                                        resList.Add(new KeyValuePair<byte[], byte[]>(it.GetKey(), it.GetValue()));
+                                        resList.Add(new KeyValuePair<byte[], byte[]>(it.GetKey(), onlyKeys?null:it.GetValue()));
                                     else
                                     {
                                         foreach (var pair in resList)
@@ -543,7 +543,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
                 if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
                 {
-                    yield return new KeyValuePair<byte[], byte[]>(it.GetKey(), it.GetValue());
+                    yield return new KeyValuePair<byte[], byte[]>(it.GetKey(), onlyKeys ? null : it.GetValue());
                 }
             }
 

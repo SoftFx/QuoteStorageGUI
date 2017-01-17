@@ -163,31 +163,21 @@ namespace QuoteHistoryGUI.Dialogs
         private void worker_Copy(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = e.Argument as BackgroundWorker;
-            var templates = templateText.Split(new[] { ";\n"}, StringSplitOptions.None);
-            if (isMetaMatching)
+            var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
+            foreach (var templ in templates)
             {
-                var templList = new List<string>(templates);
-                var matchEnum = temW.GetFromMetaByMatch(templList, _source, worker);
-                _interactor.Copy(matchEnum, worker);
-                _interactor.Copy(matchEnum, worker, true);
-            }
-            else
-            {
-                foreach (var templ in templates)
+                worker.ReportProgress(1, "Template: " + templ);
+                var matched = temW.GetByMatch(templ, worker);
+
+                _interactor.Copy(worker, matched);
+                if (isMove)
                 {
-                    worker.ReportProgress(1, "Template: " + templ);
-                    var matched = temW.GetByMatch(templ, worker);
-
-                    _interactor.Copy(worker, matched);
-                    if (isMove)
-                    {
-                        _interactor.Dispatcher = Dispatcher;
-                        _interactor.Delete(matched, null, true);
-                        _interactor.Dispatcher = null;
-                    }
+                    _interactor.Dispatcher = Dispatcher;
+                    _interactor.Delete(matched, null, true);
+                    _interactor.Dispatcher = null;
                 }
-
             }
+
             _interactor.Destination.Refresh();
         }
 
@@ -199,7 +189,7 @@ namespace QuoteHistoryGUI.Dialogs
         private void CopyProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             CopyStatusBlock.Text = e.UserState as string;
-            log.Info("Export progress report: "+ e.UserState as string);
+            log.Info("Export progress report: " + e.UserState as string);
         }
 
 
