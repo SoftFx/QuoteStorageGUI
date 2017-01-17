@@ -133,7 +133,7 @@ namespace QuoteHistoryGUI.HistoryTools
             }
         }
 
-        public int Delete(IEnumerable<Folder> selection = null, BackgroundWorker worker = null)
+        public int Delete(IEnumerable<Folder> selection = null, BackgroundWorker worker = null, bool forsed = false)
         {
             int deleteCnt = 0;
             DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
@@ -276,11 +276,14 @@ namespace QuoteHistoryGUI.HistoryTools
                         it.Seek(key);
                         if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
                         {
-                            if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
-                            {
+                            if (!forsed) { 
                                 MessageBox.Show("Unable to delete Meta when Chunk file exists. Delete Chunk File and Meta will be deleted too.", "Delete error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 it.Dispose();
                                 return -1;
+                            }
+                            else
+                            {
+                                Source.HistoryStoreDB.Delete(it.GetKey());
                             }
                         }
                         else

@@ -111,6 +111,8 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
 
         public IEnumerable<Folder> GetByMatch(string itemplate, BackgroundWorker worker = null, bool fillToTicksPath = false)
         {
+            if (itemplate == "")
+                yield break;
             //var templates = GetORTemplates(itemplate);
             var res = new List<Folder>();
             DateTime lastReport = DateTime.UtcNow.AddSeconds(-2);

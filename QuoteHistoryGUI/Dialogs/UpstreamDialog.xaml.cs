@@ -212,7 +212,7 @@ namespace QuoteHistoryGUI.Dialogs
         {
             try
             {
-                var templates = templateText.Split(new char[] { ';', ',', '\n', '\r' });
+                var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
                 BackgroundWorker worker = e.Argument as BackgroundWorker;
                 var templNum = 0;
                 int flushCnt = 0;
