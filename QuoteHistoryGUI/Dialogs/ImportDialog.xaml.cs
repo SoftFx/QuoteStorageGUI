@@ -177,15 +177,16 @@ namespace QuoteHistoryGUI.Dialogs
                     MessageBox.Show("Import Aborted", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else Console.Out.WriteLine(ReportBlock.Text+"!");
-            if(e.Error != null)
-            log.Info("Import performed...");
-            else log.Warn("Import aborted...");
+            if (e.Error == null)
+                log.Info("Import performed...");
+            else { log.Warn("Import aborted...\r\n" + e.Error.Message + "\r\n" + e.Error.StackTrace); }
             lastConsoleOutputLen = -1;
-            this.Close();
+            if(isUIVersion)
+                this.Close();
         }
 
         int lastConsoleOutputLen = -1;
-        KeyValuePair<int, int> cursorPos = new KeyValuePair<int, int>();
+        KeyValuePair<int, int> cursorPos = new KeyValuePair<int, int>(0,0);
         private void ImportProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             var message = e.UserState as string;
@@ -193,15 +194,20 @@ namespace QuoteHistoryGUI.Dialogs
             
             if(lastConsoleOutputLen>=0)
             {
-                Console.CursorLeft = cursorPos.Key;
-                Console.CursorTop = cursorPos.Value;
-                Console.Write(new string(' ', lastConsoleOutputLen));
-                Console.CursorLeft = cursorPos.Key;
-                Console.CursorTop = cursorPos.Value;
+                if (cursorPos.Key >= 0 && cursorPos.Value >= 0){
+                    Console.CursorLeft = cursorPos.Key;
+                    Console.CursorTop = cursorPos.Value;
+                    Console.Write(new string(' ', lastConsoleOutputLen));
+                    Console.CursorLeft = cursorPos.Key;
+                    Console.CursorTop = cursorPos.Value; }
             }
             else
             {
-                cursorPos = new KeyValuePair<int, int>(Console.CursorLeft, Console.CursorTop);
+                try
+                {
+                    cursorPos = new KeyValuePair<int, int>(Console.CursorLeft, Console.CursorTop);
+                }
+                catch { cursorPos = new KeyValuePair<int, int>(-1, -1); }
             }
 
             if (!isUIVersion) {
