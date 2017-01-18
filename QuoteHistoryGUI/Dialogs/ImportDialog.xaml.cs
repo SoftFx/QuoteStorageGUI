@@ -76,6 +76,8 @@ namespace QuoteHistoryGUI.Dialogs
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 SourcePath.Text = dlg.SelectedPath;
+                if (Interactor.Source != null)
+                    Interactor.Source.HistoryStoreDB.Dispose();
                 Interactor.Source = new StorageInstanceModel(dlg.SelectedPath, Owner.Dispatcher, Interactor);
             }
             if (Interactor.Source != null && Interactor.Source.Status != "Ok")
@@ -96,6 +98,8 @@ namespace QuoteHistoryGUI.Dialogs
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 DestinationPath.Text = dlg.SelectedPath;
+                if (Interactor.Destination != null)
+                    Interactor.Destination.HistoryStoreDB.Dispose();
                 Interactor.Destination = new StorageInstanceModel(dlg.SelectedPath, Owner.Dispatcher, Interactor);
             }
             if (Interactor.Source != null && Interactor.Destination.Status != "Ok")
@@ -181,7 +185,13 @@ namespace QuoteHistoryGUI.Dialogs
                 log.Info("Import performed...");
             else { log.Warn("Import aborted...\r\n" + e.Error.Message + "\r\n" + e.Error.StackTrace); }
             lastConsoleOutputLen = -1;
+            if (isUIVersion)
+            {
+                Interactor.Source.HistoryStoreDB.Dispose();
+                Interactor.Destination.HistoryStoreDB.Dispose();
+            }
             this.Close();
+            
         }
 
         int lastConsoleOutputLen = -1;
