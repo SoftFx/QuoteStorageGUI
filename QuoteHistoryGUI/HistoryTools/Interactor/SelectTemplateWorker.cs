@@ -139,7 +139,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
             }
 
             foreach (var word in wordTemplates)
-                templateExp.Add(new Regex(word));
+                templateExp.Add(new Regex("^"+word+"$"));
 
 
             var matchedFolders = new List<Folder>(_sourceTree);
@@ -166,7 +166,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
                 var fold = currentPair.Key;
                 var level = currentPair.Value;
                 var match = templateExp[level].Match(fold.Name);
-                if (match.Success && fold.Name.Length == match.Length) //Match(fold.Name, wordTemplates[level]))
+                if (match.Success) //Match(fold.Name, wordTemplates[level]))
                 {
                     if (level == templateSize - 1)
                     {
