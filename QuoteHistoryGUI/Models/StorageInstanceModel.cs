@@ -328,7 +328,10 @@ namespace QuoteHistoryGUI.Models
         private bool DeleteDelegate(object o, bool isCheckOnly)
         {
             if (isCheckOnly)
-                return true;
+                if (Selection.Count == 0)
+                    return false;
+                else
+                    return true;
             else
             {
                 try
@@ -356,7 +359,7 @@ namespace QuoteHistoryGUI.Models
                     else
                         DeleteMessage = Selection.Count + " items ?";
 
-                  var result = MessageBox.Show("Are you sure to delete "+ DeleteMessage, "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    var result = MessageBox.Show("Are you sure to delete " + DeleteMessage, "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
                     if (result == MessageBoxResult.No) return true;
                     Interactor.Source = this;
                     DeleteProgressDialog dlg = new DeleteProgressDialog(Interactor, Selection, _dispatcher)
