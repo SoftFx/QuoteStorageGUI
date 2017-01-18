@@ -181,8 +181,7 @@ namespace QuoteHistoryGUI.Dialogs
                 log.Info("Import performed...");
             else { log.Warn("Import aborted...\r\n" + e.Error.Message + "\r\n" + e.Error.StackTrace); }
             lastConsoleOutputLen = -1;
-            if(isUIVersion)
-                this.Close();
+            this.Close();
         }
 
         int lastConsoleOutputLen = -1;
