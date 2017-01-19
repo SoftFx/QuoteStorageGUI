@@ -116,6 +116,7 @@ namespace QuoteHistoryGUI.Dialogs
             string template = MakeTemplate();
             if (!string.IsNullOrEmpty(template))
                 Templates.Add(new SelectableItem(template, null, true));
+            else Templates.Add(new SelectableItem("*", null, true));
         }
 
         private void RemoveButtonClick(object sender, RoutedEventArgs e)

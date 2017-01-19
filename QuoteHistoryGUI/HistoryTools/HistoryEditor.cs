@@ -490,6 +490,8 @@ namespace QuoteHistoryGUI.HistoryTools
             if (fold as ChunkFile == null && fold as MetaFile == null)
             {
                 var path = HistoryDatabaseFuncs.GetPath(fold);
+                if(path.Count>4)
+                    periods = new List<string>() { "ticks", "ticks level2"};
                 int[] dateTime = { 2000, 1, 1, 0 };
                 for (int i = 1; i < path.Count; i++)
                 {
