@@ -232,24 +232,28 @@ namespace QuoteHistoryGUI.Dialogs
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (CopyWorker != null && CopyWorker.IsBusy)
+            if (CopyWorker != null)
             {
-                canceled = true;
-                CopyWorker.CancelAsync();
-                e.Cancel = true;
-            }
-            else
-            {
-                if(_interactor.Source!=null)
-                    _interactor.Source.HistoryStoreDB.Dispose();
-                if (_interactor.Destination != null)
-                    _interactor.Destination.Refresh();
+                if (CopyWorker.IsBusy)
+                {
+                    canceled = true;
+                    CopyWorker.CancelAsync();
+                    e.Cancel = true;
+                }
+                else
+                {
+                    if (_interactor.Source != null)
+                        _interactor.Source.HistoryStoreDB.Dispose();
+                    if (_interactor.Destination != null)
+                        _interactor.Destination.Refresh();
+                }
             }
             
         }
         private void templateHelpButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Examples:\n\nAAABBB/2015/1/2/3;\nAAA*/*15/;\n*/*/*/1/M1*;\n*/2016/*/2*/*3/ticks file*;", "Template Help", MessageBoxButton.OK, MessageBoxImage.Question);
+            HelpDialog.ShowHelp("import");
+            //MessageBox.Show("Examples:\n\nAAABBB/2015/1/2/3;\nAAA*/*15/;\n*/*/*/1/M1*;\n*/2016/*/2*/*3/ticks file*;", "Template Help", MessageBoxButton.OK, MessageBoxImage.Question);
         }
 
         private void AllRadioButton_Checked(object sender, RoutedEventArgs e)

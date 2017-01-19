@@ -211,18 +211,21 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (CopyWorker != null && CopyWorker.IsBusy)
+            if (CopyWorker != null)
             {
-                canceled = true;
-                CopyWorker.CancelAsync();
-                e.Cancel = true;
-            }
-            else
-            {
-                if (_interactor.Destination != null)
-                    _interactor.Destination.HistoryStoreDB.Dispose();
-                if (_interactor.Source != null)
-                    _interactor.Source.Refresh();
+                if (CopyWorker.IsBusy)
+                {
+                    canceled = true;
+                    CopyWorker.CancelAsync();
+                    e.Cancel = true;
+                }
+                else
+                {
+                    if (_interactor.Destination != null)
+                        _interactor.Destination.HistoryStoreDB.Dispose();
+                    if (_interactor.Source != null)
+                        _interactor.Source.Refresh();
+                }
             }
 
         }

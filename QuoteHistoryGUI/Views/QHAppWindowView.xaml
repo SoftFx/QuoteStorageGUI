@@ -69,7 +69,7 @@
                     <TextBlock Text=" Upstream"/>
                 </StackPanel>
             </Button>
-            <Button Name="About" Grid.Column="6" Command="{Binding AboutBtnClick}" Style="{StaticResource CmdButtonStyle}" MinWidth="30">
+            <Button Name="About" Grid.Column="6" Command="{Binding AboutBtnClick}" Style="{StaticResource CmdButtonStyle}" MinWidth="30" Margin="5 5 10 5">
                 <Image Width="16" Height="16" Source="../Icons/question.png"/>
             </Button>
         </Grid>
