@@ -94,7 +94,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                 if (_source.FilePath == SourceBox.Text)
                 {
-                    MessageBox.Show("Unavailable to import from the same storage ", "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(this, "Unavailable to import from the same storage ", "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     log.Info("Import canceled");
                     return;
                 }
@@ -115,7 +115,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                     if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
                     {
-                        MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                        MessageBox.Show(this, "Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                         return;
                     }
 
@@ -148,7 +148,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                     if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
                     {
-                        MessageBox.Show("Unable to modify storage opened in readonly mode", "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                        MessageBox.Show(this, "Unable to modify storage opened in readonly mode", "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                         return;
                     }
 
@@ -221,12 +221,12 @@ namespace QuoteHistoryGUI.Dialogs
             if (canceled)
             {
                 _dispatcher.Invoke(delegate
-                { MessageBox.Show("Canceled!", "Close message", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+                { MessageBox.Show(this, "Canceled!", "Close message", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
             }
             else
             {
                 _dispatcher.Invoke(delegate
-                { MessageBox.Show("Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+                { MessageBox.Show(this, "Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
             }
             Close();
         }

@@ -268,7 +268,7 @@ namespace QuoteHistoryGUI.Dialogs
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + ",\nStackTrace: " + ex.StackTrace, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(this, ex.Message + ",\nStackTrace: " + ex.StackTrace, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             _interactor.Source.Refresh();
         }
@@ -282,7 +282,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (!canceled)
             {
                 _dispatcher.Invoke(delegate
-                { MessageBox.Show("Upstream update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+                { MessageBox.Show(this, "Upstream update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
                 log.Info("Upstream performed");
             }
             Close();
@@ -302,7 +302,7 @@ namespace QuoteHistoryGUI.Dialogs
                 canceled = true;
                 UpstreamWorker.CancelAsync();
                 _dispatcher.Invoke(delegate
-                { MessageBox.Show("Canceled!", "Close message", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+                { MessageBox.Show(this, "Canceled!", "Close message", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
 
                 log.Info("Upstream canceled");
             }

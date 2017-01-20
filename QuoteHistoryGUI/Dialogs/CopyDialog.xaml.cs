@@ -70,7 +70,7 @@ namespace QuoteHistoryGUI.Dialogs
 
             if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
             {
-                MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                MessageBox.Show(this, "Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return;
             }
 
@@ -128,7 +128,7 @@ namespace QuoteHistoryGUI.Dialogs
         }
         private void worker_Copied(object sender, RunWorkerCompletedEventArgs e)
         {
-            MessageBox.Show("Done!","Result",MessageBoxButton.OK,MessageBoxImage.Asterisk);
+            MessageBox.Show(this, "Done!", "Result",MessageBoxButton.OK,MessageBoxImage.Asterisk);
             Close();
             CopyButton.IsEnabled = true;
         }
@@ -137,7 +137,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (CopyWorker != null && CopyWorker.IsBusy)
             {
                 CopyWorker.CancelAsync();
-                MessageBox.Show("Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                MessageBox.Show(this, "Canceled!", "Closing message", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 _interactor.Destination.Refresh();
             }
         }

@@ -67,7 +67,7 @@ namespace QuoteHistoryGUI.Dialogs
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + ",\nStackTrace: " + ex.StackTrace, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(this, ex.Message + ",\nStackTrace: " + ex.StackTrace, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             
         }
@@ -81,13 +81,13 @@ namespace QuoteHistoryGUI.Dialogs
             if (!canceled)
             {
                 _dispatcher.Invoke(delegate
-                { MessageBox.Show("Delete update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+                { MessageBox.Show(this, "Delete update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
                 log.Info("Delete performed");
             }
             else
             {
                 _dispatcher.Invoke(delegate
-                { MessageBox.Show("Canceled!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
+                { MessageBox.Show(this, "Canceled!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
                 log.Info("Delete canceled");
             }
             Close();

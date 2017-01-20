@@ -82,7 +82,7 @@ namespace QuoteHistoryGUI.Dialogs
             }
             if (Interactor.Source != null && Interactor.Source.Status != "Ok")
             {
-                MessageBox.Show(Interactor.Source.Status, "Open Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(this, Interactor.Source.Status, "Open Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 this.Close();
             }
             if (Interactor.Source != null && Interactor.Destination != null)
@@ -104,7 +104,7 @@ namespace QuoteHistoryGUI.Dialogs
             }
             if (Interactor.Source != null && Interactor.Destination.Status != "Ok")
             {
-                MessageBox.Show(Interactor.Destination.Status, "Open Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(this, Interactor.Destination.Status, "Open Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 this.Close();
             }
             if (Interactor.Source != null && Interactor.Destination != null)
@@ -153,7 +153,7 @@ namespace QuoteHistoryGUI.Dialogs
             catch (Exception e)
             {
                 if (isUiVersion)
-                    MessageBox.Show("Check pathes and close storages!\n\nError: "+e.Message, "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(this, "Check pathes and close storages!\n\nError: " + e.Message, "Import", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 else Console.Out.WriteLine(e.Message);
                 log.Warn(e.Message);
             }
@@ -176,9 +176,9 @@ namespace QuoteHistoryGUI.Dialogs
             if (isUIVersion)
             {
                 if (e.Error == null)
-                    MessageBox.Show("Import Completed", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(this, "Import Completed", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
                 else
-                    MessageBox.Show("Import Aborted", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(this, "Import Aborted", "Import", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else Console.Out.WriteLine(ReportBlock.Text+"!");
             if (e.Error == null)
