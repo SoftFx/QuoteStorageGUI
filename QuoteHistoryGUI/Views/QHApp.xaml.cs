@@ -48,6 +48,8 @@ namespace QuoteHistoryGUI.Views
             }
             catch (Exception ex)
             {
+                if (ApplicationMode == AppMode.Console)
+                    Console.Write(ex.Message + ",\nStack trace: " + ex.StackTrace);
                 log.Error(ex.Message + ",\nStack trace: "+ex.StackTrace);
             }
         }
