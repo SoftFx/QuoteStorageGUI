@@ -5,6 +5,7 @@ using QuoteHistoryGUI.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,6 +35,10 @@ namespace QuoteHistoryGUI.Dialogs
         {
             try
             {
+                if (Destination.Status != "Ok")
+                    throw new IOException(Destination.StoragePath+" : "+ Destination.Status);
+                if (Source.Status != "Ok")
+                    throw new IOException(Source.StoragePath + " : " + Source.Status);
                 log.Info("Import dialog initializing...");
                 Worker = new BackgroundWorker();
                 Interactor = new HistoryInteractor();

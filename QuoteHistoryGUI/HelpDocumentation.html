@@ -116,14 +116,19 @@ body {
           <a class="anchor" name="open">Open</a>
         </h3>
         <p>The <i>Open</i> button calls the Open dialog when it is possible to browse or choose from the list path to quote storage. Then after pressing the <i>Open</i> button in the dialog it tries to open this storage in GUI tool </p>
+          <p><img src="HelpFiles/open.png" alt="Mountain View" style="width:auto"></p>
       </div>
       <div>
         <h3>
           <a class="anchor" name="import">Import</a>
         </h3>
           <p>The <i>Import</i> button calls the Import dialog when it is possible to import all files or file matched by templates from another storage.</p>
+          <p>The <i>Import All</i> radio button makes tool import all files and <i>Import by template</i> radio button allows to select files for import with <a href="#template">template control</a>.</p>
+          <p><img src="HelpFiles/radio.png" alt="Mountain View" style="width:auto"></p>
           <p>Also import can be done in Console mode by calling <i>exe</i> file with <i>-import</i> or <i>-i</i> parameter with source and destination pathes. For more information use <i>-help/-h</i> parameter with executable from console</p>
           <p><img src="HelpFiles/console_import.png" alt="Mountain View" style="width:auto"></p>
+          <p></p>
+          <p><img src="HelpFiles/console_help.png" alt="Mountain View" style="width:auto"></p>
       </div>
       <!--<div>
         <h3>
@@ -136,15 +141,29 @@ body {
           <a class="anchor" name="upstream">Upstream</a>
         </h3>
         <p>The <i>Upstream</i> button calls the Upstream dialog when it is possible to perform generation ticks files from ticks level2 files and M1 files from ticks files.</p>
-        <p>The <i>Ticks to M1 update for ticks obtained from level2</i>-check box </p>
-          <p><img src="HelpFiles/m1_checkbox.png" alt="Mountain View" style="width:auto"></p>
+          <p>If storage contains only ticks level2 files, upstream will make only ticks file. In this case if you need to get M1 files too check the <i>Recursivae</i> check box. Then the M1 files will be generated too.</p>
+        <p>Serialization of large ticks level2 files requires a lot of processor time. It is possible to get better performance with parallel upstream work. The <i>Degree of parallelism</i> drop box allows to optimize working time. </p>
+          <p><img src="HelpFiles/usptream_cust.png" alt="Mountain View" style="width:auto"></p>
+          <p>Files for upstream update must be selected with <a href="#template">template control</a>.</p>
       </div>
       <div>
         <h3>
           <a class="anchor" name="export">Export</a>
         </h3>
-        <p>Export command documentation</p>
+          <p>The <i>Export</i> button calls the Export dialog when it is possible to export all files or file matched by templates to another storage.</p>
+          <p>The <i>Export All</i> radio button makes tool export all files and <i>Export by template</i> radio button allows to select files for export with <a href="#template">template control</a>.</p>
+          <p><img src="HelpFiles/radio.png" alt="Mountain View" style="width:auto"></p>
       </div>
+
+        <div>
+            <h3>
+                <a class="anchor" name="template">Templates Control</a>
+            </h3>
+            <p>The template dialog allows to select files for commads with different dates and files types. Drop boxes allow to easily edit path in template. The <i>Add</i> button adds current template to current template set. Templates in template set can be modifyed manually.</p>
+            <p><img src="HelpFiles/template_1.png" alt="Mountain View" style="width:auto"></p>
+            <p><img src="HelpFiles/template_2.png" alt="Mountain View" style="width:auto"></p>
+        </div>
+
       <div>
         <h3>
           <a class="anchor" name="copy_templates">Copy templates</a>

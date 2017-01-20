@@ -51,7 +51,8 @@ namespace QuoteHistoryGUI.Dialogs
             {
                 foreach (string symbol in symbols)
                 {
-                    Symbols.Add(new SelectableItem(symbol));
+                    if(symbol!="Loading")
+                        Symbols.Add(new SelectableItem(symbol));
                 }
                 //OnPropertyChanged(nameof(Symbols));
             }
