@@ -52,7 +52,6 @@ namespace QuoteHistoryGUI.Views
                     Console.Write(ex.Message + ",\nStack trace: " + ex.StackTrace);
                 log.Error(ex.Message + ",\nStack trace: "+ex.StackTrace);
             }
-            this.Shutdown();
         }
     }
 }
