@@ -71,14 +71,11 @@ namespace QuoteHistoryGUI
 
         private void ReadSymbolsWork(object sender, DoWorkEventArgs e)
         {
-            log.Info("Read symbols work started");
 
             if (_dispatcher != null)
                 _dispatcher.Invoke(delegate
                 { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
-            log.Info("Read symbols iterator creating...");
             var it = _dbase.CreateIterator();
-            log.Info("Read symbols iterator created");
             it.SeekToFirst();
             while (it.IsValid())
             {
@@ -99,11 +96,9 @@ namespace QuoteHistoryGUI
 
                 it.Seek(nextKey.ToArray());
             }
-            log.Info("Read symbols work performed");
             it.Dispose();
             if (_dispatcher != null)
                 _dispatcher.Invoke(delegate { _folders.RemoveAt(_folders.Count - 1); });
-            log.Info("Read symbols iterator disposed");
         }
 
         public void ReadDateTimesAsync(Folder folder, HistoryEditor editor = null)
