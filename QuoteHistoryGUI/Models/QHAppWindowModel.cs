@@ -2,6 +2,7 @@
 using log4net;
 using QuoteHistoryGUI.Dialogs;
 using QuoteHistoryGUI.HistoryTools;
+using QuoteHistoryGUI.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -160,9 +161,11 @@ namespace QuoteHistoryGUI.Models
         public static readonly ILog log = LogManager.GetLogger(typeof(QHAppWindowModel));
 
         public HistoryInteractor Interactor;
+        public QHAppWindowView MainWindow;
         public QHAppWindowModel(Dispatcher dispatcher)
         {
 
+            MainWindow = Application.Current.MainWindow as QHAppWindowView;
             Interactor = new HistoryInteractor(dispatcher);
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
             ImportBtnClick = new SingleDelegateCommand(ImportDelegate);
@@ -212,6 +215,8 @@ namespace QuoteHistoryGUI.Models
                     dlg.ShowDialog();
                     if (dlg.StoragePath.Text != "")
                     {
+                        MainWindow.IsEnabled = false;
+                        this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.ShowLoading(); }), DispatcherPriority.Send, null);
                         var tab = new StorageInstanceModel(dlg.StoragePath.Text, this.Dispatcher, this.Interactor, (bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : StorageInstanceModel.OpenMode.ReadWrite);
                         if (tab.Status == "Ok")
                         {
@@ -227,6 +232,8 @@ namespace QuoteHistoryGUI.Models
                             
                             TryToAddStorage(tab);
                             log.Info("New storage tab added");
+                            MainWindow.IsEnabled = true;
+                            this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.HideLoading(); }), DispatcherPriority.ContextIdle, null);
                         }
                         else
                         {
@@ -238,6 +245,8 @@ namespace QuoteHistoryGUI.Models
                 }
                 catch (Exception ex)
                 {
+                    MainWindow.IsEnabled = true;
+                    this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.HideLoading(); }), DispatcherPriority.ContextIdle, null);
                     log.Error(ex.Message);
                     throw ex;
                 }

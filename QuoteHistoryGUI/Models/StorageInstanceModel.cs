@@ -163,18 +163,9 @@ namespace QuoteHistoryGUI.Models
             {
                 log.Info("Opening database: " + path);
                 var wind = Application.Current.MainWindow as QHAppWindowView;
-                if (!syncLoading)
-                {
-                    wind.IsEnabled = false;
-                    wind.Dispatcher.BeginInvoke(new Action(() => { wind.ShowLoading();}), DispatcherPriority.Send, null);
-                }
                 if (!Directory.Exists(path + "\\HistoryDB"))
                     throw new Exception("Cant't find a history database folder (HistoryDB) in folder: " + path);
-                if (!syncLoading)
-                {
-                    wind.IsEnabled = true;
-                    wind.Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); }), DispatcherPriority.ContextIdle, null);
-                }
+
                 _historyStoreDB = new DB(path + "\\HistoryDB",
                         new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
                 Editor = new HistoryEditor(_historyStoreDB);
