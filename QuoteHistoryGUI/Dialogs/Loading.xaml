@@ -9,6 +9,7 @@
         AllowsTransparency="True" WindowStyle="None"
         Title="" Height="40" Width="40"
         WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
         >
     <Window.Background>
         <SolidColorBrush Opacity="0.2"/>

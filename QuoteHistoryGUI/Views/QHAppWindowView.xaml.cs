@@ -100,6 +100,13 @@ namespace QuoteHistoryGUI.Views
 
         public void HideLoading()
         {
+            int attemptCnt = 0;
+            while(_loadingDlg==null && attemptCnt<5)
+            {
+                Thread.Sleep(50);
+                attemptCnt++;
+            }
+
             if (_loadingDlg != null)
                 _loadingDlg.Dispatcher.Invoke(delegate { _loadingDlg.Hide(); });
         }
