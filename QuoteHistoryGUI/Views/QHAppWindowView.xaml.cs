@@ -49,11 +49,12 @@ namespace QuoteHistoryGUI.Views
                     this.Dispatcher.BeginInvoke(new Action(() => { this.ShowLoading(); }), DispatcherPriority.Send, null);
 
                     var tab = new StorageInstanceModel(dlg.StoragePath.Text, this.Dispatcher, _model.Interactor, (bool)dlg.ReadOnlyBox.IsChecked?StorageInstanceModel.OpenMode.ReadOnly:StorageInstanceModel.OpenMode.ReadWrite);
+                    this.IsEnabled = true;
+                    this.Dispatcher.BeginInvoke(new Action(() => { this.HideLoading(); }), DispatcherPriority.ContextIdle, null);
                     if (tab.Status == "Ok")
                         _model.TryToAddStorage(tab);
                     else MessageBox.Show(this, "Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
-                    this.IsEnabled = true;
-                    this.Dispatcher.BeginInvoke(new Action(() => { this.HideLoading(); }), DispatcherPriority.ContextIdle, null);
+
                 }
             }
         }

@@ -237,6 +237,8 @@ namespace QuoteHistoryGUI.Models
                         }
                         else
                         {
+                            MainWindow.IsEnabled = true;
+                            this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.HideLoading(); }), DispatcherPriority.ContextIdle, null);
                             MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
                             log.Info("Can't open storage: " + dlg.StoragePath.Text + " reason: " + tab.Status);
                         }
