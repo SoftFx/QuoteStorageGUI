@@ -244,6 +244,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                         if (!is2levelUpstream)
                         {
+                            entriesForM1Update.Clear();
                             files = _interactor.Source.Editor.EnumerateFilesInFolder(sel, new List<string>() { "ticks" }, new List<string>() { "Chunk" });
                             foreach (var file in files)
                             {
