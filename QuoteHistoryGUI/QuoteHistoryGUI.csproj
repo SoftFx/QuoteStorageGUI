@@ -82,6 +82,9 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="WpfAnimatedGif">
+      <HintPath>..\lib\WpfAnimatedGif\WpfAnimatedGif.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="Views\QHApp.xaml">
@@ -251,6 +254,7 @@
     <Content Include="HelpDocumentation.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Icons\spin.gif" />
     <EmbeddedResource Include="HelpFiles\open.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>

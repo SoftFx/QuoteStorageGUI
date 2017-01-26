@@ -204,8 +204,6 @@ namespace QuoteHistoryGUI.Models
             try
             {
                 log.Info("Chunk opening... " + f.Name);
-                var wind = Application.Current.MainWindow as QHAppWindowView;
-                wind.ShowLoading();
                 _currentFile = f;
                 var content = (Editor.ReadFromDB(_currentFile)).Value;
                 FileContent = ASCIIEncoding.ASCII.GetString(content);
@@ -267,12 +265,9 @@ namespace QuoteHistoryGUI.Models
                     MessageBox.Show("Unable to save in readonly mode", "Save", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     return;
                 }
-                var wind = Application.Current.MainWindow as QHAppWindowView;
-                wind.ShowLoading();
                 if (_currentFile as ChunkFile != null)
                     Editor.SaveToDB(ASCIIEncoding.ASCII.GetBytes(FileContent), _currentFile as ChunkFile);
                 else MessageBox.Show("Meta file editing is not possible!", "hmm...", MessageBoxButton.OK, MessageBoxImage.Asterisk);
-                wind.HideLoading();
                 Application.Current.MainWindow.Activate();
                 log.Info("Chunk saved: " + FilePath);
             }

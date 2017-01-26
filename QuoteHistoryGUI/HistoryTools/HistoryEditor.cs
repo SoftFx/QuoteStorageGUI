@@ -478,7 +478,6 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public IEnumerable<KeyValuePair<byte[], byte[]>> EnumerateFilesInFolder(Folder fold, List<string> periods = null, List<string> types = null, bool onlyKeys = false)
         {
-            int time = 0;
             Stopwatch w = new Stopwatch();
             if (periods == null)
                 periods = new List<string>() { "ticks", "ticks level2", "M1 ask", "M1 bid" };

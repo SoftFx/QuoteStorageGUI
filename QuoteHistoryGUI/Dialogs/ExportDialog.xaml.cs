@@ -30,7 +30,6 @@ namespace QuoteHistoryGUI.Dialogs
     {
         HistoryInteractor _interactor;
         BackgroundWorker CopyWorker;
-        bool isMetaMatching = false;
         StorageInstanceModel _source;
         StorageInstanceModel _destination;
         SelectTemplateWorker temW;

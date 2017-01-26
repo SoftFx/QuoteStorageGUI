@@ -53,17 +53,21 @@ namespace QuoteHistoryGUI.Views
                 if (chunk != null && tab != null)
                 {
                     var wind = Application.Current.MainWindow as QHAppWindowView;
-                    wind.ShowLoading();
+                    wind.IsEnabled = false;
+                    wind.Dispatcher.BeginInvoke(new Action(() => { wind.ShowLoading(); tree.Focus(); }), DispatcherPriority.Send, null);
                     tab.OpenChunk(chunk);
-                    Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
+                    wind.Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
+                    wind.IsEnabled = true;
                 }
                 var meta = tree.SelectedItem as MetaFile;
                 if (meta != null && tab != null)
                 {
                     var wind = Application.Current.MainWindow as QHAppWindowView;
-                    wind.ShowLoading();
+                    wind.IsEnabled = false;
+                    wind.Dispatcher.BeginInvoke(new Action(() => { wind.ShowLoading(); tree.Focus(); }), DispatcherPriority.Send, null);
                     tab.OpenMeta(meta);
-                    Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
+                    wind.Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
+                    wind.IsEnabled = true;
                 }
             }
         }
@@ -79,17 +83,21 @@ namespace QuoteHistoryGUI.Views
                 if (chunk != null && tab != null)
                 {
                     var wind = Application.Current.MainWindow as QHAppWindowView;
-                    wind.ShowLoading();
+                    wind.IsEnabled = false;
+                    wind.Dispatcher.BeginInvoke(new Action(() => { wind.ShowLoading(); tree.Focus(); }), DispatcherPriority.Send, null);
                     tab.OpenChunk(chunk);
-                    Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
+                    wind.Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
+                    wind.IsEnabled = true;
                 }
                 var meta = tree.SelectedItem as MetaFile;
                 if (meta != null && tab != null)
                 {
                     var wind = Application.Current.MainWindow as QHAppWindowView;
-                    wind.ShowLoading();
+                    wind.IsEnabled = false;
+                    wind.Dispatcher.BeginInvoke(new Action(() => { wind.ShowLoading(); tree.Focus(); }), DispatcherPriority.Send, null);
                     tab.OpenMeta(meta);
-                    Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
+                    wind.Dispatcher.BeginInvoke(new Action(() => { wind.HideLoading(); tree.Focus(); }), DispatcherPriority.ContextIdle, null);
+                    wind.IsEnabled = true;
                 }
             }
         }

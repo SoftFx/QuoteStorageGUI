@@ -36,7 +36,6 @@ namespace QuoteHistoryGUI.Dialogs
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
         bool canceled = false;
         Dispatcher _dispatcher;
-        int _degreeOfParallelism = 8;
         public UpstreamDialog(StorageInstanceModel source, HistoryInteractor interactor)
         {
             try
@@ -234,8 +233,6 @@ namespace QuoteHistoryGUI.Dialogs
                     var matched = temW.GetByMatch(templ, worker);
                     DateTime lastReport = DateTime.UtcNow.AddSeconds(-2);
                     int upstramCnt = 0;
-                    Folder lastDay = null;
-                    ChunkFile lastTicksFile = null;
                     foreach (var sel in matched)
                     {
                         var files = _interactor.Source.Editor.EnumerateFilesInFolder(sel, new List<string>() { "ticks level2" }, new List<string>() { "Chunk" });
