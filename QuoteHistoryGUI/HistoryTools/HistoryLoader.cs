@@ -12,8 +12,6 @@ using QuoteHistoryGUI.HistoryTools;
 using static QuoteHistoryGUI.HistoryTools.HistoryDatabaseFuncs;
 using QuoteHistoryGUI.Models;
 using log4net;
-using System.Threading;
-
 namespace QuoteHistoryGUI
 {
     public class HistoryLoader
@@ -73,39 +71,34 @@ namespace QuoteHistoryGUI
 
         private void ReadSymbolsWork(object sender, DoWorkEventArgs e)
         {
-            try {
+
+            if (_dispatcher != null)
+                _dispatcher.Invoke(delegate
+                { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
+            var it = _dbase.CreateIterator();
+            it.SeekToFirst();
+            while (it.IsValid())
+            {
+                var key = it.GetKey();
+                List<byte> nextKey = new List<byte>();
+                for (int i = 0; i < key.Length; i++)
+                {
+                    if (key[i] > 1)
+                        nextKey.Add(key[i]);
+                    else break;
+                }
+                string sym = ASCIIEncoding.ASCII.GetString(nextKey.ToArray());
                 if (_dispatcher != null)
                     _dispatcher.Invoke(delegate
-                    { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
-                var it = _dbase.CreateIterator();
-                it.SeekToFirst();
-                while (it.IsValid())
-                {
-                    var key = it.GetKey();
-                    List<byte> nextKey = new List<byte>();
-                    for (int i = 0; i < key.Length; i++)
-                    {
-                        if (key[i] > 1)
-                            nextKey.Add(key[i]);
-                        else break;
-                    }
-                    string sym = ASCIIEncoding.ASCII.GetString(nextKey.ToArray());
-                    if (_dispatcher != null)
-                        _dispatcher.Invoke(delegate
-                    { _folders.Insert(_folders.Count - 1, new Folder(sym)); _folders[_folders.Count - 2].Parent = null; });
+                { _folders.Insert(_folders.Count - 1, new Folder(sym)); _folders[_folders.Count - 2].Parent = null; });
 
-                    nextKey.Add(3);
-                    Thread.Sleep(500);
-                    it.Seek(nextKey.ToArray());
-                }
-                it.Dispose();
-                if (_dispatcher != null)
-                    _dispatcher.Invoke(delegate { _folders.RemoveAt(_folders.Count - 1); });
+                nextKey.Add(3);
+
+                it.Seek(nextKey.ToArray());
             }
-            catch (Exception ex)
-            {
-                int a = 1;
-            }
+            it.Dispose();
+            if (_dispatcher != null)
+                _dispatcher.Invoke(delegate { _folders.RemoveAt(_folders.Count - 1); });
         }
 
         public void ReadDateTimesAsync(Folder folder, HistoryEditor editor = null)

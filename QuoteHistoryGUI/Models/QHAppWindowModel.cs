@@ -233,8 +233,8 @@ namespace QuoteHistoryGUI.Models
                                 {
                                     var storageInstance = MasterStorage[0];
                                     this.Dispatcher.Invoke(delegate { TryToRemoveStorage(storageInstance); });
-                                    if (storageInstance.HistoryStoreDB != null)
-                                        storageInstance.HistoryStoreDB.Dispose();
+//                                    if (storageInstance.HistoryStoreDB != null)
+//                                        storageInstance.HistoryStoreDB.Dispose();
                                     log.Info("Previous storage removed");
                                 }
                                 this.Dispatcher.Invoke(delegate
