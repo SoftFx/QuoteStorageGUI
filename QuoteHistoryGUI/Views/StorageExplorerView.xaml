@@ -169,10 +169,12 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="80"/>
                 </Grid.ColumnDefinitions>
-                <Rectangle Grid.Column="0" Grid.ColumnSpan="2" Fill="#DBDBDB"/>
+                <Rectangle Grid.Column="0" Grid.ColumnSpan="3" Fill="#DBDBDB"/>
                 <TextBox Background="Transparent" BorderThickness="0" IsReadOnly="True" TextWrapping="Wrap" Name="FilePath" FontFamily="Consolas" Margin="3" Text="{Binding Path=FilePath}"/>
-                <Button Name="SaveButton" Background="Transparent" Content="Save" Command="{Binding SaveBtnClick}" Margin="3" Grid.Column="1"/>
+                <Button Name="EditButton" Background="Transparent" Content="Edit as txt" Command="{Binding EditBtnClick}" Margin="4" Grid.Column="1"/>
+                <Button Name="SaveButton" Background="Transparent" Content="Save" Command="{Binding SaveBtnClick}" Margin="4" Grid.Column="2"/>
             </Grid>
         </Grid>
     </Grid>

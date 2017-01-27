@@ -59,6 +59,7 @@ namespace QuoteHistoryGUI.Models
                 RefreshBtnClick = new SingleDelegateCommand(RefreshDelegate);
                 CloseBtnClick = new SingleDelegateCommand(CloseDelegate);
                 UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
+                EditBtnClick = new SingleDelegateCommand(EditDelegate);
                 log.Info("StorageInstance initialized: " + path);
             }
             catch (Exception ex)
@@ -84,6 +85,7 @@ namespace QuoteHistoryGUI.Models
         public ICommand RefreshBtnClick { get; private set; }
         public ICommand CloseBtnClick { get; private set; }
         public ICommand UpdateBtnClick { get; private set; }
+        public ICommand EditBtnClick { get; private set; }
 
         private Dispatcher _dispatcher;
 
@@ -451,6 +453,51 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
+        private bool EditDelegate(object o, bool isCheckOnly)
+        {
+            if (isCheckOnly)
+                return _currentFile!=null;
+            else
+            {
+                try
+                {
+                    if (_currentFile as ChunkFile != null)
+                    {
+                        StringBuilder builder = new StringBuilder();
+                        foreach (var line in FileContent)
+                        {
+                            builder.Append(line.Text + "\r\n");
+                        }
+                        EditDialog dlg = new EditDialog { Owner = Application.Current.MainWindow };
+                        dlg.Content.Text = builder.ToString();
+                        dlg.ShowDialog();
+                        StringReader reader = new StringReader(dlg.Content.Text);
+                        ObservableCollection<chunkLine> contentResult = new ObservableCollection<chunkLine>();
+                        if (dlg.CompleteEdit)
+                        {
+                            while (true)
+                            {
+                                var line = reader.ReadLine();
+                                if (line == null)
+                                    break;
+                                contentResult.Add(new chunkLine(line));
+                            }
+                            FileContent = contentResult;
+                        }
+
+                    }
+                    else MessageBox.Show("Meta file editing is not possible!", "hmm...", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex.Message);
+                    MessageBox.Show(ex.Message, "Edit error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                return true;
+            }
+        }
+
         private bool UpdateDelegate(object o, bool isCheckOnly)
         {
             if (isCheckOnly)
@@ -493,6 +540,7 @@ namespace QuoteHistoryGUI.Models
                 return true;
             }
         }
+
 
         public KeyValuePair<ChunkFile[], QHTick[]> tick2ToTickUpdate(ChunkFile chunk, bool showMessages = true)
         {

@@ -94,6 +94,9 @@
     <Compile Include="Dialogs\DeleteProgressDialog.xaml.cs">
       <DependentUpon>DeleteProgressDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\EditDialog.xaml.cs">
+      <DependentUpon>EditDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\HelpDialog.xaml.cs">
       <DependentUpon>HelpDialog.xaml</DependentUpon>
     </Compile>
@@ -131,6 +134,10 @@
       <DependentUpon>StorageExplorerView.xaml</DependentUpon>
     </Compile>
     <Page Include="Dialogs\DeleteProgressDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\EditDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
