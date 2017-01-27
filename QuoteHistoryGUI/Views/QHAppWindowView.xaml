@@ -88,11 +88,6 @@
                         <ColumnDefinition.Style>
                             <Style TargetType="{x:Type ColumnDefinition}">
                                 <Setter Property="Width" Value="auto" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ElementName=right_control, Path=SelectedIndex}" Value="0">
-                                        <Setter Property="Width" Value="*" />
-                                    </DataTrigger>
-                                </Style.Triggers>
                             </Style>
                         </ColumnDefinition.Style>
                     </ColumnDefinition>

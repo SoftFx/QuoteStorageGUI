@@ -113,8 +113,45 @@ namespace QuoteHistoryGUI.Models
                 NotifyPropertyChanged("StoragePath");
             }
         }
-        private string _fileContent;
-        public string FileContent
+
+        public class chunkLine : INotifyPropertyChanged
+        {
+            #region INotifyPropertyChanged
+
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            protected void NotifyPropertyChanged(string propertyName)
+            {
+                PropertyChangedEventHandler handler = PropertyChanged;
+                if (handler != null)
+                    handler(this, new PropertyChangedEventArgs(propertyName));
+            }
+
+            #endregion
+
+            private string _text;
+            public string Text
+            {
+                get
+                {
+                    return _text;
+                }
+                set
+                {
+                    if (_text == value)
+                        return;
+                    _text = value;
+                    NotifyPropertyChanged("Text");
+                }
+            }
+            public chunkLine(string s)
+            {
+                Text = s;
+            }
+        }
+
+        private ObservableCollection<chunkLine> _fileContent;
+        public ObservableCollection<chunkLine> FileContent
         {
             get
             {
@@ -162,7 +199,6 @@ namespace QuoteHistoryGUI.Models
             try
             {
                 log.Info("Opening database: " + path);
-                var wind = Application.Current.MainWindow as QHAppWindowView;
                 if (!Directory.Exists(path + "\\HistoryDB"))
                     throw new Exception("Cant't find a history database folder (HistoryDB) in folder: " + path);
 
@@ -208,7 +244,18 @@ namespace QuoteHistoryGUI.Models
                 log.Info("Chunk opening... " + f.Name);
                 _currentFile = f;
                 var content = (Editor.ReadFromDB(_currentFile)).Value;
-                FileContent = ASCIIEncoding.ASCII.GetString(content);
+                var strContent = ASCIIEncoding.ASCII.GetString(content);
+                StringReader reader = new StringReader(strContent);
+                var contentResult = new ObservableCollection<chunkLine>();
+               
+                while (true)
+                {
+                    var line = reader.ReadLine();
+                    if (line == null)
+                        break;
+                    contentResult.Add(new chunkLine(line));
+                }
+                FileContent = contentResult;
                 string path = f.Name;
                 var par = f.Parent;
                 while (par.Parent != null)
@@ -236,7 +283,18 @@ namespace QuoteHistoryGUI.Models
                 var wind = Application.Current.MainWindow as QHAppWindowView;
                 _currentFile = f;
                 var content = Editor.ReadFromDB(_currentFile).Value;
-                FileContent = ASCIIEncoding.ASCII.GetString(content);
+                var strContent = ASCIIEncoding.ASCII.GetString(content);
+                StringReader reader = new StringReader(strContent);
+                var contentResult = new ObservableCollection<chunkLine>();
+
+                while (true)
+                {
+                    var line = reader.ReadLine();
+                    if (line == null)
+                        break;
+                    contentResult.Add(new chunkLine(line));
+                }
+                FileContent = contentResult;
                 string path = f.Name;
                 var par = f.Parent;
                 while (par.Parent != null)
@@ -268,7 +326,14 @@ namespace QuoteHistoryGUI.Models
                     return;
                 }
                 if (_currentFile as ChunkFile != null)
-                    Editor.SaveToDB(ASCIIEncoding.ASCII.GetBytes(FileContent), _currentFile as ChunkFile);
+                {
+                    StringBuilder builder = new StringBuilder();
+                    foreach(var line in FileContent)
+                    {
+                        builder.Append(line.Text+"\r\n");
+                    }
+                    Editor.SaveToDB(ASCIIEncoding.ASCII.GetBytes(builder.ToString()), _currentFile as ChunkFile);
+                }
                 else MessageBox.Show("Meta file editing is not possible!", "hmm...", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 Application.Current.MainWindow.Activate();
                 log.Info("Chunk saved: " + FilePath);

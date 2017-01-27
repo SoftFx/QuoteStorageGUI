@@ -213,6 +213,37 @@ namespace QuoteHistoryGUI.Models
                         Owner = Application.Current.MainWindow
                     };
                     dlg.ShowDialog();
+
+                    var path = dlg.StoragePath.Text;
+                    StorageInstanceModel.OpenMode mode = (bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : StorageInstanceModel.OpenMode.ReadWrite;
+                    StorageInstanceModel tab = null;
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            tab = new StorageInstanceModel(path, this.Dispatcher, this.Interactor, mode);
+
+                            this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.IsEnabled = true; MainWindow.HideLoading(); }), DispatcherPriority.ContextIdle, null);
+                            if (tab != null && tab.Status == "Ok")
+                            {
+                                if (MasterStorage.Count > 0)
+                                {
+                                    var storageInstance = MasterStorage[0];
+                                    this.Dispatcher.Invoke(delegate { TryToRemoveStorage(storageInstance); });
+                                    if (storageInstance.HistoryStoreDB != null)
+                                        storageInstance.HistoryStoreDB.Dispose();
+                                    log.Info("Previous storage removed");
+                                }
+                                this.Dispatcher.Invoke(delegate
+                                {
+                                    this.TryToAddStorage(tab);
+                                });
+                            }
+                            else this.Dispatcher.Invoke(delegate { MessageBox.Show(MainWindow, "Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None); });
+                        }
+                        catch { }
+                    });
+                    /*
                     if (dlg.StoragePath.Text != "")
                     {
                         MainWindow.IsEnabled = false;
@@ -242,7 +273,7 @@ namespace QuoteHistoryGUI.Models
                             MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
                             log.Info("Can't open storage: " + dlg.StoragePath.Text + " reason: " + tab.Status);
                         }
-                    }
+                    }*/
 
                 }
                 catch (Exception ex)

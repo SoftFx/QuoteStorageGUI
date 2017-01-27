@@ -154,8 +154,16 @@
                 <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
 
-            <TextBox Name="FileContentText" BorderBrush="Gray" AcceptsReturn="True" AcceptsTab="True" ScrollViewer.CanContentScroll="True"  ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" FontFamily="Courier New" Text="{Binding Path=FileContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VirtualizingPanel.IsVirtualizing="True">
-            </TextBox>
+            <!--<TextBox Name="FileContentText" BorderBrush="Gray" AcceptsReturn="True" AcceptsTab="True" ScrollViewer.CanContentScroll="True"  ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" FontFamily="Courier New" Text="{Binding Path=FileContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VirtualizingPanel.IsVirtualizing="True">
+            </TextBox>-->
+
+            <ListBox x:Name="FileContentText"  Grid.Row="0" Grid.Column="1" BorderThickness="0" ItemsSource="{Binding FileContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VirtualizingPanel.IsVirtualizing="True">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBox Name="TextBoxList" Text="{Binding Path=Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" BorderThickness="0" FontFamily="Courier New" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
 
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
