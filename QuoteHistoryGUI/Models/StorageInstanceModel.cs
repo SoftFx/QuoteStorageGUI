@@ -614,9 +614,8 @@ namespace QuoteHistoryGUI.Models
                     log.Info("Storage instance closing: " + StoragePath);
                     var MainModel = Application.Current.MainWindow.DataContext as QHAppWindowModel;
                     MainModel.TryToRemoveStorage(this);
-                    _historyStoreDB.Dispose();
+                    //_historyStoreDB.Dispose();
                     log.Info("Storage instance closed, database disposed: " + StoragePath);
-                    log.Info("Delete performed... ");
                 }
                 catch (Exception ex)
                 {

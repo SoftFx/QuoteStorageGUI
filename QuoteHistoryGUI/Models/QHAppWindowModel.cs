@@ -28,7 +28,10 @@ namespace QuoteHistoryGUI.Models
         public static void throwExceptions(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Error != null)
-                throw new Exception(e.Error.Message + ";\t\nStack trace: "+e.Error.StackTrace);
+            {
+                throw new Exception(e.Error.Message + ";\t\nStack trace: " + e.Error.StackTrace);
+                log.Error(e.Error.Message);
+            }
         }
         public event PropertyChangedEventHandler PropertyChanged;
         public Dispatcher Dispatcher;
