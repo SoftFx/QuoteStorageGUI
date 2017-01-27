@@ -60,6 +60,7 @@ namespace QuoteHistoryGUI.Models
                 CloseBtnClick = new SingleDelegateCommand(CloseDelegate);
                 UpdateBtnClick = new SingleDelegateCommand(UpdateDelegate);
                 EditBtnClick = new SingleDelegateCommand(EditDelegate);
+                RenameBtnClick = new SingleDelegateCommand(RenameDelegate);
                 log.Info("StorageInstance initialized: " + path);
             }
             catch (Exception ex)
@@ -86,6 +87,7 @@ namespace QuoteHistoryGUI.Models
         public ICommand CloseBtnClick { get; private set; }
         public ICommand UpdateBtnClick { get; private set; }
         public ICommand EditBtnClick { get; private set; }
+        public ICommand RenameBtnClick { get; private set; }
 
         private Dispatcher _dispatcher;
 
@@ -541,6 +543,33 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
+        private bool RenameDelegate(object o, bool isCheckOnly)
+        {
+            if (isCheckOnly)
+                return Selection.Count != 0 && Selection[0].Parent==null;
+            else
+            {
+                try
+                {
+                    if (Selection.Count != 0)
+                    {
+                        var dlg = new RenameDialog(_dispatcher, this);
+                        dlg.FromBox.Text = Selection[0].Name;
+                        dlg.ToBox.Text = Selection[0].Name;
+                        dlg.Owner = Application.Current.MainWindow;
+                        dlg.ShowDialog();
+                        this.Refresh();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error(ex.Message);
+                    MessageBox.Show(ex.Message, "Rename error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                return true;
+            }
+        }
 
         public KeyValuePair<ChunkFile[], QHTick[]> tick2ToTickUpdate(ChunkFile chunk, bool showMessages = true)
         {

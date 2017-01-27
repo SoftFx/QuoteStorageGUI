@@ -220,6 +220,7 @@ namespace QuoteHistoryGUI.Models
                     var path = dlg.StoragePath.Text;
                     StorageInstanceModel.OpenMode mode = (bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : StorageInstanceModel.OpenMode.ReadWrite;
                     StorageInstanceModel tab = null;
+                    if(path!="")
                     Task.Run(() =>
                     {
                         try

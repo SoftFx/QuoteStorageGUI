@@ -109,8 +109,9 @@
                             <TextBlock.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="Export" Command="{Binding Path=PlacementTarget.Tag.CopyBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                    <Separator/>
+                                    <MenuItem Header="Rename" Command="{Binding Path=PlacementTarget.Tag.RenameBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <MenuItem Header="Delete" Command="{Binding Path=PlacementTarget.Tag.DeleteBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <Separator/>
                                     <MenuItem Header="Refresh" Command="{Binding Path=PlacementTarget.Tag.RefreshBtnClick, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 </ContextMenu>
                             </TextBlock.ContextMenu>
