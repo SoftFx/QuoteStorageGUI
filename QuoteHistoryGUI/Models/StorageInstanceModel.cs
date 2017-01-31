@@ -39,6 +39,7 @@ namespace QuoteHistoryGUI.Models
         #endregion
         public string Status = "";
         public HistoryEditor Editor;
+        public HistoryLoader Loader;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageInstanceModel));
         public StorageInstanceModel(string path, Dispatcher dispatcher, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite, bool syncLoading = false)
         {
@@ -209,10 +210,10 @@ namespace QuoteHistoryGUI.Models
                 _historyStoreDB = new DB(path + "\\HistoryDB",
                         new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
                 Editor = new HistoryEditor(_historyStoreDB);
-                HistoryLoader hl = new HistoryLoader(_dispatcher, _historyStoreDB);
+                Loader = new HistoryLoader(_dispatcher, _historyStoreDB);
                 if (!syncLoading)
-                    hl.ReadSymbols(Folders);
-                else hl.ReadSymbolsSync(Folders);
+                    Loader.ReadSymbols(Folders);
+                else Loader.ReadSymbolsSync(Folders);
                 log.Info("Database opened and initialized: " + path);
             }
             catch (Exception ex)
@@ -231,14 +232,13 @@ namespace QuoteHistoryGUI.Models
             if (!f.Loaded)
             {
                 f.Loaded = true;
-                var ha = new HistoryLoader(_dispatcher, HistoryStoreDB);
-                ha.ReadDateTimesAsync(f, Editor);
+                Loader.ReadDateTimesAsync(f, Editor);
             }
         }
         public void Refresh()
         {
             HistoryLoader hl = new HistoryLoader(_dispatcher, _historyStoreDB);
-            hl.Refresh(Folders);
+            Loader.Refresh(Folders);
         }
 
         public void OpenChunk(ChunkFile f)
@@ -546,7 +546,7 @@ namespace QuoteHistoryGUI.Models
         private bool RenameDelegate(object o, bool isCheckOnly)
         {
             if (isCheckOnly)
-                return Selection.Count != 0 && Selection[0].Parent==null;
+                return Selection.Count != 0 && Selection[0]?.Parent==null;
             else
             {
                 try
@@ -642,8 +642,17 @@ namespace QuoteHistoryGUI.Models
                 {
                     log.Info("Storage instance closing: " + StoragePath);
                     var MainModel = Application.Current.MainWindow.DataContext as QHAppWindowModel;
+
+    
+                    var code = Loader.TryDisposeLoader();
+                    if (code != 0)
+                    {
+                        MessageBox.Show("Storage is loading!","Close", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                        log.Warn("Storage is loading. Unable to close.");
+                        return true ;
+                    }
                     MainModel.TryToRemoveStorage(this);
-                    //_historyStoreDB.Dispose();
+                    _historyStoreDB.Dispose();
                     log.Info("Storage instance closed, database disposed: " + StoragePath);
                 }
                 catch (Exception ex)

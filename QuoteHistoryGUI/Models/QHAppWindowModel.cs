@@ -225,6 +225,17 @@ namespace QuoteHistoryGUI.Models
                     {
                         try
                         {
+                            if (MasterStorage.Count > 0)
+                            {
+                                var storageInstance = MasterStorage[0];
+                                var code = storageInstance.Loader.TryDisposeLoader();
+                                if (code != 0)
+                                {
+                                    MessageBox.Show("Unable to close: " + storageInstance.FilePath + ". Storage is loading!", "Close", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                                    log.Warn("Storage is loading. Unable to close.");
+                                    return;
+                                }
+                            }
                             tab = new StorageInstanceModel(path, this.Dispatcher, this.Interactor, mode);
 
                             this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.IsEnabled = true; MainWindow.HideLoading(); }), DispatcherPriority.ContextIdle, null);
@@ -233,9 +244,11 @@ namespace QuoteHistoryGUI.Models
                                 if (MasterStorage.Count > 0)
                                 {
                                     var storageInstance = MasterStorage[0];
+
+
                                     this.Dispatcher.Invoke(delegate { TryToRemoveStorage(storageInstance); });
-//                                    if (storageInstance.HistoryStoreDB != null)
-//                                        storageInstance.HistoryStoreDB.Dispose();
+                                    if (storageInstance.HistoryStoreDB != null)
+                                        storageInstance.HistoryStoreDB.Dispose();
                                     log.Info("Previous storage removed");
                                 }
                                 this.Dispatcher.Invoke(delegate
@@ -243,41 +256,17 @@ namespace QuoteHistoryGUI.Models
                                     this.TryToAddStorage(tab);
                                 });
                             }
-                            else this.Dispatcher.Invoke(delegate { MessageBox.Show(MainWindow, "Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None); });
+                            else {
+                                if (MasterStorage.Count > 0)
+                                {
+                                    var storageInstance = MasterStorage[0];
+                                    storageInstance.Loader.RestoreLoader();
+                                }
+                                    this.Dispatcher.Invoke(delegate { MessageBox.Show(MainWindow, "Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None); });
+                            }
                         }
                         catch { }
                     });
-                    /*
-                    if (dlg.StoragePath.Text != "")
-                    {
-                        MainWindow.IsEnabled = false;
-                        this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.ShowLoading(); }), DispatcherPriority.Send, null);
-                        var tab = new StorageInstanceModel(dlg.StoragePath.Text, this.Dispatcher, this.Interactor, (bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : StorageInstanceModel.OpenMode.ReadWrite);
-                        if (tab.Status == "Ok")
-                        {
-                            log.Info("Opened storage: " + dlg.StoragePath.Text);
-                            if (MasterStorage.Count > 0)
-                            {
-                                var storageInstance = MasterStorage[0];
-                                TryToRemoveStorage(storageInstance);
-                                if(storageInstance.HistoryStoreDB!=null)
-                                    storageInstance.HistoryStoreDB.Dispose();
-                                log.Info("Previous storage removed");
-                            }
-                            
-                            TryToAddStorage(tab);
-                            log.Info("New storage tab added");
-                            MainWindow.IsEnabled = true;
-                            this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.HideLoading(); }), DispatcherPriority.ContextIdle, null);
-                        }
-                        else
-                        {
-                            MainWindow.IsEnabled = true;
-                            this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.HideLoading(); }), DispatcherPriority.ContextIdle, null);
-                            MessageBox.Show("Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None);
-                            log.Info("Can't open storage: " + dlg.StoragePath.Text + " reason: " + tab.Status);
-                        }
-                    }*/
 
                 }
                 catch (Exception ex)

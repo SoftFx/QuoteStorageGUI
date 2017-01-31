@@ -12,6 +12,8 @@ using QuoteHistoryGUI.HistoryTools;
 using static QuoteHistoryGUI.HistoryTools.HistoryDatabaseFuncs;
 using QuoteHistoryGUI.Models;
 using log4net;
+using System.Threading;
+
 namespace QuoteHistoryGUI
 {
     public class HistoryLoader
@@ -30,6 +32,30 @@ namespace QuoteHistoryGUI
         Folder _folder;
         HistoryEditor _editor;
 
+        private object DBDisposeLock = new object();
+        private int loading = 0;
+
+        public int TryDisposeLoader()
+        {
+            lock (DBDisposeLock)
+            {
+                if (loading != 0)
+                    return -1;
+                loading = -1;
+            }
+            return 0;
+        }
+
+        public int RestoreLoader()
+        {
+            lock (DBDisposeLock)
+            {
+                if (loading == -1)
+                    loading = 0;
+            }
+            return 0;
+        }
+
         public HistoryLoader(Dispatcher dispatcher, DB dbase, HistoryEditor editor = null)
         {
             _dispatcher = dispatcher;
@@ -40,11 +66,17 @@ namespace QuoteHistoryGUI
 
         public void ReadSymbols(ObservableCollection<Folder> folders)
         {
-            _folders = folders;
-            var w = new BackgroundWorker();
-            w.DoWork += ReadSymbolsWork;
-            w.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
-            w.RunWorkerAsync();
+            lock (DBDisposeLock)
+            {
+                if (loading == -1)
+                    return;
+                loading++;
+                _folders = folders;
+                var w = new BackgroundWorker();
+                w.DoWork += ReadSymbolsWork;
+                w.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
+                w.RunWorkerAsync();
+            }
         }
 
         public void ReadSymbolsSync(ObservableCollection<Folder> folders)
@@ -75,7 +107,8 @@ namespace QuoteHistoryGUI
             if (_dispatcher != null)
                 _dispatcher.Invoke(delegate
                 { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
-            var it = _dbase.CreateIterator();
+            Iterator it = null;
+            it = _dbase.CreateIterator();
             it.SeekToFirst();
             while (it.IsValid())
             {
@@ -96,27 +129,36 @@ namespace QuoteHistoryGUI
 
                 it.Seek(nextKey.ToArray());
             }
+
             it.Dispose();
             if (_dispatcher != null)
                 _dispatcher.Invoke(delegate { _folders.RemoveAt(_folders.Count - 1); });
+            lock (DBDisposeLock)
+            {
+                loading--;
+            }
         }
 
         public void ReadDateTimesAsync(Folder folder, HistoryEditor editor = null)
         {
-            _editor = editor;
-            _folder = folder;
-            var w = new BackgroundWorker();
-            w.DoWork += ReadFoldersAndFiles;
-            w.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
-            w.RunWorkerAsync();
+            lock (DBDisposeLock)
+            {
+                if (loading == -1)
+                    return;
+                loading++;
+                _editor = editor;
+                _folder = folder;
+                var w = new BackgroundWorker();
+                w.DoWork += ReadFoldersAndFiles;
+                w.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
+                w.RunWorkerAsync();
+            }
         }
 
         public void ReadDateTimes(Folder folder, HistoryEditor editor = null)
         {
             _editor = editor;
             _folder = folder;
-
-            var w = new BackgroundWorker();
 
             LoadFolders();
             LoadFiles();
@@ -264,14 +306,15 @@ namespace QuoteHistoryGUI
                                     }
                                     //_dispatcher.Invoke(delegate { Application.Current.MainWindow.Activate(); });
                                 }
-                                else _dispatcher.Invoke(delegate
-                                {
-                                    if (_folder.Folders != null)
-                                    {
-                                        _folder.Folders.Add(new MetaFile(names[i] + " meta" + (getedKey[getedKey.Length - 2] > 0 ? ("." + getedKey[getedKey.Length - 2] + "") : ""), names[i], getedKey[getedKey.Length - 2]));
-                                        _folder.Folders[_folder.Folders.Count - 1].Parent = _folder;
-                                    }
-                                });
+                                else
+                                    _dispatcher.Invoke(delegate
+                               {
+                                   if (_folder.Folders != null)
+                                   {
+                                       _folder.Folders.Add(new MetaFile(names[i] + " meta" + (getedKey[getedKey.Length - 2] > 0 ? ("." + getedKey[getedKey.Length - 2] + "") : ""), names[i], getedKey[getedKey.Length - 2]));
+                                       _folder.Folders[_folder.Folders.Count - 1].Parent = _folder;
+                                   }
+                               });
                                 it.Next();
                                 if (it.IsValid())
                                 {
@@ -291,6 +334,10 @@ namespace QuoteHistoryGUI
             LoadFolders();
             LoadFiles();
             _dispatcher.Invoke(delegate { _folder.Folders?.RemoveAt(0); });
+            lock (DBDisposeLock)
+            {
+                loading--;
+            }
         }
 
         private void Refresh(object sender, DoWorkEventArgs e)
