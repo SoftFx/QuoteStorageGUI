@@ -79,6 +79,7 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void PathBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if(e.AddedItems.Count>0)
             StoragePath.Text = (string)e.AddedItems[0];
         }
 
@@ -108,5 +109,16 @@ namespace QuoteHistoryGUI.Dialogs
             }
         }
 
+        private void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            string path = "";
+            if(PathBox.SelectedItem!=null)
+                path = PathBox.SelectedItem.ToString();
+            if (path != "")
+            {
+                AppConfigManager.RemovePath(path);
+                PathBox.ItemsSource = AppConfigManager.GetPathes();
+            }
+        }
     }
 }
