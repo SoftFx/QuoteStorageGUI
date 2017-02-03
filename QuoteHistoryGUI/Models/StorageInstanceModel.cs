@@ -41,7 +41,7 @@ namespace QuoteHistoryGUI.Models
         public HistoryEditor Editor;
         public HistoryLoader Loader;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageInstanceModel));
-        public StorageInstanceModel(string path, Dispatcher dispatcher, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite, bool syncLoading = false)
+        public StorageInstanceModel(string path, Dispatcher dispatcher, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite, bool symbolLoading = true)
         {
             //log4net.Config.XmlConfigurator.Configure();
             try
@@ -50,7 +50,7 @@ namespace QuoteHistoryGUI.Models
                 openMode = mode;
                 StoragePath = path;
                 _dispatcher = dispatcher;
-                OpenBase(path, syncLoading);
+                OpenBase(path, symbolLoading);
                 MetaStorage = new MetaStorage(new HistoryLoader(_dispatcher, _historyStoreDB));
                 Interactor = inter;
                 Selection = new List<Folder>();
@@ -198,7 +198,7 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
-        private void OpenBase(string path, bool syncLoading = false)
+        private void OpenBase(string path, bool symbolLoading = true)
         {
             Folders = new ObservableCollection<Folder>();
             try
@@ -207,13 +207,11 @@ namespace QuoteHistoryGUI.Models
                 if (!Directory.Exists(path + "\\HistoryDB"))
                     throw new Exception("Cant't find a history database folder (HistoryDB) in folder: " + path);
 
-                _historyStoreDB = new DB(path + "\\HistoryDB",
-                        new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
+                _historyStoreDB = DB.Open(path + "\\HistoryDB",new Options() { FilterPolicy = new BloomFilterPolicy(10), CreateIfMissing = true });
                 Editor = new HistoryEditor(_historyStoreDB);
                 Loader = new HistoryLoader(_dispatcher, _historyStoreDB);
-                if (!syncLoading)
+                if (symbolLoading)
                     Loader.ReadSymbols(Folders);
-                else Loader.ReadSymbolsSync(Folders);
                 log.Info("Database opened and initialized: " + path);
             }
             catch (Exception ex)

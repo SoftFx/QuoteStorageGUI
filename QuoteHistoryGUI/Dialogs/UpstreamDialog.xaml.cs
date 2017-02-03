@@ -99,7 +99,7 @@ namespace QuoteHistoryGUI.Dialogs
                     return;
                 }
                 flushCnt++;
-                _interactor.Source.HistoryStoreDB.Put(pairForChunk.Key.Key, pairForChunk.Key.Value);
+                _interactor.Source.HistoryStoreDB.Put(new LevelDB.WriteOptions(), pairForChunk.Key.Key, pairForChunk.Key.Value);
                 if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.25)
                 {
                     worker.ReportProgress(1, "[" + flushCnt + "] " + "Flushing");
@@ -114,7 +114,7 @@ namespace QuoteHistoryGUI.Dialogs
                     return;
                 }
                 flushCnt++;
-                _interactor.Source.HistoryStoreDB.Put(pairForMeta.Value.Key, pairForMeta.Value.Value);
+                _interactor.Source.HistoryStoreDB.Put(new LevelDB.WriteOptions(), pairForMeta.Value.Key, pairForMeta.Value.Value);
                 if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.25)
                 {
                     worker.ReportProgress(1, "[" + flushCnt + "] " + "Flushing");

@@ -65,7 +65,7 @@ namespace QuoteHistoryGUI.HistoryTools
             bool isZip = false;
             if (f as ChunkFile != null)
             {
-                var cnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
+                var cnt = _dbase.Get(new LevelDB.ReadOptions(), HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part)).ToArray();
                 if (cnt[0] == 'P' && cnt[1] == 'K')
                     isZip = true;
                 if (!isZip)
@@ -74,7 +74,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     int flushPart = 1;
                     while (true)
                     {
-                        var cntPart = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part, flushPart));
+                        var cntPart = _dbase.Get(new LevelDB.ReadOptions(), HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part, flushPart)).ToArray();
                         if (cntPart == null) break;
                         res.AddRange(cntPart);
                         flushPart++;
@@ -86,7 +86,7 @@ namespace QuoteHistoryGUI.HistoryTools
             }
             else
             {
-                var meta = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
+                var meta = _dbase.Get(new LevelDB.ReadOptions(), HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part)).ToArray();
                 // (BitConverter.ToUInt32(dbVal, 0));
                 Crc32 hash = new Crc32();
                 hash.Value = (BitConverter.ToUInt32(meta, 0));
@@ -131,7 +131,7 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 for (int i = 0; i < 30; i++)
                 {
-                    var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", f.Period, dateTime[0], dateTime[1], dateTime[2], hour, i));
+                    var cntnt = _dbase.Get(new LevelDB.ReadOptions(), HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", f.Period, dateTime[0], dateTime[1], dateTime[2], hour, i)).ToArray();
                     if (cntnt != null)
                         result.AddRange(GetOrUnzip(cntnt));
                     else break;
@@ -160,7 +160,7 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 for (int i = 0; i < 30; i++)
                 {
-                    var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, hour, i));
+                    var cntnt = _dbase.Get(new LevelDB.ReadOptions(), HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, hour, i)).ToArray();
                     if (cntnt != null)
                         result.AddRange(GetOrUnzip(cntnt));
                     else break;
@@ -216,7 +216,7 @@ namespace QuoteHistoryGUI.HistoryTools
             var path = HistoryDatabaseFuncs.GetPath(f);
             int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
             string period = f.Period;
-            var meta = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
+            var meta = _dbase.Get(new LevelDB.ReadOptions(), HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part)).ToArray();
 
             var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part);
             byte[] value = { };
@@ -247,14 +247,14 @@ namespace QuoteHistoryGUI.HistoryTools
                 value = outputMemStream.ToArray(); 
             }
 
-            _dbase.Put(key, value);
+            _dbase.Put(new LevelDB.WriteOptions(), key, value);
 
             RebuildMeta(f, showMessages);
         }
 
         public KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>> GetChunkMetaForDB(byte[] content, HistoryDatabaseFuncs.DBEntry entry)
         {
-            var meta = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Meta",entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part));
+            var meta = _dbase.Get(new LevelDB.ReadOptions(), HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Meta",entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part)).ToArray();
             var key = HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part);
             byte[] value = { };
             string type = "Zip";
@@ -317,7 +317,7 @@ namespace QuoteHistoryGUI.HistoryTools
             Crc32 hash = new Crc32();
             hash.Update(content);
             var metaKey = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", file.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], file.Part);
-            var it = _dbase.CreateIterator();
+            var it = _dbase.NewIterator(new ReadOptions());
             it.Seek(metaKey);
 
             byte[] GettedEntry = new byte[5];
@@ -328,7 +328,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 GettedEntry[4] = 2;
             if (showMessages)
             {
-                if (!it.IsValid() || (!HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), metaKey, true, 4, true, true, true)))
+                if (!it.Valid() || (!HistoryDatabaseFuncs.ValidateKeyByKey(it.Key().ToArray(), metaKey, true, 4, true, true, true)))
                 {
                     string pathStr = "";
                     foreach (var path_part in path)
@@ -343,7 +343,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
                 else
                 {
-                    var metaEntry = it.GetValue();
+                    var metaEntry = it.Value().ToArray();
                     Crc32 hashFromDB = new Crc32();
                     hashFromDB.Value = (BitConverter.ToUInt32(metaEntry, 0));
                     var metaStr = hashFromDB.Value.ToString("X8", CultureInfo.InvariantCulture);
@@ -370,7 +370,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                 }
             }
-            _dbase.Put(metaKey, GettedEntry);
+            _dbase.Put(new WriteOptions(), metaKey, GettedEntry);
             it.Dispose();
             if (MetaCorruptionMessage != "" && showMessages)
             {
@@ -484,7 +484,7 @@ namespace QuoteHistoryGUI.HistoryTools
             if (types == null)
                 types = new List<string>() { "Meta", "Chunk" };
 
-            var it = _dbase.CreateIterator();
+            var it = _dbase.NewIterator(new ReadOptions());
 
             if (fold as ChunkFile == null && fold as MetaFile == null)
             {
@@ -507,10 +507,10 @@ namespace QuoteHistoryGUI.HistoryTools
                                 var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
                                 it.Seek(key);
                                 List<KeyValuePair<byte[], byte[]>> resList = new List<KeyValuePair<byte[], byte[]>>();
-                                while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true, false, false))
+                                while (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key().ToArray(), key, true, path.Count - 1, true, true, false, false))
                                 {
                                     if (resList.Count < 128)
-                                        resList.Add(new KeyValuePair<byte[], byte[]>(it.GetKey(), onlyKeys?null:it.GetValue()));
+                                        resList.Add(new KeyValuePair<byte[], byte[]>(it.Key().ToArray(), onlyKeys?null:it.Value().ToArray()));
                                     else
                                     {
                                         foreach (var pair in resList)
@@ -545,11 +545,11 @@ namespace QuoteHistoryGUI.HistoryTools
                     type = "Meta";
                     it.Seek(key);
                 }
-                if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                if (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key().ToArray(), key, true, path.Count - 2, true, true, true))
                 {
                     var file = fold as HistoryFile;
                     if(periods.Contains(file.Period) && types.Contains(type))
-                    yield return new KeyValuePair<byte[], byte[]>(it.GetKey(), onlyKeys ? null : it.GetValue());
+                    yield return new KeyValuePair<byte[], byte[]>(it.Key().ToArray(), onlyKeys ? null : it.Key().ToArray());
                 }
             }
 

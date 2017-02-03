@@ -218,7 +218,7 @@ namespace QuoteHistoryGUI.Models
                     dlg.ShowDialog();
 
                     var path = dlg.StoragePath.Text;
-                    StorageInstanceModel.OpenMode mode = (bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : StorageInstanceModel.OpenMode.ReadWrite;
+                    //StorageInstanceModel.OpenMode mode = (bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : StorageInstanceModel.OpenMode.ReadWrite;
                     StorageInstanceModel tab = null;
                     if(path!="")
                     Task.Run(() =>
@@ -236,7 +236,7 @@ namespace QuoteHistoryGUI.Models
                                     return;
                                 }
                             }
-                            tab = new StorageInstanceModel(path, this.Dispatcher, this.Interactor, mode);
+                            tab = new StorageInstanceModel(path, this.Dispatcher, this.Interactor, StorageInstanceModel.OpenMode.ReadWrite);
 
                             this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.IsEnabled = true; MainWindow.HideLoading(); }), DispatcherPriority.ContextIdle, null);
                             if (tab != null && tab.Status == "Ok")
@@ -387,8 +387,8 @@ namespace QuoteHistoryGUI.Models
                     {
                         var path = dlg.SelectedPath;
                         Directory.CreateDirectory(path + "\\HistoryDB");
-                        var historyStoreDB = new DB(path + "\\HistoryDB",
-                                new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
+                        var historyStoreDB = DB.Open(path + "\\HistoryDB",
+                                new Options() { FilterPolicy = new BloomFilterPolicy(10), CreateIfMissing = true });
                         historyStoreDB.Dispose();
                         var tab = new StorageInstanceModel(path, this.Dispatcher, Interactor, StorageInstanceModel.OpenMode.ReadWrite);
                         if (tab.Status == "Ok")
