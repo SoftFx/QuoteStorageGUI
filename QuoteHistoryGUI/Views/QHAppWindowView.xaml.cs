@@ -49,7 +49,7 @@ namespace QuoteHistoryGUI.Views
                     this.Dispatcher.BeginInvoke(new Action(() => { this.ShowLoading(); }), DispatcherPriority.Send, null);
                     StorageInstanceModel tab = null;
                     var path = dlg.StoragePath.Text;
-                    StorageInstanceModel.OpenMode mode = (bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : StorageInstanceModel.OpenMode.ReadWrite;
+                    StorageInstanceModel.OpenMode mode = /*(bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : */StorageInstanceModel.OpenMode.ReadWrite;
                     Task.Run(() =>
                     {
                         try

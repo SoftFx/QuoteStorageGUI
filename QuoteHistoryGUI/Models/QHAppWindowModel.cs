@@ -29,8 +29,8 @@ namespace QuoteHistoryGUI.Models
         {
             if (e.Error != null)
             {
-                throw new Exception(e.Error.Message + ";\t\nStack trace: " + e.Error.StackTrace);
                 log.Error(e.Error.Message);
+                throw new Exception(e.Error.Message + ";\t\nStack trace: " + e.Error.StackTrace);
             }
         }
         public event PropertyChangedEventHandler PropertyChanged;
@@ -218,7 +218,7 @@ namespace QuoteHistoryGUI.Models
                     dlg.ShowDialog();
 
                     var path = dlg.StoragePath.Text;
-                    StorageInstanceModel.OpenMode mode = (bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : StorageInstanceModel.OpenMode.ReadWrite;
+                    StorageInstanceModel.OpenMode mode = /*(bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : */StorageInstanceModel.OpenMode.ReadWrite;
                     StorageInstanceModel tab = null;
                     if(path!="")
                     Task.Run(() =>
