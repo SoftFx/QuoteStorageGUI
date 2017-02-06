@@ -328,7 +328,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 GettedEntry[4] = 2;
             if (showMessages)
             {
-                if (!it.IsValid() || (!HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), metaKey, true, 4, true, true, true)))
+                if (!it.Valid() || (!HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), metaKey, true, 4, true, true, true)))
                 {
                     string pathStr = "";
                     foreach (var path_part in path)
@@ -343,7 +343,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
                 else
                 {
-                    var metaEntry = it.GetValue();
+                    var metaEntry = it.Value();
                     Crc32 hashFromDB = new Crc32();
                     hashFromDB.Value = (BitConverter.ToUInt32(metaEntry, 0));
                     var metaStr = hashFromDB.Value.ToString("X8", CultureInfo.InvariantCulture);
@@ -507,10 +507,10 @@ namespace QuoteHistoryGUI.HistoryTools
                                 var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
                                 it.Seek(key);
                                 List<KeyValuePair<byte[], byte[]>> resList = new List<KeyValuePair<byte[], byte[]>>();
-                                while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 1, true, true, false, false))
+                                while (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), key, true, path.Count - 1, true, true, false, false))
                                 {
                                     if (resList.Count < 128)
-                                        resList.Add(new KeyValuePair<byte[], byte[]>(it.GetKey(), onlyKeys?null:it.GetValue()));
+                                        resList.Add(new KeyValuePair<byte[], byte[]>(it.Key(), onlyKeys?null:it.Value()));
                                     else
                                     {
                                         foreach (var pair in resList)
@@ -545,11 +545,11 @@ namespace QuoteHistoryGUI.HistoryTools
                     type = "Meta";
                     it.Seek(key);
                 }
-                if (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, path.Count - 2, true, true, true))
+                if (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), key, true, path.Count - 2, true, true, true))
                 {
                     var file = fold as HistoryFile;
                     if(periods.Contains(file.Period) && types.Contains(type))
-                    yield return new KeyValuePair<byte[], byte[]>(it.GetKey(), onlyKeys ? null : it.GetValue());
+                    yield return new KeyValuePair<byte[], byte[]>(it.Key(), onlyKeys ? null : it.Value());
                 }
             }
 

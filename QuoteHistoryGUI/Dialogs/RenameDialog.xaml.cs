@@ -66,10 +66,10 @@ namespace QuoteHistoryGUI.Dialogs
             var it = db.CreateIterator();
             int renamedCnt = 0;
             it.Seek(startKey);
-            while (it.IsValid())
+            while (it.Valid())
             {
                 
-                var entry = HistoryDatabaseFuncs.DeserealizeKey(it.GetKey());
+                var entry = HistoryDatabaseFuncs.DeserealizeKey(it.Key());
                 if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
                 {
                     worker.ReportProgress(1, "[" + renamedCnt + "] " + entry.Symbol + ": " + entry.Time + " - " + entry.Period);
@@ -79,8 +79,8 @@ namespace QuoteHistoryGUI.Dialogs
                     break;
                 if (worker.CancellationPending)
                     break;
-                var value = it.GetValue();
-                db.Delete(it.GetKey());
+                var value = it.Value();
+                db.Delete(it.Key());
                 var newKey = HistoryDatabaseFuncs.SerealizeKey(toSym, entry.Type, entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour,entry.Part, entry.FlushPart);
                 db.Put(newKey, value);
                 renamedCnt++;

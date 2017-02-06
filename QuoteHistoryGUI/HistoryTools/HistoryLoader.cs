@@ -93,9 +93,9 @@ namespace QuoteHistoryGUI
             it.Seek(key);
 
             List<HistoryDatabaseFuncs.DBEntry> resl = new List<HistoryDatabaseFuncs.DBEntry>();
-            while (it.IsValid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.GetKey(), key, true, 0, true, true))
+            while (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), key, true, 0, true, true))
             {
-                yield return HistoryDatabaseFuncs.DeserealizeKey(it.GetKey());
+                yield return HistoryDatabaseFuncs.DeserealizeKey(it.Key());
                 it.Next();
             }
             it.Dispose();
@@ -110,9 +110,9 @@ namespace QuoteHistoryGUI
             Iterator it = null;
             it = _dbase.CreateIterator();
             it.SeekToFirst();
-            while (it.IsValid())
+            while (it.Valid())
             {
-                var key = it.GetKey();
+                var key = it.Key();
                 List<byte> nextKey = new List<byte>();
                 for (int i = 0; i < key.Length; i++)
                 {
@@ -209,9 +209,9 @@ namespace QuoteHistoryGUI
                     foreach (var key in keys)
                     {
                         it.Seek(key);
-                        if (!it.IsValid())
+                        if (!it.Valid())
                             break;
-                        var getedKey = it.GetKey();
+                        var getedKey = it.Key();
                         try
                         {
                             if (HistoryDatabaseFuncs.ValidateKeyByKey(getedKey, key, true, path.Count, false, true))
@@ -278,15 +278,15 @@ namespace QuoteHistoryGUI
                 for (int i = 0; i < keys.Count; i++)
                 {
                     it.Seek(keys[i]);
-                    if (!it.IsValid())
+                    if (!it.Valid())
                         continue;
-                    var getedKey = it.GetKey();
+                    var getedKey = it.Key();
                     try
                     {
                         while (true)
                         {
                             var part = -1;
-                            if (HistoryDatabaseFuncs.ValidateKeyByKey(getedKey, keys[i], true, path.Count - 1, true, true) && it.IsValid())
+                            if (HistoryDatabaseFuncs.ValidateKeyByKey(getedKey, keys[i], true, path.Count - 1, true, true) && it.Valid())
                             {
 
                                 if (i == 0 || i == 2)
@@ -316,9 +316,9 @@ namespace QuoteHistoryGUI
                                    }
                                });
                                 it.Next();
-                                if (it.IsValid())
+                                if (it.Valid())
                                 {
-                                    getedKey = it.GetKey();
+                                    getedKey = it.Key();
                                 }
                             }
                             else break;

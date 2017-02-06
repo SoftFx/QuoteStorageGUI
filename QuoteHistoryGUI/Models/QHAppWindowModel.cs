@@ -180,6 +180,7 @@ namespace QuoteHistoryGUI.Models
             MasterStorage = new ObservableCollection<StorageInstanceModel>();
             SlaveStorage = new ObservableCollection<StorageInstanceModel>();
             CopyContextBtnClick = new SingleDelegateCommand(CopyContextDelegate);
+            CompactBtnClick = new SingleDelegateCommand(CompactDelegate);
             Dispatcher = dispatcher;
             IsOpenedStorage = false;
             try
@@ -201,6 +202,7 @@ namespace QuoteHistoryGUI.Models
         public ICommand UpdateBtnClick { get; private set; }
         public ICommand ExportBtnClick { get; private set; }
         public ICommand AboutBtnClick { get; private set; }
+        public ICommand CompactBtnClick { get; private set; }
         private bool OpenBaseDelegate(object o, bool isCheckOnly)
         {
 
@@ -416,6 +418,23 @@ namespace QuoteHistoryGUI.Models
             {
 
                 var dlg = new CopyDialog()
+                {
+                    Owner = Application.Current.MainWindow
+                };
+                dlg.ShowDialog();
+                return true;
+            }
+        }
+
+        private bool CompactDelegate(object o, bool isCheckOnly)
+        {
+
+            if (isCheckOnly)
+                return true;
+            else
+            {
+
+                var dlg = new CompactDialog(Dispatcher)
                 {
                     Owner = Application.Current.MainWindow
                 };
