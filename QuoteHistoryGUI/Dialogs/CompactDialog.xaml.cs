@@ -117,5 +117,10 @@ namespace QuoteHistoryGUI.Dialogs
             }
         }
 
+        private void HelpButton_Click(object sender, RoutedEventArgs e)
+        {
+            HelpDialog.ShowHelp("compact");
+        }
+
     }
 }

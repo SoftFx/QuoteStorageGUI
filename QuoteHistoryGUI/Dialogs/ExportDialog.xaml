@@ -36,7 +36,7 @@
         <RadioButton Name="TemplateRadioButton" Checked="TemplateRadioButton_Checked" Grid.Row="0" Grid.Column="4" VerticalAlignment="Center" HorizontalAlignment="Left" />
         <TextBlock Name="Source" Grid.Row="1"  Margin="5" Grid.ColumnSpan="4" VerticalAlignment="Center" Grid.Column="1"></TextBlock>
         <TextBlock Text="Destination:" VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Row="1" Grid.Column="0" Margin="4,2"/>
-        <ComboBox Name="DestinationBox" SelectionChanged="DestinationBox_Selected" IsEditable="True" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3" Margin="4"/>
+        <ComboBox Name="DestinationBox" SelectionChanged="DestinationBox_Selected" TextBoxBase.TextChanged="DestinationBox_TextChanged"  IsEditable="True" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3" Margin="4"/>
         <Button Name="BrowseButton" Click="BrowseButton_Click" Grid.Column="4" Grid.Row="1" Margin="4" Content="..."/>
         <Button Name ="CopyButton" Content="Start" Background="#F2F0ED" Width="80" HorizontalAlignment="Right"  BorderBrush="#7F6E53" Click="Button_Click" Grid.Row="2" Grid.Column="5" Margin="4,2" ></Button>
         <TextBlock Name="CopyStatusBlock" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" Margin="4,2"/>

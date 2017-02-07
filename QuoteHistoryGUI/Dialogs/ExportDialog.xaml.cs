@@ -267,5 +267,10 @@ namespace QuoteHistoryGUI.Dialogs
         {
             CopyButton.IsEnabled = true;
         }
+
+        private void DestinationBox_TextChanged(object sender, RoutedEventArgs e)
+        {
+            CopyButton.IsEnabled = true;
+        }
     }
 }
