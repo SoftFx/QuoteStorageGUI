@@ -297,7 +297,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
                 it.Dispose();
             }
-
+            if(worker!=null)
             worker.ReportProgress(1, "[" + deleteCnt + "] files deleted");
             
             return 1;

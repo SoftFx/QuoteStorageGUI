@@ -194,7 +194,7 @@ namespace QuoteHistoryGUI.Dialogs
                     if (isMove)
                     {
                         _interactor.Dispatcher = Dispatcher;
-                        _interactor.Delete(matched);
+                        _interactor.Delete(matched, worker,true);
                         _interactor.Dispatcher = null;
                     }
 
