@@ -316,41 +316,41 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public void Import(bool replace = true, BackgroundWorker worker = null)
         {
-            var sourceIter = Source.HistoryStoreDB.CreateIterator();
-            sourceIter.SeekToFirst();
-            DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
-            int cnt = 0;
-            while (sourceIter.Valid())
-            {
-                if (worker.CancellationPending == true)
+                var sourceIter = Source.HistoryStoreDB.CreateIterator();
+                sourceIter.SeekToFirst();
+                DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
+                int cnt = 0;
+                while (sourceIter.Valid())
                 {
-                    sourceIter.Dispose();
-                    return;
-                }
+                    if (worker.CancellationPending == true)
+                    {
+                        sourceIter.Dispose();
+                        return;
+                    }
 
-                cnt++;
-                if (replace)
-                {
-                    Destination.HistoryStoreDB.Put(sourceIter.Key(), sourceIter.Value());
-                }
-                else
-                {
-                    if (Destination.HistoryStoreDB.Get(sourceIter.Key()) == null)
+                    cnt++;
+                    if (replace)
                     {
                         Destination.HistoryStoreDB.Put(sourceIter.Key(), sourceIter.Value());
                     }
-                }
+                    else
+                    {
+                        if (Destination.HistoryStoreDB.Get(sourceIter.Key()) == null)
+                        {
+                            Destination.HistoryStoreDB.Put(sourceIter.Key(), sourceIter.Value());
+                        }
+                    }
 
-                if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
-                {
-                    var dbentry = DeserealizeKey(sourceIter.Key());
-                    worker.ReportProgress(1, "[" + cnt + "] "+ dbentry.Symbol+": "+ dbentry.Time+" - "+dbentry.Period);
-                    ReportTime = DateTime.Now;
-                }
+                    if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
+                    {
+                        var dbentry = DeserealizeKey(sourceIter.Key());
+                        worker.ReportProgress(1, "[" + cnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                        ReportTime = DateTime.Now;
+                    }
 
-                sourceIter.Next();
-            }
-            sourceIter.Dispose();
+                    sourceIter.Next();
+                }
+                sourceIter.Dispose(); 
         }
         
 

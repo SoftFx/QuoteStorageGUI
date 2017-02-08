@@ -161,6 +161,7 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void worker_Copy(object sender, DoWorkEventArgs e)
         {
+
             BackgroundWorker worker = e.Argument as BackgroundWorker;
             var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
             foreach (var templ in templates)
@@ -177,7 +178,8 @@ namespace QuoteHistoryGUI.Dialogs
                 }
             }
 
-            _interactor.Destination.Refresh();
+            _interactor.Source.Refresh();
+
         }
 
         private void worker_Export(object sender, DoWorkEventArgs e)
