@@ -82,7 +82,6 @@ namespace QuoteHistoryGUI
         public void ReadSymbolsSync(ObservableCollection<Folder> folders)
         {
             _folders = folders;
-            var w = new BackgroundWorker();
             ReadSymbolsWork(new object(), new DoWorkEventArgs(new object()));
         }
 

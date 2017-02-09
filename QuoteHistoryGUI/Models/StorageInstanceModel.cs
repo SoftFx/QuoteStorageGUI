@@ -46,7 +46,6 @@ namespace QuoteHistoryGUI.Models
             //log4net.Config.XmlConfigurator.Configure();
             try
             {
-                _dispatcher = dispatcher;
                 openMode = mode;
                 StoragePath = path;
                 _dispatcher = dispatcher;
@@ -424,7 +423,7 @@ namespace QuoteHistoryGUI.Models
                     }
                     else
                         DeleteMessage = Selection.Count + " items ?";
-
+                    MessageBox.Show(MainView, "The execution of delete operations can lead to poor performance. It is recommended to do a compact operation after delete operations.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                     var result = MessageBox.Show("Are you sure to delete " + DeleteMessage, "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
                     if (result == MessageBoxResult.No) return true;
                     Interactor.Source = this;

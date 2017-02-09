@@ -274,5 +274,11 @@ namespace QuoteHistoryGUI.Dialogs
         {
             CopyButton.IsEnabled = true;
         }
+
+        private void OperationTypeBox_Selected(object sender, RoutedEventArgs e)
+        {
+            if (OperationTypeBox.SelectedIndex == 1)
+                MessageBox.Show(this, "The move option will cause the execution of delete operations. It can lead to poor performance. It is recommended to do a compact operation after delete operations.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 }
