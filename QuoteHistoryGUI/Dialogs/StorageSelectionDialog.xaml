@@ -18,13 +18,18 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="60"/>
             <ColumnDefinition />
-            <ColumnDefinition Width=" 80"/>
+            <ColumnDefinition Width=" 60"/>
+            <ColumnDefinition Width=" 20"/>
         </Grid.ColumnDefinitions>
 
         <TextBox Name="StoragePath" Margin="5" Grid.ColumnSpan="2" Grid.Row="0"></TextBox>
-        <Button Content="Browse" Background="#F2F0ED" BorderBrush="#7F6E53" Foreground="Black" Grid.Row="0" Grid.Column="2" Margin="5" Click="Browse"></Button>
-        <ListBox Name="PathBox" KeyDown="PathBox_KeyDown" SelectionChanged="PathBox_SelectionChanged" MouseDoubleClick="PathBox_MouseDoubleClick"  Grid.Row="1" Margin="5" Grid.ColumnSpan="3"></ListBox>
-        <Button Content="Open" Background="#F2F0ED"  BorderBrush="#7F6E53" Click="Open" Grid.Row="2" Grid.Column="2" Margin="5" ></Button>
-        <CheckBox Name="ReadOnlyBox" Content="Readonly mode  "  Background="#F2F0ED"  HorizontalAlignment="Right" BorderBrush="#7F6E53"  Grid.Row="2" Grid.Column="1" Margin="5" ></CheckBox>
+        <Button Content="Browse" Background="#F2F0ED" BorderBrush="#7F6E53" Foreground="Black" Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2" Margin="5" Click="Browse"></Button>
+        <ListBox Name="PathBox" KeyDown="PathBox_KeyDown" SelectionChanged="PathBox_SelectionChanged" MouseDoubleClick="PathBox_MouseDoubleClick"  Grid.Row="1" Margin="5" Grid.ColumnSpan="3">
+        </ListBox>
+        <Button Name="DeleteButton" Grid.Column="3" Grid.Row="1" Height="17" Margin="0 6 3 0" VerticalAlignment="Top" Click="DeleteButton_Click">
+            <Image Source="../Icons/Close.png" Height="16" Width="7" Margin="1 3" VerticalAlignment="Top"/>
+        </Button>
+        <Button Content="Open" Background="#F2F0ED"  BorderBrush="#7F6E53" Click="Open" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Margin="5" ></Button>
+        <!--<CheckBox Name="ReadOnlyBox" Content="Readonly mode  "  Background="#F2F0ED"  HorizontalAlignment="Right" BorderBrush="#7F6E53"  Grid.Row="2" Grid.Column="1" Margin="5" ></CheckBox>-->
     </Grid>
 </Window>

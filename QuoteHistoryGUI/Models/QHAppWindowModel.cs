@@ -29,8 +29,8 @@ namespace QuoteHistoryGUI.Models
         {
             if (e.Error != null)
             {
-                throw new Exception(e.Error.Message + ";\t\nStack trace: " + e.Error.StackTrace);
                 log.Error(e.Error.Message);
+                throw new Exception(e.Error.Message + ";\t\nStack trace: " + e.Error.StackTrace);
             }
         }
         public event PropertyChangedEventHandler PropertyChanged;
@@ -180,6 +180,7 @@ namespace QuoteHistoryGUI.Models
             MasterStorage = new ObservableCollection<StorageInstanceModel>();
             SlaveStorage = new ObservableCollection<StorageInstanceModel>();
             CopyContextBtnClick = new SingleDelegateCommand(CopyContextDelegate);
+            CompactBtnClick = new SingleDelegateCommand(CompactDelegate);
             Dispatcher = dispatcher;
             IsOpenedStorage = false;
             try
@@ -201,6 +202,7 @@ namespace QuoteHistoryGUI.Models
         public ICommand UpdateBtnClick { get; private set; }
         public ICommand ExportBtnClick { get; private set; }
         public ICommand AboutBtnClick { get; private set; }
+        public ICommand CompactBtnClick { get; private set; }
         private bool OpenBaseDelegate(object o, bool isCheckOnly)
         {
 
@@ -218,7 +220,7 @@ namespace QuoteHistoryGUI.Models
                     dlg.ShowDialog();
 
                     var path = dlg.StoragePath.Text;
-                    //StorageInstanceModel.OpenMode mode = (bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : StorageInstanceModel.OpenMode.ReadWrite;
+                    StorageInstanceModel.OpenMode mode = /*(bool)dlg.ReadOnlyBox.IsChecked ? StorageInstanceModel.OpenMode.ReadOnly : */StorageInstanceModel.OpenMode.ReadWrite;
                     StorageInstanceModel tab = null;
                     if(path!="")
                     Task.Run(() =>
@@ -236,7 +238,7 @@ namespace QuoteHistoryGUI.Models
                                     return;
                                 }
                             }
-                            tab = new StorageInstanceModel(path, this.Dispatcher, this.Interactor, StorageInstanceModel.OpenMode.ReadWrite);
+                            tab = new StorageInstanceModel(path, this.Dispatcher, this.Interactor, mode);
 
                             this.Dispatcher.BeginInvoke(new Action(() => { MainWindow.IsEnabled = true; MainWindow.HideLoading(); }), DispatcherPriority.ContextIdle, null);
                             if (tab != null && tab.Status == "Ok")
@@ -387,8 +389,8 @@ namespace QuoteHistoryGUI.Models
                     {
                         var path = dlg.SelectedPath;
                         Directory.CreateDirectory(path + "\\HistoryDB");
-                        var historyStoreDB = DB.Open(path + "\\HistoryDB",
-                                new Options() { FilterPolicy = new BloomFilterPolicy(10), CreateIfMissing = true });
+                        var historyStoreDB = new DB(path + "\\HistoryDB",
+                                new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
                         historyStoreDB.Dispose();
                         var tab = new StorageInstanceModel(path, this.Dispatcher, Interactor, StorageInstanceModel.OpenMode.ReadWrite);
                         if (tab.Status == "Ok")
@@ -416,6 +418,23 @@ namespace QuoteHistoryGUI.Models
             {
 
                 var dlg = new CopyDialog()
+                {
+                    Owner = Application.Current.MainWindow
+                };
+                dlg.ShowDialog();
+                return true;
+            }
+        }
+
+        private bool CompactDelegate(object o, bool isCheckOnly)
+        {
+
+            if (isCheckOnly)
+                return true;
+            else
+            {
+
+                var dlg = new CompactDialog(Dispatcher)
                 {
                     Owner = Application.Current.MainWindow
                 };

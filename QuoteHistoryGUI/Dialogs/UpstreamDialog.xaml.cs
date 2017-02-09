@@ -45,7 +45,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                 _dispatcher = this.Dispatcher;
 
-                Level2Box.IsChecked = true;
+                //Level2Box.IsChecked = true;
                 TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
                     HistoryInteractor.GetTemplates(interactor.Selection));
                 _interactor = interactor;
@@ -68,7 +68,7 @@ namespace QuoteHistoryGUI.Dialogs
                 log.Info("Upstream calling...");
                 UpstreamWorker = new BackgroundWorker();
                 _interactor.Source = _source;
-                is2levelUpstream = Level2Box.IsChecked.HasValue && Level2Box.IsChecked.Value;
+                //is2levelUpstream = Level2Box.IsChecked.HasValue && Level2Box.IsChecked.Value;
 
                 temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
                 templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
@@ -139,7 +139,7 @@ namespace QuoteHistoryGUI.Dialogs
                 var entry = HistoryDatabaseFuncs.DeserealizeKey(file.Key);
                 if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.5)
                 {
-                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Month+ "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
+                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Month + "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
                     lastReport = DateTime.UtcNow;
                 }
 
@@ -174,7 +174,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                 if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.5)
                 {
-                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/"+entry.Time.Month+"/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
+                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Month + "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
                     lastReport = DateTime.UtcNow;
                 }
                 if (worker?.CancellationPending == true)
@@ -223,10 +223,11 @@ namespace QuoteHistoryGUI.Dialogs
                 {
                     var item = DegreeBox.SelectedItem as ComboBoxItem;
                     var textBlock = item.Content as TextBlock;
-                    degreeOfParallelism = int.Parse(textBlock.Text); });
-                
+                    degreeOfParallelism = int.Parse(textBlock.Text);
+                });
 
-                List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update = new List<HistoryDatabaseFuncs.DBEntry>(); 
+
+                List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update = new List<HistoryDatabaseFuncs.DBEntry>();
                 foreach (var templ in templates)
                 {
                     templNum++;
@@ -242,20 +243,18 @@ namespace QuoteHistoryGUI.Dialogs
 
                         FlushWork(worker, saveListTicks, ref flushCnt, ref lastReport);
 
-                        if (!is2levelUpstream)
+                        entriesForM1Update.Clear();
+                        files = _interactor.Source.Editor.EnumerateFilesInFolder(sel, new List<string>() { "ticks" }, new List<string>() { "Chunk" });
+                        foreach (var file in files)
                         {
-                            entriesForM1Update.Clear();
-                            files = _interactor.Source.Editor.EnumerateFilesInFolder(sel, new List<string>() { "ticks" }, new List<string>() { "Chunk" });
-                            foreach (var file in files)
+                            var entry = HistoryDatabaseFuncs.DeserealizeKey(file.Key);
+                            if (entriesForM1Update.Count == 0 || entriesForM1Update.Last().Time.Year != entry.Time.Year ||
+                                entriesForM1Update.Last().Time.Month != entry.Time.Month || entriesForM1Update.Last().Time.Day != entry.Time.Day)
                             {
-                                var entry = HistoryDatabaseFuncs.DeserealizeKey(file.Key);
-                                if (entriesForM1Update.Count == 0 || entriesForM1Update.Last().Time.Year != entry.Time.Year ||
-                                    entriesForM1Update.Last().Time.Month != entry.Time.Month || entriesForM1Update.Last().Time.Day != entry.Time.Day)
-                                {
-                                    entriesForM1Update.Add(new HistoryDatabaseFuncs.DBEntry(entry.Symbol, new DateTime(entry.Time.Year, entry.Time.Month, entry.Time.Day), entry.Period, "chunk", 0));
-                                }
+                                entriesForM1Update.Add(new HistoryDatabaseFuncs.DBEntry(entry.Symbol, new DateTime(entry.Time.Year, entry.Time.Month, entry.Time.Day), entry.Period, "chunk", 0));
                             }
                         }
+
                         ticksToM1Work(worker, entriesForM1Update, ref upstramCnt, ref flushCnt, ref lastReport, saveListBids, saveListAsks);
                         entriesForM1Update.Clear();
                     }

@@ -161,6 +161,7 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void worker_Copy(object sender, DoWorkEventArgs e)
         {
+
             BackgroundWorker worker = e.Argument as BackgroundWorker;
             var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
             foreach (var templ in templates)
@@ -172,12 +173,13 @@ namespace QuoteHistoryGUI.Dialogs
                 if (isMove)
                 {
                     _interactor.Dispatcher = Dispatcher;
-                    _interactor.Delete(matched, null, true);
+                    _interactor.Delete(matched, worker, true);
                     _interactor.Dispatcher = null;
                 }
             }
 
-            _interactor.Destination.Refresh();
+            _interactor.Source.Refresh();
+
         }
 
         private void worker_Export(object sender, DoWorkEventArgs e)
@@ -266,6 +268,17 @@ namespace QuoteHistoryGUI.Dialogs
         private void DestinationBox_Selected(object sender, RoutedEventArgs e)
         {
             CopyButton.IsEnabled = true;
+        }
+
+        private void DestinationBox_TextChanged(object sender, RoutedEventArgs e)
+        {
+            CopyButton.IsEnabled = true;
+        }
+
+        private void OperationTypeBox_Selected(object sender, RoutedEventArgs e)
+        {
+            if (OperationTypeBox.SelectedIndex == 1)
+                MessageBox.Show(this, "The move option will cause the execution of delete operations. It can lead to poor performance. It is recommended to do a compact operation after delete operations.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 }

@@ -63,5 +63,39 @@ namespace QuoteHistoryGUI
                 throw ex;
             }
         }
+
+
+        public static void RemovePath(string path)
+        {
+            try
+            {
+                Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                if (config.AppSettings.Settings["path_count"] == null)
+                    config.AppSettings.Settings.Add(new KeyValueConfigurationElement("path_count", "0"));
+                var pathCount = int.Parse(config.AppSettings.Settings["path_count"].Value);
+                bool deleted = false;
+                for (int i = 0; i < pathCount; i++)
+                {
+                    if (path == config.AppSettings.Settings["path_" + i].Value)
+                    {
+                        config.AppSettings.Settings["path_count"].Value = (int.Parse(config.AppSettings.Settings["path_count"].Value) - 1).ToString();
+                       deleted = true;
+                    }
+                    if (deleted)
+                    {
+                        if(i<pathCount-1)
+                        config.AppSettings.Settings["path_" + i].Value = config.AppSettings.Settings["path_" + (i + 1)].Value;
+                        else config.AppSettings.Settings.Remove("path_" + i);
+                    }
+                }
+                
+                config.Save();
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message);
+                throw ex;
+            }
+        }
     }
 }
