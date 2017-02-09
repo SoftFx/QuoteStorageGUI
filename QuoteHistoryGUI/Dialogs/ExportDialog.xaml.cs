@@ -45,7 +45,7 @@ namespace QuoteHistoryGUI.Dialogs
                 log.Info("Export dialog initializing...");
                 InitializeComponent();
 
-                _dispatcher = this.Dispatcher;
+                _dispatcher = interactor.Dispatcher;
 
                 this.Closing += Window_Closing;
                 OperationTypeBox.IsEnabled = false;
@@ -99,7 +99,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                     if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
                         Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
-                    _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
+                    _destination = new StorageInstanceModel(DestinationBox.Text, _dispatcher, _interactor,StorageInstanceModel.OpenMode.ReadWrite,StorageInstanceModel.LoadingMode.None);
                     _interactor.Destination = _destination;
 
 

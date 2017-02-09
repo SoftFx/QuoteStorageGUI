@@ -25,6 +25,14 @@ namespace QuoteHistoryGUI.Models
             ReadWrite,
             ReadOnly
         }
+
+        public enum LoadingMode
+        {
+            None,
+            Sync,
+            Async
+        }
+
         #region INotifyPropertyChanged
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -41,7 +49,7 @@ namespace QuoteHistoryGUI.Models
         public HistoryEditor Editor;
         public HistoryLoader Loader;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageInstanceModel));
-        public StorageInstanceModel(string path, Dispatcher dispatcher, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite, bool syncLoading = false)
+        public StorageInstanceModel(string path, Dispatcher dispatcher, HistoryInteractor inter = null, OpenMode mode = OpenMode.ReadWrite, LoadingMode loadingMode = LoadingMode.Async)
         {
             //log4net.Config.XmlConfigurator.Configure();
             try
@@ -49,7 +57,7 @@ namespace QuoteHistoryGUI.Models
                 openMode = mode;
                 StoragePath = path;
                 _dispatcher = dispatcher;
-                OpenBase(path, syncLoading);
+                OpenBase(path, loadingMode);
                 MetaStorage = new MetaStorage(new HistoryLoader(_dispatcher, _historyStoreDB));
                 Interactor = inter;
                 Selection = new List<Folder>();
@@ -67,7 +75,7 @@ namespace QuoteHistoryGUI.Models
             { log.Error(ex.Message); throw ex; }
         }
 
-
+        
 
         public OpenMode openMode;
         private DB _historyStoreDB;
@@ -197,7 +205,7 @@ namespace QuoteHistoryGUI.Models
             }
         }
 
-        private void OpenBase(string path, bool syncLoading = false)
+        private void OpenBase(string path, LoadingMode loadingMode = LoadingMode.Async)
         {
             Folders = new ObservableCollection<Folder>();
             try
@@ -210,9 +218,10 @@ namespace QuoteHistoryGUI.Models
                         new Options() { BloomFilter = new BloomFilterPolicy(10), CreateIfMissing = true });
                 Editor = new HistoryEditor(_historyStoreDB);
                 Loader = new HistoryLoader(_dispatcher, _historyStoreDB);
-                if (!syncLoading)
+                if (loadingMode == LoadingMode.Async)
                     Loader.ReadSymbols(Folders);
-                else Loader.ReadSymbolsSync(Folders);
+                if (loadingMode == LoadingMode.Sync)
+                    Loader.ReadSymbolsSync(Folders);
                 log.Info("Database opened and initialized: " + path);
             }
             catch (Exception ex)
