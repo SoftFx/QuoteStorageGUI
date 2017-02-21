@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -38,6 +39,8 @@ namespace QuoteHistoryGUI.Views
                         new ImportDialog().Show();
                         break;
                     case AppMode.Console:
+                        if (!Directory.Exists(Destination + "\\HistoryDB"))
+                            Directory.CreateDirectory(Destination + "\\HistoryDB");
                         new ImportDialog(new Models.StorageInstanceModel(Destination, this.Dispatcher), new Models.StorageInstanceModel(Source, this.Dispatcher)).DoImport(false);
                         break;
                     default:
