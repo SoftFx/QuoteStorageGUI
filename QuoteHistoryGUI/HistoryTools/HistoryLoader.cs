@@ -204,6 +204,14 @@ namespace QuoteHistoryGUI
                         keys.Add(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "M1 bid", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
                         keys.Add(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "M1 ask", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
                     }
+
+                    if (path.Count < 3)
+                    {
+                        keys.Add(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", "H1 bid", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
+                        keys.Add(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", "H1 ask", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
+                        keys.Add(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "H1 bid", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
+                        keys.Add(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", "H1 ask", dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0));
+                    }
                     var it = _dbase.CreateIterator();
                     foreach (var key in keys)
                     {
@@ -235,7 +243,7 @@ namespace QuoteHistoryGUI
         private void LoadFiles(bool ShowMessages = true)
         {
             var path = HistoryDatabaseFuncs.GetPath(_folder);
-            if (path.Count >= 4)
+            if (path.Count >= 3)
             {
                 int[] dateTime = { 2000, 1, 1, 0, 0 };
                 for (int i = 1; i < path.Count; i++)
@@ -250,6 +258,17 @@ namespace QuoteHistoryGUI
                 List<byte[]> keys = new List<byte[]>();
                 switch (path.Count)
                 {
+                    case 3:
+                        {
+                            names = new string[] { "H1 bid", "H1 bid", "H1 ask", "H1 ask" };
+                            keys = new List<byte[]> {
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Chunk","H1 bid",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Meta","H1 bid",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Chunk","H1 ask",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                    HistoryDatabaseFuncs.SerealizeKey(path[0].Name,"Meta","H1 ask",dateTime[0],dateTime[1],dateTime[2],dateTime[3],0),
+                                };
+                            break;
+                        }
                     case 4:
                         {
                             names = new string[] { "M1 bid", "M1 bid", "M1 ask", "M1 ask" };

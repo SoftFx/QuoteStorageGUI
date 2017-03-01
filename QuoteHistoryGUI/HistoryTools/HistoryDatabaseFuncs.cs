@@ -14,6 +14,8 @@ namespace QuoteHistoryGUI.HistoryTools
             {"ticks level2",1 },
             {"M1 ask",2 },
             {"M1 bid",3 },
+            {"H1 ask",14 },
+            {"H1 bid",15 }
         };
 
         static public readonly Dictionary<string, byte> typeDict = new Dictionary<string, byte>()
