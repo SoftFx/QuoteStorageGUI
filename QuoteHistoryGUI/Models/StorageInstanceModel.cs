@@ -582,7 +582,7 @@ namespace QuoteHistoryGUI.Models
         public KeyValuePair<ChunkFile[], QHTick[]> tick2ToTickUpdate(ChunkFile chunk, bool showMessages = true)
         {
 
-            var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.oneDate);
+            var content = Editor.ReadAllPart(chunk, HistoryEditor.ReadMode.oneDate);
             var items = HistorySerializer.Deserialize(chunk.Period, content);
             var itemsList = new List<QHItem>();
             var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
@@ -613,7 +613,7 @@ namespace QuoteHistoryGUI.Models
         public KeyValuePair<QHBar[], QHBar[]> tickToM1Update(ChunkFile chunk, bool showMessages = true)
         {
 
-            var content = Editor.ReadAllPart(chunk, HistoryEditor.hourReadMode.allDate);
+            var content = Editor.ReadAllPart(chunk, HistoryEditor.ReadMode.ticksAllDate);
             var items = HistorySerializer.Deserialize(chunk.Period, content);
             var itemsList = new List<QHItem>();
             var ticks = items as IEnumerable<QHTick>;

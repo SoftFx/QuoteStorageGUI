@@ -31,10 +31,15 @@ namespace QuoteHistoryGUI.Dialogs
 
             Months = new SelectableItemSource(CultureInfo.InvariantCulture.DateTimeFormat.MonthNames.TakeWhile(m => m.Length > 0).Select((m, i) => new SelectableItem((i + 1).ToString(), m)));
 
-            Days = new SelectableItemSource(new List<string>(Enumerable.Range(1, 31).Select(d => d.ToString())));
+            List<string> days = new List<string>(Enumerable.Range(1, 31).Select(h => h.ToString()))
+            {
+                "H1*", "H1 bid*", "H1 ask*"
+            };
+
+            Days = new SelectableItemSource(days);
             List<string> hours = new List<string>(Enumerable.Range(0, 24).Select(h => h.ToString()))
             {
-                "M1*", "M1 bid", "M1 ask"
+                "M1*", "M1 bid*", "M1 ask*"
             };
             Hours = new SelectableItemSource(hours);
             Ticks = new SelectableItemSource(new[] { "ticks*", "(ticks file|ticks meta)", "ticks level2*" });
@@ -195,7 +200,7 @@ namespace QuoteHistoryGUI.Dialogs
     {
         private readonly ObservableCollection<SelectableItem> _source = new ObservableCollection<SelectableItem>();
         private readonly HashSet<SelectableItem> _checkedItems = new HashSet<SelectableItem>();
-        private string _text;
+        private string _text = "*";
 
         public IEnumerable<SelectableItem> Source => _source;
 

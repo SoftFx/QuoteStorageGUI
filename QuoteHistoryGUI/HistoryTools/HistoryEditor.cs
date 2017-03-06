@@ -55,7 +55,8 @@ namespace QuoteHistoryGUI.HistoryTools
                 return content;
             }
         }
-        public KeyValuePair<string,byte[]> ReadFromDB(HistoryFile f) {
+        public KeyValuePair<string, byte[]> ReadFromDB(HistoryFile f)
+        {
 
             var path = HistoryDatabaseFuncs.GetPath(f);
             int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
@@ -99,71 +100,142 @@ namespace QuoteHistoryGUI.HistoryTools
                 return new KeyValuePair<string, byte[]>("Meta", ASCIIEncoding.ASCII.GetBytes(contStr));
 
             }
-            
+
         }
-        public enum hourReadMode
+        public enum ReadMode
         {
-            allDate,
+            H1AllDate,
+            ticksAllDate,
             oneDate
         }
-        
 
-        public byte[] ReadAllPart(HistoryFile f, hourReadMode hm = hourReadMode.oneDate)
+
+        public byte[] ReadAllPart(HistoryFile f, ReadMode hm = ReadMode.oneDate)
         {
 
             var path = HistoryDatabaseFuncs.GetPath(f);
             int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
 
             List<byte> result = new List<byte>();
-            int hstart;
-            int hend;
-            if(hm == hourReadMode.oneDate)
+            int hstart = 0;
+            int hend = 0;
+
+            int dstart = 0;
+            int dend = 0;
+
+            if (hm == ReadMode.oneDate)
             {
                 hstart = dateTime[3];
                 hend = dateTime[3] + 1;
+                dstart = dateTime[2];
+                dend = dateTime[2] + 1;
             }
             else
+            if (hm == ReadMode.ticksAllDate)
             {
                 hstart = 0;
                 hend = 24;
+                dstart = dateTime[2];
+                dend = dateTime[2] + 1;
             }
-            for (int hour = hstart; hour < hend; hour++)
+            else
+            if (hm == ReadMode.H1AllDate)
             {
-                for (int i = 0; i < 30; i++)
+                hstart = 0;
+                hend = 1;
+                dstart = 1;
+                dend = 32;
+            }
+            for (int day = dstart; day < dend; day++)
+            {
+                for (int hour = hstart; hour < hend; hour++)
                 {
-                    var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", f.Period, dateTime[0], dateTime[1], dateTime[2], hour, i));
-                    if (cntnt != null)
-                        result.AddRange(GetOrUnzip(cntnt));
-                    else break;
+                    for (int i = 0; i < 30; i++)
+                    {
+                        var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", f.Period, dateTime[0], dateTime[1], day, hour, i));
+
+                        if (cntnt != null && !(cntnt[0] == 'P' && cntnt[1] == 'K'))
+                        {
+                            var cntList = new List<byte>(cntnt);
+                            var flushPart = 1;
+                            while (true)
+                            {
+                                var cntFlushPart = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", f.Period, dateTime[0], dateTime[1], day, hour, i, flushPart));
+                                if (cntFlushPart == null) break;
+                                else
+                                    cntList.AddRange(cntFlushPart);
+                            }
+                            cntnt = cntList.ToArray();
+                        }
+
+                        if (cntnt != null)
+                            result.AddRange(GetOrUnzip(cntnt));
+                        else break;
+                    }
                 }
             }
             return result.ToArray();
         }
 
-        public byte[] ReadAllPart(HistoryDatabaseFuncs.DBEntry entry, hourReadMode hm = hourReadMode.oneDate)
+        public byte[] ReadAllPart(HistoryDatabaseFuncs.DBEntry entry, ReadMode hm = ReadMode.oneDate)
         {
-            
+
             List<byte> result = new List<byte>();
-            int hstart;
-            int hend;
-            if (hm == hourReadMode.oneDate)
+            int hstart = 0;
+            int hend = 0;
+
+            int dstart = 0;
+            int dend = 0;
+
+            if (hm == ReadMode.oneDate)
             {
                 hstart = entry.Time.Hour;
                 hend = entry.Time.Hour + 1;
+                dstart = entry.Time.Day;
+                dend = entry.Time.Day + 1;
             }
             else
+            if (hm == ReadMode.ticksAllDate)
             {
                 hstart = 0;
                 hend = 24;
+                dstart = entry.Time.Day;
+                dend = entry.Time.Day + 1;
             }
-            for (int hour = hstart; hour < hend; hour++)
+            else
+            if (hm == ReadMode.H1AllDate)
             {
-                for (int i = 0; i < 30; i++)
+                hstart = 0;
+                hend = 1;
+                dstart = 1;
+                dend = 32;
+            }
+            for (int day = dstart; day < dend; day++)
+            {
+                for (int hour = hstart; hour < hend; hour++)
                 {
-                    var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, hour, i));
-                    if (cntnt != null)
-                        result.AddRange(GetOrUnzip(cntnt));
-                    else break;
+                    for (int i = 0; i < 30; i++)
+                    {
+                        var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, day, hour, i));
+
+                        if (cntnt != null && !(cntnt[0] == 'P' && cntnt[1] == 'K'))
+                        {
+                            var cntList = new List<byte>(cntnt);
+                            var flushPart = 1;
+                            while (true)
+                            {
+                                var cntFlushPart = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, day, hour, i, flushPart));
+                                if (cntFlushPart == null) break;
+                                else
+                                    cntList.AddRange(cntFlushPart);
+                            }
+                            cntnt = cntList.ToArray();
+                        }
+
+                        if (cntnt != null)
+                            result.AddRange(GetOrUnzip(cntnt));
+                        else break;
+                    }
                 }
             }
             return result.ToArray();
@@ -171,10 +243,10 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public int SaveToDBParted(IEnumerable<QHItem> items, ChunkFile file, bool rebuildMeta = true, bool showMessages = true)
         {
-            ChunkFile f = new ChunkFile(file.Name,file.Period, 0, file.Parent);
+            ChunkFile f = new ChunkFile(file.Name, file.Period, 0, file.Parent);
             int part = 0;
             List<QHItem> chunk = new List<QHItem>();
-            foreach(var item in items)
+            foreach (var item in items)
             {
                 if (chunk.Count == MaxCountPerChunk)
                 {
@@ -191,7 +263,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public int CalculatePartCount(IEnumerable<QHItem> items)
         {
-            return items.Count()/MaxCountPerChunk+ items.Count()%MaxCountPerChunk>0?1:0;
+            return items.Count() / MaxCountPerChunk + items.Count() % MaxCountPerChunk > 0 ? 1 : 0;
         }
 
         public void SaveToDB(byte[] content, ChunkFile f, bool showMessages = true)
@@ -200,15 +272,15 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 HistorySerializer.Deserialize(f.Period, content);
             }
-            catch(InvalidDataException ex)
+            catch (InvalidDataException ex)
             {
-                MessageBox.Show("There is a syntax error! Unable to save.\n\n"+ex.Message, "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("There is a syntax error! Unable to save.\n\n" + ex.Message, "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             catch
             {
-                
-                MessageBox.Show("There is a syntax error! Unable to save.\n\n"+ "Check the numeric format and punctuation", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                MessageBox.Show("There is a syntax error! Unable to save.\n\n" + "Check the numeric format and punctuation", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.MainWindow.Activate();
                 return;
             }
@@ -220,9 +292,9 @@ namespace QuoteHistoryGUI.HistoryTools
 
             var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part);
             byte[] value = { };
-            if (meta!=null && meta[4] == 2)
+            if (meta != null && meta[4] == 2)
             {
-                value = content;   
+                value = content;
             }
             else
             {
@@ -232,7 +304,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 zipStream.SetLevel(3); //0-9, 9 being the highest level of compression
 
-                ZipEntry newEntry = new ZipEntry(f.Period+".txt");
+                ZipEntry newEntry = new ZipEntry(f.Period + ".txt");
                 newEntry.DateTime = DateTime.Now;
 
                 zipStream.PutNextEntry(newEntry);
@@ -244,7 +316,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 zipStream.Close();          // Must finish the ZipOutputStream before using outputMemStream.
 
                 outputMemStream.Position = 0;
-                value = outputMemStream.ToArray(); 
+                value = outputMemStream.ToArray();
             }
 
             _dbase.Put(key, value);
@@ -254,7 +326,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>> GetChunkMetaForDB(byte[] content, HistoryDatabaseFuncs.DBEntry entry)
         {
-            var meta = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Meta",entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part));
+            var meta = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Meta", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part));
             var key = HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part);
             byte[] value = { };
             string type = "Zip";
@@ -287,11 +359,11 @@ namespace QuoteHistoryGUI.HistoryTools
             }
             var metaPair = GetRebuildedMeta(content, type, entry);
             KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>> res = new KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>(new KeyValuePair<byte[], byte[]>(key, value), new KeyValuePair<byte[], byte[]>(metaPair.Key, metaPair.Value));
-            return res;  
+            return res;
         }
 
 
-        public KeyValuePair<byte[],byte[]> GetRebuildedMeta(byte[] TextContent, string type, HistoryDatabaseFuncs.DBEntry entry)
+        public KeyValuePair<byte[], byte[]> GetRebuildedMeta(byte[] TextContent, string type, HistoryDatabaseFuncs.DBEntry entry)
         {
             Crc32 hash = new Crc32();
             hash.Update(TextContent);
@@ -374,10 +446,53 @@ namespace QuoteHistoryGUI.HistoryTools
             it.Dispose();
             if (MetaCorruptionMessage != "" && showMessages)
             {
-                MessageBox.Show(MetaCorruptionMessage, "Meta rebuild",MessageBoxButton.OK,MessageBoxImage.Asterisk);
-            } 
+                MessageBox.Show(MetaCorruptionMessage, "Meta rebuild", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+            }
         }
 
+
+        public QHBar[] GetH1FromM1(IEnumerable<QHBar> bars)
+        {
+            if (bars == null || bars.Count() == 0)
+                return new QHBar[] { };
+
+            List<QHBar> resBars = new List<QHBar>();
+
+            var curBar = new QHBar();
+
+
+            curBar.Time = new DateTime(bars.First().Time.Year, bars.First().Time.Month, bars.First().Time.Day, bars.First().Time.Hour, 0, 0);
+            curBar.Open = bars.First().Open;
+            curBar.High = bars.First().High;
+            curBar.Low = bars.First().Low;
+            curBar.Close = bars.First().Close;
+            curBar.Volume = 0;
+
+            foreach (var bar in bars)
+            {
+                var time = new DateTime(bar.Time.Year, bar.Time.Month, bar.Time.Day, bar.Time.Hour, 0, 0);
+                if (curBar.Time != time)
+                {
+                    resBars.Add(curBar);
+                    curBar = new QHBar();
+                    curBar.Time = time;
+                    curBar.Open = bar.Open;
+                    curBar.High = bar.High;
+                    curBar.Low = bar.Low;
+                    curBar.Close = bar.Close;
+                    curBar.Volume = 0;
+                }
+
+                curBar.Close = bar.Close;
+                curBar.Volume += bar.Volume;
+                curBar.High = Math.Max(curBar.High, bar.High);
+                curBar.Low = Math.Min(curBar.Low, bar.Low);
+            }
+            resBars.Add(curBar);
+            resBars.Add(curBar);
+
+            return resBars.ToArray();
+        }
 
         public KeyValuePair<QHBar[], QHBar[]> GetM1FromTicks(IEnumerable<QHTick> ticks)
         {
@@ -394,10 +509,10 @@ namespace QuoteHistoryGUI.HistoryTools
             curBid.Open = curBid.High = curBid.Low = curBid.Close = ticks.First().Bid;
             curAsk.Open = curAsk.High = curAsk.Low = curAsk.Close = ticks.First().Ask;
 
-            foreach(var tick in ticks)
+            foreach (var tick in ticks)
             {
                 var time = new DateTime(tick.Time.Year, tick.Time.Month, tick.Time.Day, tick.Time.Hour, tick.Time.Minute, 0);
-                if (curBid.Time!= time)
+                if (curBid.Time != time)
                 {
                     resBid.Add(curBid);
                     curBid = new QHBar();
@@ -468,7 +583,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
         void SvCntToFld(string content, string period, int part, Folder parent)
         {
-            var chunk = new ChunkFile(period+" file", period, 0, parent);
+            var chunk = new ChunkFile(period + " file", period, 0, parent);
             var meta = new MetaFile(period + " meta", period, 0, parent);
             parent.Folders.Add(chunk);
             parent.Folders.Add(meta);
@@ -480,7 +595,7 @@ namespace QuoteHistoryGUI.HistoryTools
         {
             Stopwatch w = new Stopwatch();
             if (periods == null)
-                periods = new List<string>() { "ticks", "ticks level2", "M1 ask", "M1 bid" };
+                periods = new List<string>() { "ticks", "ticks level2", "M1 ask", "M1 bid", "H1 ask", "H1 bid" };
             if (types == null)
                 types = new List<string>() { "Meta", "Chunk" };
 
@@ -489,8 +604,8 @@ namespace QuoteHistoryGUI.HistoryTools
             if (fold as ChunkFile == null && fold as MetaFile == null)
             {
                 var path = HistoryDatabaseFuncs.GetPath(fold);
-                if(path.Count>4)
-                    periods = new List<string>() { "ticks", "ticks level2"};
+                if (path.Count > 4)
+                    periods = new List<string>() { "ticks", "ticks level2" };
                 int[] dateTime = { 2000, 1, 1, 0 };
                 for (int i = 1; i < path.Count; i++)
                 {
@@ -499,9 +614,9 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 foreach (var period in HistoryDatabaseFuncs.periodicityDict)
                 {
-                    if(periods.Contains(period.Key))
-                    foreach (var type in HistoryDatabaseFuncs.typeDict)
-                    {
+                    if (periods.Contains(period.Key))
+                        foreach (var type in HistoryDatabaseFuncs.typeDict)
+                        {
                             if (types.Contains(type.Key))
                             {
                                 var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
@@ -510,7 +625,7 @@ namespace QuoteHistoryGUI.HistoryTools
                                 while (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), key, true, path.Count - 1, true, true, false, false))
                                 {
                                     if (resList.Count < 128)
-                                        resList.Add(new KeyValuePair<byte[], byte[]>(it.Key(), onlyKeys?null:it.Value()));
+                                        resList.Add(new KeyValuePair<byte[], byte[]>(it.Key(), onlyKeys ? null : it.Value()));
                                     else
                                     {
                                         foreach (var pair in resList)
@@ -522,7 +637,7 @@ namespace QuoteHistoryGUI.HistoryTools
                                 foreach (var pair in resList)
                                     yield return pair;
                             }
-                    }
+                        }
                 }
             }
             else
@@ -548,13 +663,13 @@ namespace QuoteHistoryGUI.HistoryTools
                 if (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), key, true, path.Count - 2, true, true, true))
                 {
                     var file = fold as HistoryFile;
-                    if(periods.Contains(file.Period) && types.Contains(type))
-                    yield return new KeyValuePair<byte[], byte[]>(it.Key(), onlyKeys ? null : it.Value());
+                    if (periods.Contains(file.Period) && types.Contains(type))
+                        yield return new KeyValuePair<byte[], byte[]>(it.Key(), onlyKeys ? null : it.Value());
                 }
             }
 
             it.Dispose();
         }
     }
-   
+
 }

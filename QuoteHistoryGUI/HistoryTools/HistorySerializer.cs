@@ -95,7 +95,7 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 return DeserializeTicksLevel2(content, degreeOfParallelism);
             }
-            else if (period == "M1 ask" || period == "M1 bid" || period == "H1 ask" || period == "H1 bid")
+            else if (period == "M1 ask" || period == "M1 bid" || period == "H1 ask" || period == "H1 bid" )
             {
                 return DeserializeBars(content);
             }
