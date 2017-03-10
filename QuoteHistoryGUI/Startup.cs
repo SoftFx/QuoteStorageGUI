@@ -48,7 +48,7 @@ namespace QuoteHistoryGUI
                         {
                             QHApp myConsoleApp = new QHApp {ApplicationMode = QHApp.AppMode.ImportDialog};
 
-                            if (args.Length == 2 || args.Length > 3)
+                            if (args.Length == 2 || args.Length > 4)
                             {
                                 Console.Out.WriteLine("\nIncorrect arguments. See usage:");
                                 ShowUsage();
@@ -61,6 +61,15 @@ namespace QuoteHistoryGUI
                                 myConsoleApp.ApplicationMode = QHApp.AppMode.Console;
                                 myConsoleApp.Source = args[2];
                                 myConsoleApp.Destination = args[1];
+                            }
+
+                            if (args.Length == 4)
+                            {
+                                Console.Out.WriteLine($"\nImporting from \"{args[2]}\" to \"{args[1]}\"");
+                                myConsoleApp.ApplicationMode = QHApp.AppMode.Console;
+                                myConsoleApp.Source = args[2];
+                                myConsoleApp.Destination = args[1];
+                                myConsoleApp.templates = args[3];
                             }
 
                             myConsoleApp.Run();

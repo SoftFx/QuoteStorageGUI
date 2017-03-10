@@ -169,6 +169,76 @@ namespace QuoteHistoryGUI.Dialogs
             }
         }
 
+        public void DoConsoleImport(StorageInstanceModel destination, StorageInstanceModel source, string templateStr)
+        {
+            StringBuilder templText = new StringBuilder();
+            foreach(var ch in templateStr)
+            {
+                templText.Append(ch);
+                if (ch == ';')
+                    templText.Append('\n');
+            }
+
+            templateText = templText.ToString();
+            _destination = destination;
+            _source = source;
+
+
+            _interactor = new HistoryInteractor();
+            _interactor.Source = _destination;
+            _interactor.Destination = _source;
+
+            temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
+
+            CopyWorker = new BackgroundWorker();
+            CopyWorker.WorkerReportsProgress = true;
+            CopyWorker.WorkerSupportsCancellation = true;
+            CopyWorker.DoWork += worker_Copy;
+            CopyWorker.ProgressChanged += ImportConsoleProgressChanged;
+            CopyWorker.RunWorkerCompleted += worker_ConsoleCopied;
+            CopyWorker.RunWorkerCompleted += QHAppWindowModel.throwExceptions;
+            CopyWorker.RunWorkerAsync(CopyWorker);
+        }
+
+        int lastConsoleOutputLen = -1;
+        KeyValuePair<int, int> cursorPos = new KeyValuePair<int, int>(0, 0);
+        private void ImportConsoleProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            var message = e.UserState as string;
+            message = "";
+
+            if (lastConsoleOutputLen >= 0)
+            {
+                if (cursorPos.Key >= 0 && cursorPos.Value >= 0)
+                {
+                    Console.CursorLeft = cursorPos.Key;
+                    Console.CursorTop = cursorPos.Value;
+                    Console.Write(new string(' ', lastConsoleOutputLen));
+                    Console.CursorLeft = cursorPos.Key;
+                    Console.CursorTop = cursorPos.Value;
+                }
+            }
+            else
+            {
+                try
+                {
+                    cursorPos = new KeyValuePair<int, int>(Console.CursorLeft, Console.CursorTop);
+                }
+                catch { cursorPos = new KeyValuePair<int, int>(-1, -1); }
+            }
+
+            Console.WriteLine(message);
+            lastConsoleOutputLen = message.Length;
+            log.Info("Import progresss report: " + message);
+        }
+
+        private void worker_ConsoleCopied(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Console.WriteLine("Import completed!");
+            Close();
+        }
+
+
         private void worker_Copy(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = e.Argument as BackgroundWorker;
