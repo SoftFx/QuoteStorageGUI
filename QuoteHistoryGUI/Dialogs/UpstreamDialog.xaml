@@ -21,8 +21,8 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="40"/>
-            <ColumnDefinition Width="140"/>
-            <ColumnDefinition Width="30"/>
+            <ColumnDefinition Width="120"/>
+            <ColumnDefinition Width="100"/>
             <ColumnDefinition Width="140"/>
             <ColumnDefinition Width="50"/>
             <ColumnDefinition Width="auto"/>
@@ -31,8 +31,21 @@
 
         <Button Grid.Column="5" Margin="4" Content="Upstream" Click="UpstreamButton_Click" Name="UpstreamButton" MinWidth="75"/>
         <TextBlock Name="UpstreamStatusBlock" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" Margin="4"/>
-        <!--<TextBlock Text="Recursive (level2->ticks->M1): " HorizontalAlignment="Right" VerticalAlignment="Center" Grid.ColumnSpan="2"/>-->
-        <!--<CheckBox Name="Level2Box" Grid.Column="2" Grid.Row="0"  VerticalAlignment="Center"  Margin="3" HorizontalAlignment="Center" />-->
+        <TextBlock Text="Upstream type: " HorizontalAlignment="Right" VerticalAlignment="Center" Grid.ColumnSpan="2"/>
+        <ComboBox Name="TypeBox" Margin="5" Grid.Column="2" SelectedIndex="0">
+            <ComboBoxItem>
+                <TextBlock Text="Full"/>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <TextBlock Text="level2->ticks"/>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <TextBlock Text="ticks->M1"/>
+            </ComboBoxItem>
+            <ComboBoxItem>
+                <TextBlock Text="M1->H1"/>
+            </ComboBoxItem>
+        </ComboBox>
         <TextBlock Text="DegreeOfParallelism: " Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Right"/>
         <ComboBox Name="DegreeBox" Margin="5" Grid.Column="4" SelectedIndex="3">
             <ComboBoxItem>
