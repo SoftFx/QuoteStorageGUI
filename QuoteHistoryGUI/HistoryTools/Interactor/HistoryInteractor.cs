@@ -60,7 +60,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
 
 
-        public void Copy(BackgroundWorker worker = null, IEnumerable<Folder> selection = null)
+        public void Copy(BackgroundWorker worker = null, IEnumerable<Folder> selection = null, List<string> periods = null)
         {
             List<byte[]> deleteList = new List<byte[]>();
             int copiedCnt = 0;
@@ -71,7 +71,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 selection = Selection;
             foreach (var fold in selection)
             {
-                var files = Source.Editor.EnumerateFilesInFolder(fold);
+                var files = Source.Editor.EnumerateFilesInFolder(fold, periods);
                 foreach (var file in files)
                 {
                     if (worker.CancellationPending == true)

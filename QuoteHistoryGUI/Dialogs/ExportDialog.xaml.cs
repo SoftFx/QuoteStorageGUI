@@ -38,6 +38,7 @@ namespace QuoteHistoryGUI.Dialogs
         bool canceled = false;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
         Dispatcher _dispatcher;
+        List<string> periods = null;
         public ExportDialog(StorageInstanceModel source, HistoryInteractor interactor)
         {
             try
@@ -113,6 +114,24 @@ namespace QuoteHistoryGUI.Dialogs
                     temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
                     templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
 
+                    switch (FileTypeBox.SelectedIndex)
+                    {
+                        case 1:
+                            periods = new List<string>() {"ticks level2" };
+                            break;
+                        case 2:
+                            periods = new List<string>() { "ticks" };
+                            break;
+                        case 3:
+                            periods = new List<string>() { "M1 ask", "M1 bid" };
+                            break;
+                        case 4:
+                            periods = new List<string>() { "H1 ask", "H1 bid" };
+                            break;
+                        default: break;
+                    }
+
+
                     CopyButton.IsEnabled = false;
                     CopyWorker.WorkerReportsProgress = true;
                     CopyWorker.WorkerSupportsCancellation = true;
@@ -169,7 +188,7 @@ namespace QuoteHistoryGUI.Dialogs
                 worker.ReportProgress(1, "Template: " + templ);
                 var matched = temW.GetByMatch(templ, worker);
 
-                _interactor.Copy(worker, matched);
+                _interactor.Copy(worker, matched, periods);
                 if (isMove)
                 {
                     _interactor.Dispatcher = Dispatcher;
@@ -243,6 +262,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (TemplateExpander != null)
                 TemplateExpander.IsEnabled = false;
             OperationTypeBox.IsEnabled = false;
+            FileTypeBox.IsEnabled = false;
         }
 
         private void TemplateRadioButton_Checked(object sender, RoutedEventArgs e)
@@ -250,6 +270,7 @@ namespace QuoteHistoryGUI.Dialogs
             if (TemplateExpander != null)
                 TemplateExpander.IsEnabled = true;
             OperationTypeBox.IsEnabled = true;
+            FileTypeBox.IsEnabled = true;
         }
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)

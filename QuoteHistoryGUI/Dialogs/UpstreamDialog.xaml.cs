@@ -351,9 +351,9 @@ namespace QuoteHistoryGUI.Dialogs
         {
             if (!canceled)
             {
+                log.Info("Upstream performed");
                 _dispatcher.Invoke(delegate
                 { MessageBox.Show(this, "Upstream update completed", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk); });
-                log.Info("Upstream performed");
             }
             Close();
             UpstreamButton.IsEnabled = true;
