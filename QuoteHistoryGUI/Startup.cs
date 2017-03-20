@@ -1,7 +1,9 @@
 ﻿using log4net;
+using QuoteHistoryGUI.HistoryTools;
 using QuoteHistoryGUI.Views;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -21,18 +23,17 @@ namespace QuoteHistoryGUI
             "QuoteHistoryGUI.exe -import \"C:\\Quotes History\" \"C:\\New Quotes History\"";
 
         public static readonly ILog log = LogManager.GetLogger(typeof(Startup));
+        
 
-
-        [DllImport("kernel32.dll")]
-        static extern bool AttachConsole(int dwProcessId);
-        private const int ATTACH_PARENT_PROCESS = -1;
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        static extern bool FreeConsole();
 
         [STAThread]
         public static void Main(string[] args)
         {
+            
+            Console.Out.WriteLine("Test");
             log4net.Config.XmlConfigurator.Configure();
-
-            AttachConsole(ATTACH_PARENT_PROCESS);
 
             if (args.Length > 0)
             {
@@ -46,8 +47,9 @@ namespace QuoteHistoryGUI
                     case "-import":
                         try
                         {
-                            QHApp myConsoleApp = new QHApp {ApplicationMode = QHApp.AppMode.ImportDialog};
-
+                            string Source = null;
+                            string Destination = null;
+                            string templates = null;
                             if (args.Length == 2 || args.Length > 4)
                             {
                                 Console.Out.WriteLine("\nIncorrect arguments. See usage:");
@@ -58,34 +60,41 @@ namespace QuoteHistoryGUI
                             if (args.Length == 3)
                             {
                                 Console.Out.WriteLine($"\nImporting from \"{args[2]}\" to \"{args[1]}\"");
-                                myConsoleApp.ApplicationMode = QHApp.AppMode.Console;
-                                myConsoleApp.Source = args[2];
-                                myConsoleApp.Destination = args[1];
+                                Source = args[2];
+                                Destination = args[1];
                             }
 
                             if (args.Length == 4)
                             {
                                 Console.Out.WriteLine($"\nImporting from \"{args[2]}\" to \"{args[1]}\"");
-                                myConsoleApp.ApplicationMode = QHApp.AppMode.Console;
-                                myConsoleApp.Source = args[2];
-                                myConsoleApp.Destination = args[1];
-                                myConsoleApp.templates = args[3];
+                                Source = args[2];
+                                Destination = args[1];
+                                templates = args[3];
                             }
 
-                            myConsoleApp.Run();
+                            if (!Directory.Exists(Destination + "\\HistoryDB"))
+                                Directory.CreateDirectory(Destination + "\\HistoryDB");
+
+                            var loadingMode = Models.StorageInstanceModel.LoadingMode.None;
+                            if (templates != null)
+                                loadingMode = Models.StorageInstanceModel.LoadingMode.Sync;
+                            ConsoleCommands.Import(new Models.StorageInstanceModel(Destination, null, loadingMode: loadingMode), new Models.StorageInstanceModel(Source, null, loadingMode: loadingMode), templates);
+
                         }
                         catch (Exception e)
                         {
                             Console.Out.WriteLine("Check pathes and close storages!\r\nError: " + e.Message);
-                            log.Error("Check pathes and close storages!\r\nError: "+e.Message+"\r\n"+e.StackTrace);
+                            log.Error("Check pathes and close storages!\r\nError: " + e.Message + "\r\n" + e.StackTrace);
                         }
                         break;
                     default:
-                        new QHApp().Run();
+                        Console.Out.WriteLine("Cannot understand params");
                         break;
                 }
             }
-            else new QHApp().Run();
+            else {
+                FreeConsole();
+                new QHApp().Run(); }
         }
 
         private static void ShowUsage()

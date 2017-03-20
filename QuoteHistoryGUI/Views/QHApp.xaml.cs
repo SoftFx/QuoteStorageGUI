@@ -41,14 +41,7 @@ namespace QuoteHistoryGUI.Views
                         new ImportDialog().Show();
                         break;
                     case AppMode.Console:
-                        if (!Directory.Exists(Destination + "\\HistoryDB"))
-                            Directory.CreateDirectory(Destination + "\\HistoryDB");
 
-                        var loadingMode = Models.StorageInstanceModel.LoadingMode.None;
-                        if(templates!=null)
-                            loadingMode = Models.StorageInstanceModel.LoadingMode.Sync;
-                        ConsoleCommands.Import(new Models.StorageInstanceModel(Destination, this.Dispatcher, loadingMode: loadingMode), new Models.StorageInstanceModel(Source, this.Dispatcher, loadingMode: loadingMode), templates);
-                        this.Shutdown();
                         break;
                     default:
 

@@ -28,14 +28,15 @@ namespace QuoteHistoryGUI.Views
 
         private readonly QHAppWindowModel _model;
         public QHAppWindowView()
-        {        
-            DataContext = _model = new QHAppWindowModel(this.Dispatcher);
+        {
             InitializeComponent();
+            DataContext = _model = new QHAppWindowModel(this.Dispatcher);
             this.Closed += OnClosed;
         }
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             mainWindow = this as Window;
+            _model.MainWindow = mainWindow as QHAppWindowView;
             var dlg = new StorageSelectionDialog()
             {
                 Owner = mainWindow

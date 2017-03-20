@@ -106,6 +106,7 @@ namespace QuoteHistoryGUI
             if (_dispatcher != null)
                 _dispatcher.Invoke(delegate
                 { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; });
+            else { _folders.Insert(0, new LoadingFolder()); _folders[0].Parent = null; }
             Iterator it = null;
             it = _dbase.CreateIterator();
             it.SeekToFirst();
@@ -123,6 +124,7 @@ namespace QuoteHistoryGUI
                 if (_dispatcher != null)
                     _dispatcher.Invoke(delegate
                 { _folders.Insert(_folders.Count - 1, new Folder(sym)); _folders[_folders.Count - 2].Parent = null; });
+                else { _folders.Insert(_folders.Count - 1, new Folder(sym)); _folders[_folders.Count - 2].Parent = null; }
 
                 nextKey.Add(3);
 
@@ -132,6 +134,7 @@ namespace QuoteHistoryGUI
             it.Dispose();
             if (_dispatcher != null)
                 _dispatcher.Invoke(delegate { _folders.RemoveAt(_folders.Count - 1); });
+            else { _folders.RemoveAt(_folders.Count - 1); }
             lock (DBDisposeLock)
             {
                 loading--;

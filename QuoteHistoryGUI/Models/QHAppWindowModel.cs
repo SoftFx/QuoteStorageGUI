@@ -168,7 +168,7 @@ namespace QuoteHistoryGUI.Models
         public QHAppWindowModel(Dispatcher dispatcher)
         {
 
-            MainWindow = Application.Current.MainWindow as QHAppWindowView;
+            
             Interactor = new HistoryInteractor(dispatcher);
             OpenBtnClick = new SingleDelegateCommand(OpenBaseDelegate);
             ImportBtnClick = new SingleDelegateCommand(ImportDelegate);
