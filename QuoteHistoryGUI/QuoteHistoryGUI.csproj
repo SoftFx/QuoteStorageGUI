@@ -127,6 +127,7 @@
     <Compile Include="Dialogs\UpstreamDialog.xaml.cs">
       <DependentUpon>UpstreamDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="HistoryTools\ConsoleCommands.cs" />
     <Compile Include="HistoryTools\HistoryRecalculateUpdater.cs" />
     <Compile Include="HistoryTools\HistoryParams.cs" />
     <Compile Include="HistoryTools\HistorySerializer.cs" />

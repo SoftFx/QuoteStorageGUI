@@ -100,7 +100,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                     if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
                         Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
-                    _destination = new StorageInstanceModel(DestinationBox.Text, _dispatcher, _interactor,StorageInstanceModel.OpenMode.ReadWrite,StorageInstanceModel.LoadingMode.None);
+                    _destination = new StorageInstanceModel(DestinationBox.Text, _dispatcher, _interactor, StorageInstanceModel.OpenMode.ReadWrite, StorageInstanceModel.LoadingMode.None);
                     _interactor.Destination = _destination;
 
 
@@ -117,7 +117,7 @@ namespace QuoteHistoryGUI.Dialogs
                     switch (FileTypeBox.SelectedIndex)
                     {
                         case 1:
-                            periods = new List<string>() {"ticks level2" };
+                            periods = new List<string>() { "ticks level2" };
                             break;
                         case 2:
                             periods = new List<string>() { "ticks" };
@@ -187,8 +187,10 @@ namespace QuoteHistoryGUI.Dialogs
             {
                 worker.ReportProgress(1, "Template: " + templ);
                 var matched = temW.GetByMatch(templ, worker);
-
-                _interactor.Copy(worker, matched, periods);
+                _interactor.Copy(worker, matched, periods, (message) =>
+                {
+                    worker.ReportProgress(1, message);
+                });
                 if (isMove)
                 {
                     _interactor.Dispatcher = Dispatcher;
@@ -204,7 +206,11 @@ namespace QuoteHistoryGUI.Dialogs
         private void worker_Export(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = e.Argument as BackgroundWorker;
-            _interactor.Import(true, worker);
+            _interactor.Import(true, worker, (key, copiedCnt) =>
+            {
+                var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
+                worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+            });
         }
         private void CopyProgressChanged(object sender, ProgressChangedEventArgs e)
         {

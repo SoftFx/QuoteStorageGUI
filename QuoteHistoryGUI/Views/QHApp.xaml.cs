@@ -1,5 +1,6 @@
 ﻿using log4net;
 using QuoteHistoryGUI.Dialogs;
+using QuoteHistoryGUI.HistoryTools;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -42,15 +43,12 @@ namespace QuoteHistoryGUI.Views
                     case AppMode.Console:
                         if (!Directory.Exists(Destination + "\\HistoryDB"))
                             Directory.CreateDirectory(Destination + "\\HistoryDB");
-                        if (templates == null)
-                        {
-                            new ImportDialog(new Models.StorageInstanceModel(Destination, this.Dispatcher), new Models.StorageInstanceModel(Source, this.Dispatcher)).DoImport(false);
-                        }
-                        else
-                        {
-                            var dlg = new SmartImportDialog();
-                            dlg.DoConsoleImport(new Models.StorageInstanceModel(Source, this.Dispatcher, loadingMode:Models.StorageInstanceModel.LoadingMode.Sync), new Models.StorageInstanceModel(Destination, this.Dispatcher,loadingMode:Models.StorageInstanceModel.LoadingMode.Sync), templates);
-                        }
+
+                        var loadingMode = Models.StorageInstanceModel.LoadingMode.None;
+                        if(templates!=null)
+                            loadingMode = Models.StorageInstanceModel.LoadingMode.Sync;
+                        ConsoleCommands.Import(new Models.StorageInstanceModel(Destination, this.Dispatcher, loadingMode: loadingMode), new Models.StorageInstanceModel(Source, this.Dispatcher, loadingMode: loadingMode), templates);
+                        this.Shutdown();
                         break;
                     default:
 

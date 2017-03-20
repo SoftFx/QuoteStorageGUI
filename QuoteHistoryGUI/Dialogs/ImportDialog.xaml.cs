@@ -136,6 +136,8 @@ namespace QuoteHistoryGUI.Dialogs
                 ReportBlock.Text = "Import starting...";
                 ImportBtn.IsEnabled = false;
 
+
+
                 if (Interactor.Source != null && Interactor.Destination != null)
                 {
                     log.Info("Import source: " + Interactor.Source.StoragePath);
@@ -169,7 +171,10 @@ namespace QuoteHistoryGUI.Dialogs
         {
             if (!isUIVersion) Console.Out.WriteLine("Import Started");
             if (!isUIVersion) Console.Out.WriteLine("...");
-            Interactor.Import(Replace, Worker);
+            Interactor.Import(Replace, Worker, (key, copiedCnt) => {
+                var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
+                Worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+            });
             if (isUIVersion) Interactor.Destination.Refresh();
         }
 
@@ -195,8 +200,8 @@ namespace QuoteHistoryGUI.Dialogs
                 Interactor.Source.HistoryStoreDB.Dispose();
                 Interactor.Destination.HistoryStoreDB.Dispose();
             }
-            this.Close();
-            
+            //this.Close();
+            log.Info("Import closing...");
         }
 
         int lastConsoleOutputLen = -1;

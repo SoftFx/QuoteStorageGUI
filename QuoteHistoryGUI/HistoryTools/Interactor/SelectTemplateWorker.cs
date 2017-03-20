@@ -111,7 +111,8 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
 
         public IEnumerable<Folder> GetByMatch(string itemplate, BackgroundWorker worker = null, bool fillToTicksPath = false)
         {
-            worker.ReportProgress(1, "Template processing: " + itemplate);
+            if(worker!=null)
+                worker.ReportProgress(1, "Template processing: " + itemplate);
 
             if (itemplate == "")
                 yield break;

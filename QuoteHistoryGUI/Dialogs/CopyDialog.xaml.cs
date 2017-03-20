@@ -36,19 +36,19 @@ namespace QuoteHistoryGUI.Dialogs
         bool isMove = false;
         public CopyDialog(StorageInstanceModel source, ObservableCollection<StorageInstanceModel> tabs, HistoryInteractor interactor)
         {
-            
+
             InitializeComponent();
             this.MetaMatching.IsChecked = false;
             Source.Text = source.StoragePath;
-            foreach(var tab in tabs)
+            foreach (var tab in tabs)
             {
-                if (tab != source) _destination = tab; 
+                if (tab != source) _destination = tab;
             }
             Destination.Text = _destination.StoragePath;
             var win = Application.Current.MainWindow as QHAppWindowView;
-            
+
             _interactor = interactor;
-            
+
             TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
                 HistoryInteractor.GetTemplates(interactor.Selection));
             _interactor.Selection.Clear();
@@ -79,7 +79,7 @@ namespace QuoteHistoryGUI.Dialogs
 
             isMetaMatching = this.MetaMatching.IsChecked.HasValue && this.MetaMatching.IsChecked.Value;
             CopyButton.IsEnabled = false;
-            CopyWorker.WorkerReportsProgress=true;
+            CopyWorker.WorkerReportsProgress = true;
             CopyWorker.WorkerSupportsCancellation = true;
             CopyWorker.DoWork += worker_Copy;
             CopyWorker.ProgressChanged += CopyProgressChanged;
@@ -101,7 +101,7 @@ namespace QuoteHistoryGUI.Dialogs
             }
             else
             {
-                
+
 
 
                 foreach (var templ in templates)
@@ -109,7 +109,11 @@ namespace QuoteHistoryGUI.Dialogs
                     worker.ReportProgress(1, "Template: " + templ);
                     var matched = temW.GetByMatch(templ, worker).ToArray();
 
-                    _interactor.Copy(worker, matched);
+                    _interactor.Copy(worker, matched, null, (message) =>
+                {
+
+                    worker.ReportProgress(1, message);
+                });
                     if (isMove)
                     {
                         _interactor.Dispatcher = Dispatcher;
@@ -128,7 +132,7 @@ namespace QuoteHistoryGUI.Dialogs
         }
         private void worker_Copied(object sender, RunWorkerCompletedEventArgs e)
         {
-            MessageBox.Show(this, "Done!", "Result",MessageBoxButton.OK,MessageBoxImage.Asterisk);
+            MessageBox.Show(this, "Done!", "Result", MessageBoxButton.OK, MessageBoxImage.Asterisk);
             Close();
             CopyButton.IsEnabled = true;
         }

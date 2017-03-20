@@ -18,7 +18,8 @@ namespace QuoteHistoryGUI.HistoryTools
         public Dispatcher Dispatcher;
         public List<Folder> Selection = new List<Folder>();
 
-        public HistoryInteractor(Dispatcher dispatcher = null) {
+        public HistoryInteractor(Dispatcher dispatcher = null)
+        {
             Dispatcher = dispatcher;
         }
 
@@ -60,7 +61,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
 
 
-        public void Copy(BackgroundWorker worker = null, IEnumerable<Folder> selection = null, List<string> periods = null)
+        public void Copy(BackgroundWorker worker = null, IEnumerable<Folder> selection = null, List<string> periods = null, Action<string> reportAction = null)
         {
             List<byte[]> deleteList = new List<byte[]>();
             int copiedCnt = 0;
@@ -74,22 +75,23 @@ namespace QuoteHistoryGUI.HistoryTools
                 var files = Source.Editor.EnumerateFilesInFolder(fold, periods);
                 foreach (var file in files)
                 {
-                    if (worker.CancellationPending == true)
+                    if (worker?.CancellationPending == true)
                     {
                         return;
                     }
                     Destination.HistoryStoreDB.Put(file.Key, file.Value);
                     copiedCnt++;
-                    if (worker != null && (DateTime.UtcNow - lastReport).Seconds > 0.25)
+
+                    if (reportAction != null && (DateTime.UtcNow - lastReport).Seconds > 0.25)
                     {
                         var dbentry = DeserealizeKey(file.Key);
-                        worker.ReportProgress(1,"[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                        reportAction.Invoke("[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
                         lastReport = DateTime.UtcNow;
                     }
                 }
             }
-
-            worker.ReportProgress(1, "[" + copiedCnt + "] files copied");
+            
+            reportAction.Invoke("[" + copiedCnt + "] files copied");
         }
 
         public void Copy(IEnumerable<DBEntry> matchedEntries, BackgroundWorker worker = null, bool copyChunk = false)
@@ -98,7 +100,7 @@ namespace QuoteHistoryGUI.HistoryTools
             int copiedCnt = 0;
             DateTime lastReport = DateTime.UtcNow.AddSeconds(-2);
 
-            foreach(var entry in matchedEntries)
+            foreach (var entry in matchedEntries)
             {
                 copiedCnt++;
 
@@ -133,7 +135,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
             }
 
-                worker.ReportProgress(1, "[" + copiedCnt + "] files copied");
+            worker.ReportProgress(1, "[" + copiedCnt + "] files copied");
         }
 
         public int Delete(IEnumerable<Folder> selection = null, BackgroundWorker worker = null, bool forsed = false)
@@ -143,7 +145,7 @@ namespace QuoteHistoryGUI.HistoryTools
             if (selection == null)
                 selection = Selection;
 
-            
+
 
             HistoryEditor editor = new HistoryEditor(Source.HistoryStoreDB);
             foreach (var fold in selection)
@@ -297,9 +299,9 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
                 it.Dispose();
             }
-            if(worker!=null)
-            worker.ReportProgress(1, "[" + deleteCnt + "] files deleted");
-            
+            if (worker != null)
+                worker.ReportProgress(1, "[" + deleteCnt + "] files deleted");
+
             return 1;
         }
 
@@ -314,45 +316,44 @@ namespace QuoteHistoryGUI.HistoryTools
         }
 
 
-        public void Import(bool replace = true, BackgroundWorker worker = null)
+        public void Import(bool replace = true, BackgroundWorker worker = null, Action<byte[], int> reportAction = null)
         {
-                var sourceIter = Source.HistoryStoreDB.CreateIterator();
-                sourceIter.SeekToFirst();
-                DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
-                int cnt = 0;
-                while (sourceIter.Valid())
+            var sourceIter = Source.HistoryStoreDB.CreateIterator();
+            sourceIter.SeekToFirst();
+            DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
+            int cnt = 0;
+            while (sourceIter.Valid())
+            {
+                if (worker?.CancellationPending == true)
                 {
-                    if (worker.CancellationPending == true)
-                    {
-                        sourceIter.Dispose();
-                        return;
-                    }
+                    sourceIter.Dispose();
+                    return;
+                }
 
-                    cnt++;
-                    if (replace)
+                cnt++;
+                if (replace)
+                {
+                    Destination.HistoryStoreDB.Put(sourceIter.Key(), sourceIter.Value());
+                }
+                else
+                {
+                    if (Destination.HistoryStoreDB.Get(sourceIter.Key()) == null)
                     {
                         Destination.HistoryStoreDB.Put(sourceIter.Key(), sourceIter.Value());
                     }
-                    else
-                    {
-                        if (Destination.HistoryStoreDB.Get(sourceIter.Key()) == null)
-                        {
-                            Destination.HistoryStoreDB.Put(sourceIter.Key(), sourceIter.Value());
-                        }
-                    }
-
-                    if (worker != null && (DateTime.Now - ReportTime).Seconds > 0.25)
-                    {
-                        var dbentry = DeserealizeKey(sourceIter.Key());
-                        worker.ReportProgress(1, "[" + cnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
-                        ReportTime = DateTime.Now;
-                    }
-
-                    sourceIter.Next();
                 }
-                sourceIter.Dispose(); 
+
+                if (reportAction != null && (DateTime.UtcNow - ReportTime).Seconds > 0.25)
+                {
+                    reportAction.Invoke(sourceIter.Key(), cnt);
+                    ReportTime = DateTime.UtcNow;
+                }
+
+                sourceIter.Next();
+            }
+            sourceIter.Dispose();
         }
-        
+
 
     }
 }

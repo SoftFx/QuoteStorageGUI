@@ -273,25 +273,20 @@ namespace QuoteHistoryGUI.Dialogs
             }
             else
             {
-
-
-
                 foreach (var templ in templates)
                 {
                     worker.ReportProgress(1, "Template: " + templ);
                     var matched = temW.GetByMatch(templ, worker);
-
-                    _interactor.Copy(worker, matched, periods);
+                    _interactor.Copy(worker, matched, periods, (message) => {
+                            worker.ReportProgress(1, message);
+                    });
                     if (isMove)
                     {
                         _interactor.Dispatcher = Dispatcher;
                         _interactor.Delete(matched, worker,true);
                         _interactor.Dispatcher = null;
                     }
-
-
                 }
-
             }
             _interactor.Destination.Refresh();
         }
@@ -299,7 +294,10 @@ namespace QuoteHistoryGUI.Dialogs
         private void worker_Import(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = e.Argument as BackgroundWorker;
-            _interactor.Import(true, worker);
+            _interactor.Import(true, worker, (key, copiedCnt) => {
+                    var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
+                    worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+            });
             _interactor.Destination.Refresh();
         }
         private void CopyProgressChanged(object sender, ProgressChangedEventArgs e)
