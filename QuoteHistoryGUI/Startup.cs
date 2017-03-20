@@ -32,8 +32,10 @@ namespace QuoteHistoryGUI
         public static void Main(string[] args)
         {
             
-            Console.Out.WriteLine("Test");
             log4net.Config.XmlConfigurator.Configure();
+
+            foreach (var a in args)
+                Console.WriteLine(a);
 
             if (args.Length > 0)
             {
