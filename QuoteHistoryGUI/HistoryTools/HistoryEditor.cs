@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Windows;
 using System.Diagnostics;
+using System.ComponentModel;
+using QuoteHistoryGUI.HistoryTools.Interactor;
+using System.Threading;
 
 namespace QuoteHistoryGUI.HistoryTools
 {
@@ -163,7 +166,10 @@ namespace QuoteHistoryGUI.HistoryTools
                                 var cntFlushPart = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", f.Period, dateTime[0], dateTime[1], day, hour, i, flushPart));
                                 if (cntFlushPart == null) break;
                                 else
+                                {
                                     cntList.AddRange(cntFlushPart);
+                                    flushPart++;
+                                }
                             }
                             cntnt = cntList.ToArray();
                         }
@@ -227,7 +233,10 @@ namespace QuoteHistoryGUI.HistoryTools
                                 var cntFlushPart = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, day, hour, i, flushPart));
                                 if (cntFlushPart == null) break;
                                 else
+                                {
                                     cntList.AddRange(cntFlushPart);
+                                    flushPart++;
+                                }
                             }
                             cntnt = cntList.ToArray();
                         }
@@ -670,6 +679,6 @@ namespace QuoteHistoryGUI.HistoryTools
 
             it.Dispose();
         }
-    }
 
+    }
 }

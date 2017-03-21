@@ -164,7 +164,9 @@ namespace QuoteHistoryGUI
 
             LoadFolders();
             LoadFiles();
-            _dispatcher.Invoke(delegate { _folder.Folders?.RemoveAt(0); });
+            if (_dispatcher != null)
+                _dispatcher.Invoke(delegate { _folder.Folders?.RemoveAt(0); });
+            else _folder.Folders?.RemoveAt(0);
         }
         public void Refresh(ObservableCollection<Folder> folders)
         {
@@ -226,14 +228,25 @@ namespace QuoteHistoryGUI
                         {
                             if (HistoryDatabaseFuncs.ValidateKeyByKey(getedKey, key, true, path.Count, false, true))
                             {
-                                _dispatcher.Invoke(delegate
+                                if (_dispatcher != null)
+                                {
+                                    _dispatcher.Invoke(delegate
+                                    {
+                                        if (_folder.Folders != null)
+                                        {
+                                            _folder.Folders.Add(new Folder(DT.ToString()));
+                                            _folder.Folders[_folder.Folders.Count - 1].Parent = _folder;
+                                        }
+                                    });
+                                }
+                                else
                                 {
                                     if (_folder.Folders != null)
                                     {
                                         _folder.Folders.Add(new Folder(DT.ToString()));
                                         _folder.Folders[_folder.Folders.Count - 1].Parent = _folder;
                                     }
-                                });
+                                }
                                 break;
                             }
                         }
@@ -314,7 +327,9 @@ namespace QuoteHistoryGUI
                                 {
                                     var chunk = new ChunkFile(names[i] + " file" + (getedKey[getedKey.Length - 2] > 0 ? ("." + getedKey[getedKey.Length - 2] + "") : ""), names[i], getedKey[getedKey.Length - 2]);
                                     chunk.Parent = _folder;
-                                    _dispatcher.Invoke(delegate { _folder.Folders?.Add(chunk); });
+                                    if (_dispatcher != null)
+                                        _dispatcher.Invoke(delegate { _folder.Folders?.Add(chunk); });
+                                    else { _folder.Folders?.Add(chunk); }
                                     if (part == getedKey[getedKey.Length - 2])
                                         break;
                                     part = getedKey[getedKey.Length - 2];
@@ -328,6 +343,8 @@ namespace QuoteHistoryGUI
                                     //_dispatcher.Invoke(delegate { Application.Current.MainWindow.Activate(); });
                                 }
                                 else
+                                    if (_dispatcher != null)
+                                {
                                     _dispatcher.Invoke(delegate
                                {
                                    if (_folder.Folders != null)
@@ -336,6 +353,15 @@ namespace QuoteHistoryGUI
                                        _folder.Folders[_folder.Folders.Count - 1].Parent = _folder;
                                    }
                                });
+                                }
+                                else
+                                {
+                                    if (_folder.Folders != null)
+                                    {
+                                        _folder.Folders.Add(new MetaFile(names[i] + " meta" + (getedKey[getedKey.Length - 2] > 0 ? ("." + getedKey[getedKey.Length - 2] + "") : ""), names[i], getedKey[getedKey.Length - 2]));
+                                        _folder.Folders[_folder.Folders.Count - 1].Parent = _folder;
+                                    }
+                                }
                                 it.Next();
                                 if (it.Valid())
                                 {

@@ -62,7 +62,7 @@ namespace QuoteHistoryGUI.HistoryTools.Interactor
        }
    }*/
 
-    class SelectTemplateWorker
+    public class SelectTemplateWorker
     {
         IEnumerable<Folder> _sourceTree;
         HistoryLoader _loader;

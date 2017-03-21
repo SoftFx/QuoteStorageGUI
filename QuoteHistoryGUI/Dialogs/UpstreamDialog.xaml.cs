@@ -47,7 +47,7 @@ namespace QuoteHistoryGUI.Dialogs
 
                 //Level2Box.IsChecked = true;
                 TemplateBox.SetData(source.Folders.Select(f => f.Name), Enumerable.Range(2010, DateTime.Today.Year - 2009).Select(y => y.ToString()),
-                    interactor.Selection==null|| interactor.Selection.Count==0?new string[] { "*"}: HistoryInteractor.GetTemplates(interactor.Selection));
+                    interactor.Selection == null || interactor.Selection.Count == 0 ? new string[] { "*" } : HistoryInteractor.GetTemplates(interactor.Selection));
                 _interactor = interactor;
                 _interactor.Selection.Clear();
                 _source = source;
@@ -89,169 +89,13 @@ namespace QuoteHistoryGUI.Dialogs
             }
         }
 
-        void FlushWork(BackgroundWorker worker, List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveList, ref int flushCnt, ref DateTime lastReport)
-        {
-            foreach (var pairForChunk in saveList)
-            {
-                if (worker?.CancellationPending == true)
-                {
-                    canceled = true;
-                    return;
-                }
-                flushCnt++;
-                _interactor.Source.HistoryStoreDB.Put(pairForChunk.Key.Key, pairForChunk.Key.Value);
-                if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.25)
-                {
-                    worker.ReportProgress(1, "[" + flushCnt + "] " + "Flushing");
-                    lastReport = DateTime.UtcNow;
-                }
-            }
-            foreach (var pairForMeta in saveList)
-            {
-                if (worker?.CancellationPending == true)
-                {
-                    canceled = true;
-                    return;
-                }
-                flushCnt++;
-                _interactor.Source.HistoryStoreDB.Put(pairForMeta.Value.Key, pairForMeta.Value.Value);
-                if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.25)
-                {
-                    worker.ReportProgress(1, "[" + flushCnt + "] " + "Flushing");
-                    lastReport = DateTime.UtcNow;
-                }
-            }
-            saveList.Clear();
-        }
-
-        object listAddLock = new object();
-        void level2ToTicksWork(BackgroundWorker worker, IEnumerable<KeyValuePair<byte[], byte[]>> files, ref int upstramCnt, ref int flushCnt, ref DateTime lastReport,
-            List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListTicks, List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update, int degreeOfParallelism = 4)
-        {
-            foreach (var file in files)
-            {
-                if (worker?.CancellationPending == true)
-                {
-                    canceled = true;
-                    return;
-                }
-                Interlocked.Increment(ref upstramCnt);
-                var entry = HistoryDatabaseFuncs.DeserealizeKey(file.Key);
-                if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.5)
-                {
-                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Month + "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
-                    lastReport = DateTime.UtcNow;
-                }
-
-                var items = HistorySerializer.Deserialize("ticks level2", _interactor.Source.Editor.GetOrUnzip(file.Value), degreeOfParallelism);
-                var itemsList = new List<QHItem>();
-                var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
-                var ticks = _interactor.Source.Editor.GetTicksFromLevel2(ticksLevel2);
-                var content = HistorySerializer.Serialize((IEnumerable<QHItem>)(ticks));
-
-                entry.Period = "ticks";
-
-                if (entriesForM1Update.Count == 0 || entriesForM1Update.Last().Time.Year != entry.Time.Year ||
-                    entriesForM1Update.Last().Time.Month != entry.Time.Month || entriesForM1Update.Last().Time.Day != entry.Time.Day)
-                {
-                    entriesForM1Update.Add(new HistoryDatabaseFuncs.DBEntry(entry.Symbol, new DateTime(entry.Time.Year, entry.Time.Month, entry.Time.Day), entry.Period, "chunk", 0));
-                }
-
-                saveListTicks.Add(_interactor.Source.Editor.GetChunkMetaForDB(content, entry));
-                if (saveListTicks.Count > 1024)
-                {
-                    FlushWork(worker, saveListTicks, ref flushCnt, ref lastReport);
-                }
-            }
-        }
-
-        void ticksToM1Work(BackgroundWorker worker, IEnumerable<HistoryDatabaseFuncs.DBEntry> entriesForM1Update, ref int upstramCnt, ref int flushCnt, ref DateTime lastReport,
-            List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListBids, List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListAsks)
-        {
-
-            foreach (var entry in entriesForM1Update)
-            {
-
-                if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.5)
-                {
-                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Month + "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
-                    lastReport = DateTime.UtcNow;
-                }
-                if (worker?.CancellationPending == true)
-                {
-                    canceled = true;
-                    return;
-                }
-                upstramCnt++;
-                var file = _interactor.Source.Editor.ReadAllPart(entry, HistoryEditor.ReadMode.ticksAllDate);
-                var items = HistorySerializer.Deserialize("ticks", file);
-                var itemsList = new List<QHItem>();
-                var ticks = items as IEnumerable<QHTick>;
-                var bars = _interactor.Source.Editor.GetM1FromTicks(ticks);
-                var contentBid = HistorySerializer.Serialize(bars.Key);
-                var contentAsk = HistorySerializer.Serialize(bars.Value);
-                var bidEntry = new HistoryDatabaseFuncs.DBEntry(entry.Symbol, entry.Time, "M1 bid", "Chunk", 0);
-                var askEntry = new HistoryDatabaseFuncs.DBEntry(entry.Symbol, entry.Time, "M1 ask", "Chunk", 0);
-                saveListBids.Add(_interactor.Source.Editor.GetChunkMetaForDB(contentBid, bidEntry));
-                saveListAsks.Add(_interactor.Source.Editor.GetChunkMetaForDB(contentAsk, askEntry));
-
-                if (saveListBids.Count > 1024)
-                {
-                    FlushWork(worker, saveListBids, ref flushCnt, ref lastReport);
-                }
-
-                if (saveListAsks.Count > 1024)
-                {
-                    FlushWork(worker, saveListAsks, ref flushCnt, ref lastReport);
-                }
-            }
-        }
-
-        void M1ToH1Work(BackgroundWorker worker, IEnumerable<HistoryDatabaseFuncs.DBEntry> entriesForH1Update, ref int upstramCnt, ref int flushCnt, ref DateTime lastReport,
-            List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveList)
-        {
-
-            foreach (var entry in entriesForH1Update)
-            {
-
-                if (worker != null && (DateTime.UtcNow - lastReport).TotalSeconds > 0.5)
-                {
-                    worker.ReportProgress(1, "[" + upstramCnt + "] " + entry.Symbol + "/" + entry.Time.Year + "/" + entry.Time.Month + "/" + entry.Time.Day + "/" + entry.Time.Hour + "/" + entry.Period + "." + entry.Part);
-                    lastReport = DateTime.UtcNow;
-                }
-                if (worker?.CancellationPending == true)
-                {
-                    canceled = true;
-                    return;
-                }
-                upstramCnt++;
-                var file = _interactor.Source.Editor.ReadAllPart(entry, HistoryEditor.ReadMode.H1AllDate);
-                var items = HistorySerializer.Deserialize("M1 bid", file);
-                var itemsList = new List<QHItem>();
-                var m1Bars = items as IEnumerable<QHBar>;
-                var bars = _interactor.Source.Editor.GetH1FromM1(m1Bars);
-                var content = HistorySerializer.Serialize(bars);
-                var Entry = new HistoryDatabaseFuncs.DBEntry(entry.Symbol, entry.Time, entry.Period == "M1 bid" ? "H1 bid" : "H1 ask", "Chunk", 0);
-                saveList.Add(_interactor.Source.Editor.GetChunkMetaForDB(content, Entry));
-
-                if (saveList.Count > 1024)
-                {
-                    FlushWork(worker, saveList, ref flushCnt, ref lastReport);
-                }
-            }
-        }
-
         private void worker_Upstream(object sender, DoWorkEventArgs e)
         {
             try
             {
                 var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
                 BackgroundWorker worker = e.Argument as BackgroundWorker;
-                var templNum = 0;
-                int flushCnt = 0;
-                List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListTicks = new List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>>();
-                List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListBids = new List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>>();
-                List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveListAsks = new List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>>();
+
                 int degreeOfParallelism = 1;
                 int upstreamType = 0;
                 _dispatcher.Invoke(delegate
@@ -263,82 +107,15 @@ namespace QuoteHistoryGUI.Dialogs
                     upstreamType = TypeBox.SelectedIndex;
                 });
 
+                _interactor.Upstream(templates, worker, temW, t => { worker.ReportProgress(1, t); }, degreeOfParallelism, upstreamType);
 
-                List<HistoryDatabaseFuncs.DBEntry> entriesForM1Update = new List<HistoryDatabaseFuncs.DBEntry>();
-                List<HistoryDatabaseFuncs.DBEntry> entriesForH1Update = new List<HistoryDatabaseFuncs.DBEntry>();
-                foreach (var templ in templates)
-                {
-                    templNum++;
-                    var matched = temW.GetByMatch(templ, worker);
-                    DateTime lastReport = DateTime.UtcNow.AddSeconds(-2);
-                    int upstramCnt = 0;
-                    if (upstreamType == 0 || upstreamType == 1)
-                        foreach (var sel in matched)
-                        {
-                            var files = _interactor.Source.Editor.EnumerateFilesInFolder(sel, new List<string>() { "ticks level2" }, new List<string>() { "Chunk" });
-                            level2ToTicksWork(worker, files, ref upstramCnt, ref flushCnt, ref lastReport, saveListTicks, entriesForM1Update, degreeOfParallelism);
-                        }
-                    FlushWork(worker, saveListTicks, ref flushCnt, ref lastReport);
-
-                    if (upstreamType == 0 || upstreamType == 2)
-                        foreach (var sel in matched)
-                        {
-                            entriesForM1Update.Clear();
-                            var files = _interactor.Source.Editor.EnumerateFilesInFolder(sel, new List<string>() { "ticks" }, new List<string>() { "Chunk" });
-                            foreach (var file in files)
-                            {
-                                var entry = HistoryDatabaseFuncs.DeserealizeKey(file.Key);
-                                if (entriesForM1Update.Count == 0 || entriesForM1Update.Last().Time.Year != entry.Time.Year ||
-                                    entriesForM1Update.Last().Time.Month != entry.Time.Month || entriesForM1Update.Last().Time.Day != entry.Time.Day)
-                                {
-                                    entriesForM1Update.Add(new HistoryDatabaseFuncs.DBEntry(entry.Symbol, new DateTime(entry.Time.Year, entry.Time.Month, entry.Time.Day), entry.Period, "chunk", 0));
-                                }
-                            }
-
-                            ticksToM1Work(worker, entriesForM1Update, ref upstramCnt, ref flushCnt, ref lastReport, saveListBids, saveListAsks);
-                            entriesForM1Update.Clear();
-                        }
-                    FlushWork(worker, saveListBids, ref flushCnt, ref lastReport);
-                    FlushWork(worker, saveListAsks, ref flushCnt, ref lastReport);
-
-                    if (upstreamType == 0 || upstreamType == 3)
-                        foreach (var sel in matched)
-                        {
-                            var files = _interactor.Source.Editor.EnumerateFilesInFolder(sel, new List<string>() { "M1 bid" }, new List<string>() { "Chunk" });
-                            foreach (var file in files)
-                            {
-                                var entry = HistoryDatabaseFuncs.DeserealizeKey(file.Key);
-                                if (entriesForH1Update.Count == 0 || entriesForH1Update.Last().Time.Year != entry.Time.Year ||
-                                    entriesForH1Update.Last().Time.Month != entry.Time.Month)
-                                {
-                                    entriesForH1Update.Add(new HistoryDatabaseFuncs.DBEntry(entry.Symbol, new DateTime(entry.Time.Year, entry.Time.Month, 1), entry.Period, "chunk", 0));
-                                }
-                            }
-
-                            M1ToH1Work(worker, entriesForH1Update, ref upstramCnt, ref flushCnt, ref lastReport, saveListBids);
-                            entriesForH1Update.Clear();
-
-                            files = _interactor.Source.Editor.EnumerateFilesInFolder(sel, new List<string>() { "M1 ask" }, new List<string>() { "Chunk" });
-                            foreach (var file in files)
-                            {
-                                var entry = HistoryDatabaseFuncs.DeserealizeKey(file.Key);
-                                if (entriesForH1Update.Count == 0 || entriesForH1Update.Last().Time.Year != entry.Time.Year ||
-                                    entriesForH1Update.Last().Time.Month != entry.Time.Month)
-                                {
-                                    entriesForH1Update.Add(new HistoryDatabaseFuncs.DBEntry(entry.Symbol, new DateTime(entry.Time.Year, entry.Time.Month, 1), entry.Period, "chunk", 0));
-                                }
-                            }
-
-                            M1ToH1Work(worker, entriesForH1Update, ref upstramCnt, ref flushCnt, ref lastReport, saveListAsks);
-                            entriesForH1Update.Clear();
-                        }
-                    FlushWork(worker, saveListBids, ref flushCnt, ref lastReport);
-                    FlushWork(worker, saveListAsks, ref flushCnt, ref lastReport);
-                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message + ",\nStackTrace: " + ex.StackTrace, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
+                _dispatcher.Invoke(delegate
+                {
+                    MessageBox.Show(this, ex.Message + ",\nStackTrace: " + ex.StackTrace, "Upstream error", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
             }
             _interactor.Source.Refresh();
         }
