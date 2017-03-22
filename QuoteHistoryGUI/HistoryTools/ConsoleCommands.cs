@@ -73,10 +73,13 @@ namespace QuoteHistoryGUI.HistoryTools
                     {
 
                         var matched = temW.GetByMatch(templ, null);
+                        //var t = matched.ToArray();
                         Interactor.Copy(null, matched, types, (message) => {
                             Console.WriteLine(DateTime.UtcNow + ": importing "+ message);
                         });
                     }
+                    Interactor.Source.HistoryStoreDB.Dispose();
+                    Interactor.Destination.HistoryStoreDB.Dispose();
 
                 }
                 Console.WriteLine(DateTime.UtcNow + ": Import performed!");
@@ -144,6 +147,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
 
                     Interactor.Upstream(templates, null, temW, t => { Console.WriteLine(DateTime.UtcNow + ": upstreaming " + t); }, degreeOfParallelism, upsType);
+                    Interactor.Source.HistoryStoreDB.Dispose();
 
                 }
                 catch (Exception ex)

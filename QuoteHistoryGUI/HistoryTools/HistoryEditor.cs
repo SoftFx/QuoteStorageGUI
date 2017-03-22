@@ -602,6 +602,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public IEnumerable<KeyValuePair<byte[], byte[]>> EnumerateFilesInFolder(Folder fold, List<string> periods = null, List<string> types = null, bool onlyKeys = false)
         {
+
             Stopwatch w = new Stopwatch();
             if (periods == null)
                 periods = new List<string>() { "ticks", "ticks level2", "M1 ask", "M1 bid", "H1 ask", "H1 bid" };
@@ -609,75 +610,80 @@ namespace QuoteHistoryGUI.HistoryTools
                 types = new List<string>() { "Meta", "Chunk" };
 
             var it = _dbase.CreateIterator();
-
-            if (fold as ChunkFile == null && fold as MetaFile == null)
+            try
             {
-                var path = HistoryDatabaseFuncs.GetPath(fold);
-                if (path.Count > 4)
-                    periods = new List<string>() { "ticks", "ticks level2" };
-                int[] dateTime = { 2000, 1, 1, 0 };
-                for (int i = 1; i < path.Count; i++)
+                if (fold as ChunkFile == null && fold as MetaFile == null)
                 {
-                    dateTime[i - 1] = int.Parse(path[i].Name);
-                }
+                    var path = HistoryDatabaseFuncs.GetPath(fold);
+                    if (path.Count > 4)
+                        periods = new List<string>() { "ticks", "ticks level2" };
+                    int[] dateTime = { 2000, 1, 1, 0 };
+                    for (int i = 1; i < path.Count; i++)
+                    {
+                        dateTime[i - 1] = int.Parse(path[i].Name);
+                    }
 
-                foreach (var period in HistoryDatabaseFuncs.periodicityDict)
-                {
-                    if (periods.Contains(period.Key))
-                        foreach (var type in HistoryDatabaseFuncs.typeDict)
-                        {
-                            if (types.Contains(type.Key))
+                    foreach (var period in HistoryDatabaseFuncs.periodicityDict)
+                    {
+                        if (periods.Contains(period.Key))
+                            foreach (var type in HistoryDatabaseFuncs.typeDict)
                             {
-                                var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
-                                it.Seek(key);
-                                List<KeyValuePair<byte[], byte[]>> resList = new List<KeyValuePair<byte[], byte[]>>();
-                                while (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), key, true, path.Count - 1, true, true, false, false))
+                                if (types.Contains(type.Key))
                                 {
-                                    if (resList.Count < 128)
-                                        resList.Add(new KeyValuePair<byte[], byte[]>(it.Key(), onlyKeys ? null : it.Value()));
-                                    else
+                                    var key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, type.Key, period.Key, dateTime[0], dateTime[1], dateTime[2], dateTime[3], 0);
+                                    it.Seek(key);
+                                    List<KeyValuePair<byte[], byte[]>> resList = new List<KeyValuePair<byte[], byte[]>>();
+                                    while (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), key, true, path.Count - 1, true, true, false, false))
                                     {
-                                        foreach (var pair in resList)
-                                            yield return pair;
-                                        resList = new List<KeyValuePair<byte[], byte[]>>();
+                                        if (resList.Count < 128)
+                                            resList.Add(new KeyValuePair<byte[], byte[]>(it.Key(), onlyKeys ? null : it.Value()));
+                                        else
+                                        {
+                                            foreach (var pair in resList)
+                                                yield return pair;
+                                            resList = new List<KeyValuePair<byte[], byte[]>>();
+                                        }
+                                        it.Next();
                                     }
-                                    it.Next();
+                                    foreach (var pair in resList)
+                                        yield return pair;
                                 }
-                                foreach (var pair in resList)
-                                    yield return pair;
                             }
-                        }
+                    }
                 }
+                else
+                {
+                    byte[] key = new byte[] { };
+                    var path = HistoryDatabaseFuncs.GetPath(fold);
+                    int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
+                    string type = "";
+                    if (fold as ChunkFile != null)
+                    {
+                        ChunkFile chunk = fold as ChunkFile;
+                        key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", chunk.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], chunk.Part);
+                        type = "Chunk";
+                        it.Seek(key);
+                    }
+                    if (fold as MetaFile != null)
+                    {
+                        MetaFile metaFile = fold as MetaFile;
+                        key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
+                        type = "Meta";
+                        it.Seek(key);
+                    }
+                    if (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), key, true, path.Count - 2, true, true, true))
+                    {
+                        var file = fold as HistoryFile;
+                        if (periods.Contains(file.Period) && types.Contains(type))
+                            yield return new KeyValuePair<byte[], byte[]>(it.Key(), onlyKeys ? null : it.Value());
+                    }
+                }
+                it.Dispose();
             }
-            else
+            finally
             {
-                byte[] key = new byte[] { };
-                var path = HistoryDatabaseFuncs.GetPath(fold);
-                int[] dateTime = HistoryDatabaseFuncs.GetFolderStartTime(path);
-                string type = "";
-                if (fold as ChunkFile != null)
-                {
-                    ChunkFile chunk = fold as ChunkFile;
-                    key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", chunk.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], chunk.Part);
-                    type = "Chunk";
-                    it.Seek(key);
-                }
-                if (fold as MetaFile != null)
-                {
-                    MetaFile metaFile = fold as MetaFile;
-                    key = HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Meta", metaFile.Period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], metaFile.Part);
-                    type = "Meta";
-                    it.Seek(key);
-                }
-                if (it.Valid() && HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), key, true, path.Count - 2, true, true, true))
-                {
-                    var file = fold as HistoryFile;
-                    if (periods.Contains(file.Period) && types.Contains(type))
-                        yield return new KeyValuePair<byte[], byte[]>(it.Key(), onlyKeys ? null : it.Value());
-                }
+                it.Dispose();
             }
-
-            it.Dispose();
         }
 
     }
