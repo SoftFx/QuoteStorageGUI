@@ -105,7 +105,7 @@ namespace QuoteHistoryGUI
                             string templates = "*";
                             string upstreamType = null;
                             int degree = 8;
-                            if (args.Length == 2 || args.Length > 6)
+                            if (args.Length == 1 || args.Length > 6)
                             {
                                 Console.Out.WriteLine("\nIncorrect arguments. See usage:");
                                 ShowUsage();

@@ -228,7 +228,7 @@ namespace QuoteHistoryGUI.Models
             {
                 Status = ex.Message;
                 log.Warn(Status);
-                return;
+                throw ex;
             }
             FilePath = path;
             Status = "Ok";
