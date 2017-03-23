@@ -29,7 +29,7 @@ namespace QuoteHistoryGUI
         static extern bool FreeConsole();
 
         [STAThread]
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
             
             log4net.Config.XmlConfigurator.Configure();
@@ -53,7 +53,7 @@ namespace QuoteHistoryGUI
                             {
                                 Console.Out.WriteLine("\nIncorrect arguments. See usage:");
                                 ShowUsage();
-                                return;
+                                return -1;
                             }
 
                             if (args.Length == 3)
@@ -86,13 +86,14 @@ namespace QuoteHistoryGUI
                             var loadingMode = Models.StorageInstanceModel.LoadingMode.None;
                             if (templates != null)
                                 loadingMode = Models.StorageInstanceModel.LoadingMode.Sync;
-                            ConsoleCommands.Import(new Models.StorageInstanceModel(Destination, null, loadingMode: loadingMode), new Models.StorageInstanceModel(Source, null, loadingMode: loadingMode), templates, types);
+                            return ConsoleCommands.Import(new Models.StorageInstanceModel(Destination, null, loadingMode: loadingMode), new Models.StorageInstanceModel(Source, null, loadingMode: loadingMode), templates, types);
 
                         }
                         catch (Exception e)
                         {
                             Console.Out.WriteLine("Check pathes and close storages!\r\nError: " + e.Message);
                             log.Error("Check pathes and close storages!\r\nError: " + e.Message + "\r\n" + e.StackTrace);
+                            return -1;
                         }
                         break;
                     case "-u":
@@ -108,7 +109,7 @@ namespace QuoteHistoryGUI
                             {
                                 Console.Out.WriteLine("\nIncorrect arguments. See usage:");
                                 ShowUsage();
-                                return;
+                                return -1;
                             }
 
                             if (args.Length == 2)
@@ -139,13 +140,14 @@ namespace QuoteHistoryGUI
                             }
 
                             var loadingMode = Models.StorageInstanceModel.LoadingMode.Sync;
-                            ConsoleCommands.Upstream(new Models.StorageInstanceModel(Source, null, loadingMode: loadingMode), templates, upstreamType, degree);
+                            return ConsoleCommands.Upstream(new Models.StorageInstanceModel(Source, null, loadingMode: loadingMode), templates, upstreamType, degree);
 
                         }
                         catch (Exception e)
                         {
                             Console.Out.WriteLine("Check params!\r\nError: " + e.Message);
                             log.Error("Check params!\r\nError: " + e.Message + "\r\n" + e.StackTrace);
+                            return -1;
                         }
                         break;
                     default:
@@ -156,6 +158,7 @@ namespace QuoteHistoryGUI
             else {
                 FreeConsole();
                 new QHApp().Run(); }
+            return 0;
         }
 
         private static void ShowUsage()

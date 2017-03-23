@@ -14,8 +14,10 @@ namespace QuoteHistoryGUI.HistoryTools
     {
 
         public static readonly ILog log = LogManager.GetLogger(typeof(Startup));
-        public static void Import(StorageInstanceModel destination, StorageInstanceModel source, string templateStr = null, string typeStr = null) {
-            try {
+        public static int Import(StorageInstanceModel destination, StorageInstanceModel source, string templateStr = null, string typeStr = null)
+        {
+            try
+            {
                 var Interactor = new HistoryInteractor();
                 Interactor.Destination = destination;
                 Interactor.Source = source;
@@ -37,7 +39,7 @@ namespace QuoteHistoryGUI.HistoryTools
                         type = upstreamTypes[typeStr.ToLower()];
 
                     List<string> types = null;
-                    switch(type)
+                    switch (type)
                     {
                         case 1:
                             types = new List<string>() { "ticks level2" };
@@ -74,8 +76,9 @@ namespace QuoteHistoryGUI.HistoryTools
 
                         var matched = temW.GetByMatch(templ, null);
                         //var t = matched.ToArray();
-                        Interactor.Copy(null, matched, types, (message) => {
-                            Console.WriteLine(DateTime.UtcNow + ": importing "+ message);
+                        Interactor.Copy(null, matched, types, (message) =>
+                        {
+                            Console.WriteLine(DateTime.UtcNow + ": importing " + message);
                         });
                     }
                     Interactor.Source.HistoryStoreDB.Dispose();
@@ -84,10 +87,12 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
                 Console.WriteLine(DateTime.UtcNow + ": Import performed!");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.Write(ex);
+                return -1;
             }
+            return 0;
         }
 
         static Dictionary<string, int> upstreamTypes = new Dictionary<string, int>
@@ -107,53 +112,49 @@ namespace QuoteHistoryGUI.HistoryTools
         };
 
 
-        public static void Upstream(StorageInstanceModel source, string templateStr = null, string upstreamType = null, int degeree = 8)
+        public static int Upstream(StorageInstanceModel source, string templateStr = null, string upstreamType = null, int degeree = 8)
         {
             try
             {
                 var Interactor = new HistoryInteractor();
                 Interactor.Source = source;
 
+
+                Console.Out.WriteLine(DateTime.UtcNow + ": Upstream starting...");
+                if (templateStr == null)
+                    templateStr = "*";
+                StringBuilder templText = new StringBuilder();
+                foreach (var ch in templateStr)
+                {
+                    templText.Append(ch);
+                    if (ch == ';')
+                        templText.Append('\n');
+                }
+
+                var templateText = templText.ToString();
+
+                var temW = new SelectTemplateWorker(Interactor.Source.Folders, new HistoryLoader(null, Interactor.Source.HistoryStoreDB));
+
+                var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
+                int upsType = 0;
+                int degreeOfParallelism = degeree;
                 try
                 {
-                    Console.Out.WriteLine(DateTime.UtcNow + ": Upstream starting...");
-                    if (templateStr == null)
-                        templateStr = "*";
-                    StringBuilder templText = new StringBuilder();
-                    foreach (var ch in templateStr)
-                    {
-                        templText.Append(ch);
-                        if (ch == ';')
-                            templText.Append('\n');
-                    }
-
-                    var templateText = templText.ToString();
-
-                    var temW = new SelectTemplateWorker(Interactor.Source.Folders, new HistoryLoader(null, Interactor.Source.HistoryStoreDB));
-
-                    var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
-                    int upsType = 0;
-                    int degreeOfParallelism = degeree;
-                    try {
-                        upsType = upstreamTypes[upstreamType.ToLower()];
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Invalid usptream type case");
-                        Console.WriteLine("Possible, Case-insensitive:");
-                        foreach (var key in upstreamTypes.Keys)
-                            Console.WriteLine(key);
-                        return;
-                    }
-
-                    Interactor.Upstream(templates, null, temW, t => { Console.WriteLine(DateTime.UtcNow + ": upstreaming " + t); }, degreeOfParallelism, upsType);
-                    Interactor.Source.HistoryStoreDB.Dispose();
-
+                    upsType = upstreamTypes[upstreamType.ToLower()];
                 }
                 catch (Exception ex)
                 {
-                        Console.WriteLine(ex.Message + ",\nStackTrace: " + ex.StackTrace);
+                    Console.WriteLine("Invalid usptream type case");
+                    Console.WriteLine("Possible, Case-insensitive:");
+                    foreach (var key in upstreamTypes.Keys)
+                        Console.WriteLine(key);
+                    return -1;
                 }
+
+                Interactor.Upstream(templates, null, temW, t => { Console.WriteLine(DateTime.UtcNow + ": upstreaming " + t); }, degreeOfParallelism, upsType);
+                Interactor.Source.HistoryStoreDB.Dispose();
+
+
 
 
                 Console.WriteLine(DateTime.UtcNow + ": Upstream performed!");
@@ -161,7 +162,9 @@ namespace QuoteHistoryGUI.HistoryTools
             catch (Exception ex)
             {
                 Console.Write(ex);
+                return -1;
             }
+            return 0;
         }
     }
 }
