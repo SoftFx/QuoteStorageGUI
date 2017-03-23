@@ -498,7 +498,6 @@ namespace QuoteHistoryGUI.HistoryTools
                 curBar.Low = Math.Min(curBar.Low, bar.Low);
             }
             resBars.Add(curBar);
-            resBars.Add(curBar);
 
             return resBars.ToArray();
         }
