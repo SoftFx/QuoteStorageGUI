@@ -41,6 +41,8 @@ namespace QuoteHistoryGUI
                     case "-help":
                         ShowUsage();
                         break;
+                    case "-e":
+                    case "-export":
                     case "-i":
                     case "-import":
                         try
@@ -78,6 +80,13 @@ namespace QuoteHistoryGUI
                                 Destination = args[1];
                                 templates = args[3];
                                 types = args[4];
+                            }
+
+                            if (args[0] == "-e" || args[0] == "-export")
+                            {
+                                var buf = Source;
+                                Source = Destination;
+                                Destination = buf;
                             }
 
                             if (!Directory.Exists(Destination + "\\HistoryDB"))
@@ -145,8 +154,8 @@ namespace QuoteHistoryGUI
                         }
                         catch (Exception e)
                         {
-                            Console.Out.WriteLine("Check params!\r\nError: " + e.Message);
-                            log.Error("Check params!\r\nError: " + e.Message + "\r\n" + e.StackTrace);
+                            Console.Out.WriteLine("An error has occurred.\r\nError: " + e.Message);
+                            log.Error("An error has occurred.\r\nError: " + e.Message + "\r\n" + e.StackTrace);
                             return -1;
                         }
                         break;

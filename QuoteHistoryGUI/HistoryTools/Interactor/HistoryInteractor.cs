@@ -3,6 +3,7 @@ using QuoteHistoryGUI.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -93,6 +94,46 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
             }
             
+            reportAction.Invoke("[" + copiedCnt + "] files copied");
+        }
+
+        public void NtfsExport(BackgroundWorker worker = null, IEnumerable<Folder> selection = null, string NtfsPath = "NtfsExport", List<string> periods = null, Action<string> reportAction = null)
+        {
+            List<byte[]> deleteList = new List<byte[]>();
+            int copiedCnt = 0;
+            DateTime lastReport = DateTime.UtcNow;
+
+
+            if (selection == null)
+                selection = Selection;
+            foreach (var fold in selection)
+            {
+                var files = Source.Editor.EnumerateFilesInFolder(fold, periods, types:new List<string>() { "Chunk"});
+                foreach (var file in files)
+                {
+                    if (worker?.CancellationPending == true)
+                    {
+                        return;
+                    }
+                    DBEntry dbentry = DeserealizeKey(file.Key);
+                    string fileFormat = (file.Value.Length > 2 && file.Value[0] == 'P' && file.Value[1] == 'K') ? ".zip" : ".txt";
+                    string fileName = dbentry.Symbol + " " + dbentry.Period + " " + dbentry.Time.ToString("yyyy-MM-dd hh") + (dbentry.Part == 0 ? "" : "."+dbentry.Part.ToString());
+
+                    if (!Directory.Exists(NtfsPath))
+                        Directory.CreateDirectory(NtfsPath);
+
+                    File.WriteAllBytes(NtfsPath+"/"+fileName + fileFormat, file.Value);
+                    copiedCnt++;
+
+                    if (reportAction != null && (DateTime.UtcNow - lastReport).Seconds > 0.25)
+                    {
+                        dbentry = DeserealizeKey(file.Key);
+                        reportAction.Invoke("[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                        lastReport = DateTime.UtcNow;
+                    }
+                }
+            }
+
             reportAction.Invoke("[" + copiedCnt + "] files copied");
         }
 
@@ -351,6 +392,41 @@ namespace QuoteHistoryGUI.HistoryTools
                     ReportTime = DateTime.UtcNow;
                 }
 
+                sourceIter.Next();
+            }
+            sourceIter.Dispose();
+        }
+
+        public void ExportAllNtfs(bool replace = true, string NtfsPath = "NtfsExport", BackgroundWorker worker = null, Action<byte[], int> reportAction = null)
+        {
+            var sourceIter = Source.HistoryStoreDB.CreateIterator();
+            sourceIter.SeekToFirst();
+            DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
+            int cnt = 0;
+            while (sourceIter.Valid())
+            {
+                if (worker?.CancellationPending == true)
+                {
+                    sourceIter.Dispose();
+                    return;
+                }
+
+                cnt++;
+
+                DBEntry dbentry = DeserealizeKey(sourceIter.Key());
+                if (dbentry.Type == "Chunk")
+                {
+                    string fileFormat = (sourceIter.Value().Length > 2 && sourceIter.Value()[0] == 'P' && sourceIter.Value()[1] == 'K') ? ".zip" : ".txt";
+                    string fileName = dbentry.Symbol + " " + dbentry.Period + " " + dbentry.Time.ToString("yyyy-MM-dd hh") + (dbentry.Part == 0 ? "" : "." + dbentry.Part.ToString());
+                    if (!Directory.Exists(NtfsPath))
+                        Directory.CreateDirectory(NtfsPath);
+                    File.WriteAllBytes(NtfsPath + "/" + fileName + fileFormat, sourceIter.Value());
+                }
+                if (reportAction != null && (DateTime.UtcNow - ReportTime).Seconds > 0.25)
+                {
+                    reportAction.Invoke(sourceIter.Key(), cnt);
+                    ReportTime = DateTime.UtcNow;
+                }
                 sourceIter.Next();
             }
             sourceIter.Dispose();

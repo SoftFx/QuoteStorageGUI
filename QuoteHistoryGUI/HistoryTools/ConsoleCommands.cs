@@ -14,7 +14,8 @@ namespace QuoteHistoryGUI.HistoryTools
     {
 
         public static readonly ILog log = LogManager.GetLogger(typeof(Startup));
-        public static int Import(StorageInstanceModel destination, StorageInstanceModel source, string templateStr = null, string typeStr = null)
+
+        public static int Import(StorageInstanceModel destination, StorageInstanceModel source, string templateStr = null, string typeStr = null, string format = "LevelDB")
         {
             try
             {
@@ -95,6 +96,8 @@ namespace QuoteHistoryGUI.HistoryTools
             return 0;
         }
 
+
+        
         static Dictionary<string, int> upstreamTypes = new Dictionary<string, int>
         {
             { "",0 },

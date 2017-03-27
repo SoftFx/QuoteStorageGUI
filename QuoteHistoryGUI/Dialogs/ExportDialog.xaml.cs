@@ -33,7 +33,9 @@ namespace QuoteHistoryGUI.Dialogs
         StorageInstanceModel _source;
         StorageInstanceModel _destination;
         SelectTemplateWorker temW;
+        string destinationStr;
         string templateText;
+        int formatType = 0;
         bool isMove = false;
         bool canceled = false;
         public static readonly ILog log = LogManager.GetLogger(typeof(StorageSelectionDialog));
@@ -82,8 +84,11 @@ namespace QuoteHistoryGUI.Dialogs
         {
             try
             {
+                formatType = FormatBox.SelectedIndex;
                 log.Info("Export calling...");
                 AppConfigManager.SavePathes(DestinationBox.Text);
+
+                destinationStr = DestinationBox.Text;
 
                 if (_source.FilePath == DestinationBox.Text)
                 {
@@ -97,20 +102,22 @@ namespace QuoteHistoryGUI.Dialogs
                     isMove = OperationTypeBox.SelectedIndex == 1;
                     CopyWorker = new BackgroundWorker();
                     _interactor.Source = _source;
-
-                    if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
-                        Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
-                    _destination = new StorageInstanceModel(DestinationBox.Text, _dispatcher, _interactor, StorageInstanceModel.OpenMode.ReadWrite, StorageInstanceModel.LoadingMode.None);
-                    _interactor.Destination = _destination;
-
-
-
-                    if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
+                    if (formatType == 0)
                     {
-                        MessageBox.Show(this, "Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                        return;
-                    }
+                        if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
+                            Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
 
+                        _destination = new StorageInstanceModel(DestinationBox.Text, _dispatcher, _interactor, StorageInstanceModel.OpenMode.ReadWrite, StorageInstanceModel.LoadingMode.None);
+                        _interactor.Destination = _destination;
+
+
+
+                        if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
+                        {
+                            MessageBox.Show(this, "Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                            return;
+                        }
+                    }
                     temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
                     templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
 
@@ -146,20 +153,25 @@ namespace QuoteHistoryGUI.Dialogs
 
                     isMove = OperationTypeBox.SelectedIndex == 1;
                     CopyWorker = new BackgroundWorker();
-
-
-                    if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
-                        Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
-                    _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
                     _interactor.Source = _source;
-                    _interactor.Destination = _destination;
 
-                    if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
+
+                    if (formatType == 0)
                     {
-                        MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                        return;
-                    }
+                        if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
+                            Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
+                        if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
+                            _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
 
+                       
+                        _interactor.Destination = _destination;
+
+                        if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
+                        {
+                            MessageBox.Show("Unable to modify storage opened in readonly mode", "Copy", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                            return;
+                        }
+                    }
                     CopyButton.IsEnabled = false;
                     CopyWorker.WorkerReportsProgress = true;
                     CopyWorker.WorkerSupportsCancellation = true;
@@ -183,19 +195,40 @@ namespace QuoteHistoryGUI.Dialogs
 
             BackgroundWorker worker = e.Argument as BackgroundWorker;
             var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
-            foreach (var templ in templates)
+            if (formatType == 0)
             {
-                worker.ReportProgress(1, "Template: " + templ);
-                var matched = temW.GetByMatch(templ, worker);
-                _interactor.Copy(worker, matched, periods, (message) =>
+                foreach (var templ in templates)
                 {
-                    worker.ReportProgress(1, message);
-                });
-                if (isMove)
+                    worker.ReportProgress(1, "Template: " + templ);
+                    var matched = temW.GetByMatch(templ, worker);
+                    _interactor.Copy(worker, matched, periods, (message) =>
+                    {
+                        worker.ReportProgress(1, message);
+                    });
+                    if (isMove)
+                    {
+                        _interactor.Dispatcher = Dispatcher;
+                        _interactor.Delete(matched, worker, true);
+                        _interactor.Dispatcher = null;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var templ in templates)
                 {
-                    _interactor.Dispatcher = Dispatcher;
-                    _interactor.Delete(matched, worker, true);
-                    _interactor.Dispatcher = null;
+                    worker.ReportProgress(1, "Template: " + templ);
+                    var matched = temW.GetByMatch(templ, worker);
+                    _interactor.NtfsExport(worker, matched, destinationStr, periods, (message) =>
+                    {
+                        worker.ReportProgress(1, message);
+                    });
+                    if (isMove)
+                    {
+                        _interactor.Dispatcher = Dispatcher;
+                        _interactor.Delete(matched, worker, true);
+                        _interactor.Dispatcher = null;
+                    }
                 }
             }
 
@@ -206,11 +239,22 @@ namespace QuoteHistoryGUI.Dialogs
         private void worker_Export(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = e.Argument as BackgroundWorker;
-            _interactor.Import(true, worker, (key, copiedCnt) =>
+            if (formatType == 0)
             {
-                var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
-                worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
-            });
+                _interactor.Import(true, worker, (key, copiedCnt) =>
+                {
+                    var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
+                    worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                });
+            }
+            else
+            {
+                _interactor.ExportAllNtfs(true, destinationStr, worker, (key, copiedCnt) =>
+                {
+                    var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
+                    worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                });
+            }
         }
         private void CopyProgressChanged(object sender, ProgressChangedEventArgs e)
         {
