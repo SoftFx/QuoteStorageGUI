@@ -3,6 +3,7 @@ using QuoteHistoryGUI.HistoryTools.Interactor;
 using QuoteHistoryGUI.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,32 +14,100 @@ namespace QuoteHistoryGUI.HistoryTools
     class ConsoleCommands
     {
 
+        public static Dictionary<string, string> ParseOptions(Dictionary<string, string> defaultDict, string[] argv, int startInd = 0)
+        {
+            var resDict = new Dictionary<string, string>(defaultDict);
+            for (int i = startInd; i < argv.Length;)
+            {
+                try
+                {
+                    resDict[argv[i]] = argv[i + 1];
+                    i += 2;
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException("Error with parsing argument " + argv[i], ex);
+                }
+            }
+            return resDict;
+        }
+
         public static readonly ILog log = LogManager.GetLogger(typeof(Startup));
 
-        public static int Import(StorageInstanceModel destination, StorageInstanceModel source, string templateStr = null, string typeStr = null, string format = "LevelDB")
+        static Dictionary<string, int> copyTypes = new Dictionary<string, int>
         {
+            { "",0 },
+            { "all",0 },
+            { "full",0 },
+            { "level2",1 },
+            { "l2",1 },
+            { "ticks",2 },
+            { "t",2 },
+            { "m1",3 },
+            { "h1",4 }
+        };
+
+        public static readonly Dictionary<string, string> ImportParamsDict = new Dictionary<string, string>
+        {
+            {"-templates", null},
+            {"-type", null},
+            {"-format", "LevelDB" }
+        };
+
+        public static int Copy(string sourcePath, string destinationPath, string templateStr = null, string typeStr = null, string format = "LevelDB")
+        {
+
+            var loadingMode = Models.StorageInstanceModel.LoadingMode.None;
+            if (templateStr != null)
+                loadingMode = Models.StorageInstanceModel.LoadingMode.Sync;
+
+            var source = new Models.StorageInstanceModel(sourcePath, null, loadingMode: loadingMode);
+
             try
             {
                 var Interactor = new HistoryInteractor();
-                Interactor.Destination = destination;
                 Interactor.Source = source;
-
+                Console.WriteLine(DateTime.UtcNow + ": copying starting...");
                 if (templateStr == null)
                 {
-                    Console.WriteLine(DateTime.UtcNow + ": Import starting...");
-                    Interactor.Import(true, null, (key, cnt) =>
+                    
+                    if (format == "LevelDB")
                     {
-                        var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
-                        Console.WriteLine(DateTime.UtcNow + ": importing [" + cnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
-                    });
+                        if (!Directory.Exists(destinationPath + "\\HistoryDB"))
+                            Directory.CreateDirectory(destinationPath + "\\HistoryDB");
+                        var destination = new Models.StorageInstanceModel(destinationPath, null, loadingMode: loadingMode);
+                        Interactor.Destination = destination;
+                        Interactor.Import(true, null, (key, cnt) =>
+                        {
+                            var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
+                            Console.WriteLine(DateTime.UtcNow + ": copying [" + cnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                        });
+                    }
+                    else
+                    {
+                        Interactor.ExportAllNtfs(true, destinationPath, null, (key, cnt) =>
+                         {
+                             var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
+                             Console.WriteLine(DateTime.UtcNow + ": copying [" + cnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                         });
+                    }
                 }
                 else
                 {
                     int type = 0;
-
-                    if (typeStr != null)
-                        type = upstreamTypes[typeStr.ToLower()];
-
+                    try
+                    {
+                        if (typeStr != null)
+                            type = copyTypes[typeStr.ToLower()];
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Invalid copy type case");
+                        Console.WriteLine("Possible, Case-insensitive:");
+                        foreach (var key in copyTypes.Keys)
+                            Console.WriteLine(key);
+                        return -1;
+                    }
                     List<string> types = null;
                     switch (type)
                     {
@@ -71,22 +140,41 @@ namespace QuoteHistoryGUI.HistoryTools
                     var temW = new SelectTemplateWorker(Interactor.Source.Folders, new HistoryLoader(null, Interactor.Source.HistoryStoreDB));
 
                     var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
-
-                    foreach (var templ in templates)
+                    if (format == "LevelDB")
                     {
-
-                        var matched = temW.GetByMatch(templ, null);
-                        //var t = matched.ToArray();
-                        Interactor.Copy(null, matched, types, (message) =>
+                        if (!Directory.Exists(destinationPath + "\\HistoryDB"))
+                            Directory.CreateDirectory(destinationPath + "\\HistoryDB");
+                        var destination = new Models.StorageInstanceModel(destinationPath, null, loadingMode: loadingMode);
+                        Interactor.Destination = destination;
+                        foreach (var templ in templates)
                         {
-                            Console.WriteLine(DateTime.UtcNow + ": importing " + message);
-                        });
+
+                            var matched = temW.GetByMatch(templ, null);
+                            //var t = matched.ToArray();
+                            Interactor.Copy(null, matched, types, (message) =>
+                            {
+                                Console.WriteLine(DateTime.UtcNow + ": copying " + message);
+                            });
+                        }
+                        Interactor.Source.HistoryStoreDB.Dispose();
+                        Interactor.Destination.HistoryStoreDB.Dispose();
                     }
-                    Interactor.Source.HistoryStoreDB.Dispose();
-                    Interactor.Destination.HistoryStoreDB.Dispose();
+                    else
+                    {
+                        foreach (var templ in templates)
+                        {
+
+                            var matched = temW.GetByMatch(templ, null);
+                            //var t = matched.ToArray();
+                            Interactor.NtfsExport(null, matched, destinationPath, types, (message) =>
+                            {
+                                Console.WriteLine(DateTime.UtcNow + ": copying " + message);
+                            });
+                        }
+                    }
 
                 }
-                Console.WriteLine(DateTime.UtcNow + ": Import performed!");
+                Console.WriteLine(DateTime.UtcNow + ": copying performed!");
             }
             catch (Exception ex)
             {
@@ -97,7 +185,7 @@ namespace QuoteHistoryGUI.HistoryTools
         }
 
 
-        
+
         static Dictionary<string, int> upstreamTypes = new Dictionary<string, int>
         {
             { "",0 },
@@ -114,8 +202,14 @@ namespace QuoteHistoryGUI.HistoryTools
             { "h1",4 }
         };
 
+        public static readonly Dictionary<string, string> UpstreamParamsDict = new Dictionary<string, string>
+        {
+            {"-templates", "*"},
+            {"-type", ""},
+            {"-degree", "8" }
+        };
 
-        public static int Upstream(StorageInstanceModel source, string templateStr = null, string upstreamType = null, int degeree = 8)
+        public static int Upstream(StorageInstanceModel source, string templateStr = null, string upstreamType = "", int degeree = 8)
         {
             try
             {
@@ -123,7 +217,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 Interactor.Source = source;
 
 
-                Console.Out.WriteLine(DateTime.UtcNow + ": Upstream starting...");
+                Console.Out.WriteLine(DateTime.UtcNow + ": upstream starting...");
                 if (templateStr == null)
                     templateStr = "*";
                 StringBuilder templText = new StringBuilder();
@@ -160,7 +254,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
 
 
-                Console.WriteLine(DateTime.UtcNow + ": Upstream performed!");
+                Console.WriteLine(DateTime.UtcNow + ": upstream performed!");
             }
             catch (Exception ex)
             {

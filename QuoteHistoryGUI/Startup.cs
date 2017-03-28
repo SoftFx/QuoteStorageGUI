@@ -23,7 +23,7 @@ namespace QuoteHistoryGUI
             "QuoteHistoryGUI.exe -import \"C:\\Quotes History\" \"C:\\New Quotes History\"";
 
         public static readonly ILog log = LogManager.GetLogger(typeof(Startup));
-        
+
 
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
         static extern bool FreeConsole();
@@ -31,7 +31,7 @@ namespace QuoteHistoryGUI
         [STAThread]
         public static int Main(string[] args)
         {
-            
+
             log4net.Config.XmlConfigurator.Configure();
             if (args.Length > 0)
             {
@@ -51,36 +51,17 @@ namespace QuoteHistoryGUI
                             string Destination = null;
                             string templates = null;
                             string types = null;
-                            if (args.Length == 2 || args.Length > 5)
+                            if (args.Length == 2)
                             {
                                 Console.Out.WriteLine("\nIncorrect arguments. See usage:");
                                 ShowUsage();
                                 return -1;
                             }
 
-                            if (args.Length == 3)
-                            {
-                                Console.Out.WriteLine($"\nImporting from \"{args[2]}\" to \"{args[1]}\"");
-                                Source = args[2];
-                                Destination = args[1];
-                            }
+                            Source = args[2];
+                            Destination = args[1];
 
-                            if (args.Length == 4)
-                            {
-                                Console.Out.WriteLine($"\nImporting from \"{args[2]}\" to \"{args[1]}\"");
-                                Source = args[2];
-                                Destination = args[1];
-                                templates = args[3];
-                            }
-
-                            if (args.Length == 5)
-                            {
-                                Console.Out.WriteLine($"\nImporting from \"{args[2]}\" to \"{args[1]}\"");
-                                Source = args[2];
-                                Destination = args[1];
-                                templates = args[3];
-                                types = args[4];
-                            }
+                            var paramDict = ConsoleCommands.ParseOptions(ConsoleCommands.ImportParamsDict, args, 3);
 
                             if (args[0] == "-e" || args[0] == "-export")
                             {
@@ -89,14 +70,7 @@ namespace QuoteHistoryGUI
                                 Destination = buf;
                             }
 
-                            if (!Directory.Exists(Destination + "\\HistoryDB"))
-                                Directory.CreateDirectory(Destination + "\\HistoryDB");
-
-                            var loadingMode = Models.StorageInstanceModel.LoadingMode.None;
-                            if (templates != null)
-                                loadingMode = Models.StorageInstanceModel.LoadingMode.Sync;
-                            return ConsoleCommands.Import(new Models.StorageInstanceModel(Destination, null, loadingMode: loadingMode), new Models.StorageInstanceModel(Source, null, loadingMode: loadingMode), templates, types);
-
+                            return ConsoleCommands.Copy(Source, Destination, paramDict["-templates"], paramDict["-type"], paramDict["-format"]);
                         }
                         catch (Exception e)
                         {
@@ -109,47 +83,19 @@ namespace QuoteHistoryGUI
                     case "-upstream":
                         try
                         {
-
-                            string Source = null;
-                            string templates = "*";
-                            string upstreamType = null;
-                            int degree = 8;
-                            if (args.Length == 1 || args.Length > 6)
+                            if (args.Length == 1)
                             {
                                 Console.Out.WriteLine("\nIncorrect arguments. See usage:");
                                 ShowUsage();
                                 return -1;
                             }
+                            string Source = args[1];
 
-                            if (args.Length == 2)
-                            {
-                                Source = args[1];
-                            }
-
-                            if (args.Length == 3)
-                            {
-                                Source = args[1];
-                                templates = args[2];
-                            }
-
-                            if (args.Length == 4)
-                            {
-                                Source = args[1];
-                                templates = args[2];
-                                upstreamType = args[3];
-                            }
-
-                            if (args.Length == 5)
-                            {
-                                Console.Out.WriteLine("Upstreaming...");
-                                Source = args[1];
-                                templates = args[2];
-                                upstreamType = args[3];
-                                degree = int.Parse(args[4]);
-                            }
-
+                            var paramDict = ConsoleCommands.ParseOptions(ConsoleCommands.UpstreamParamsDict, args, 2);
+                            
                             var loadingMode = Models.StorageInstanceModel.LoadingMode.Sync;
-                            return ConsoleCommands.Upstream(new Models.StorageInstanceModel(Source, null, loadingMode: loadingMode), templates, upstreamType, degree);
+
+                            return ConsoleCommands.Upstream(new Models.StorageInstanceModel(Source, null, loadingMode: loadingMode), paramDict["-templates"], paramDict["-type"], int.Parse(paramDict["-degree"]));
 
                         }
                         catch (Exception e)
@@ -164,9 +110,11 @@ namespace QuoteHistoryGUI
                         break;
                 }
             }
-            else {
+            else
+            {
                 FreeConsole();
-                new QHApp().Run(); }
+                new QHApp().Run();
+            }
             return 0;
         }
 
