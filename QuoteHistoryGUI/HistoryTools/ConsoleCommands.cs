@@ -56,12 +56,14 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public static int Copy(string sourcePath, string destinationPath, string templateStr = null, string typeStr = null, string format = "LevelDB")
         {
-
             var loadingMode = Models.StorageInstanceModel.LoadingMode.None;
-            if (templateStr != null)
+            if (templateStr != null || typeStr !=null)
                 loadingMode = Models.StorageInstanceModel.LoadingMode.Sync;
 
             var source = new Models.StorageInstanceModel(sourcePath, null, loadingMode: loadingMode);
+
+            if (typeStr != null && templateStr == null)
+                templateStr = "*";
 
             try
             {
@@ -82,6 +84,7 @@ namespace QuoteHistoryGUI.HistoryTools
                             var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
                             Console.WriteLine(DateTime.UtcNow + ": copying [" + cnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
                         });
+                        Interactor.Destination.HistoryStoreDB.Dispose();
                     }
                     else
                     {
@@ -156,7 +159,6 @@ namespace QuoteHistoryGUI.HistoryTools
                                 Console.WriteLine(DateTime.UtcNow + ": copying " + message);
                             });
                         }
-                        Interactor.Source.HistoryStoreDB.Dispose();
                         Interactor.Destination.HistoryStoreDB.Dispose();
                     }
                     else
@@ -175,6 +177,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 }
                 Console.WriteLine(DateTime.UtcNow + ": copying performed!");
+                Interactor.Source.HistoryStoreDB.Dispose();
             }
             catch (Exception ex)
             {

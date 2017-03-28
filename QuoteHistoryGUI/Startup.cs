@@ -96,7 +96,6 @@ namespace QuoteHistoryGUI
                             var loadingMode = Models.StorageInstanceModel.LoadingMode.Sync;
 
                             return ConsoleCommands.Upstream(new Models.StorageInstanceModel(Source, null, loadingMode: loadingMode), paramDict["-templates"], paramDict["-type"], int.Parse(paramDict["-degree"]));
-
                         }
                         catch (Exception e)
                         {
