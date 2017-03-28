@@ -95,7 +95,7 @@ namespace QuoteHistoryGUI.HistoryTools
             {
                 return DeserializeTicksLevel2(content, degreeOfParallelism);
             }
-            else if (period == "M1 ask" || period == "M1 bid" || period == "H1 ask" || period == "H1 bid" )
+            else if (period == "M1 ask" || period == "M1 bid" || period == "H1 ask" || period == "H1 bid")
             {
                 return DeserializeBars(content);
             }
@@ -108,21 +108,31 @@ namespace QuoteHistoryGUI.HistoryTools
         {
             List<QHBar> res = new List<QHBar>();
             StreamReader reader = new StreamReader(new MemoryStream(content));
-            while (!reader.EndOfStream)
+            string line = "";
+            try
             {
-                var splittedLine = reader.ReadLine().Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                if (splittedLine.Count() == 0)
+                while (!reader.EndOfStream)
                 {
-                    throw new InvalidDataException("Blank line not at the end of the file is not allowed.");
+                    line = reader.ReadLine();
+                    var splittedLine = line.Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (splittedLine.Count() == 0)
+                    {
+                        throw new InvalidDataException("Blank line not at the end of the file is not allowed.");
+                    }
+                    QHBar bar = new QHBar();
+                    bar.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
+                    bar.Open = decimal.Parse(splittedLine[2], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+                    bar.High = decimal.Parse(splittedLine[3], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+                    bar.Low = decimal.Parse(splittedLine[4], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+                    bar.Close = decimal.Parse(splittedLine[5], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+                    bar.Volume = decimal.Parse(splittedLine[6], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+
+                    res.Add(bar);
                 }
-                QHBar bar = new QHBar();
-                bar.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
-                bar.Open = decimal.Parse(splittedLine[2], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
-                bar.High = decimal.Parse(splittedLine[3], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
-                bar.Low = decimal.Parse(splittedLine[4], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
-                bar.Close = decimal.Parse(splittedLine[5], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
-                bar.Volume = decimal.Parse(splittedLine[6], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
-                res.Add(bar);
+            }
+            catch (FormatException ex)
+            {
+                throw new FormatException("Line " + line + " caused " + ex);
             }
             return res;
         }
@@ -132,26 +142,35 @@ namespace QuoteHistoryGUI.HistoryTools
         {
             List<QHTick> res = new List<QHTick>();
             StreamReader reader = new StreamReader(new MemoryStream(content));
-            while (!reader.EndOfStream)
+            string line = "";
+            try
             {
-                var splittedLine = reader.ReadLine().Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                if (splittedLine.Count() == 0)
+                while (!reader.EndOfStream)
                 {
-                    throw new InvalidDataException("Blank line not at the end of the file is not allowed.");
+                    line = reader.ReadLine();
+                    var splittedLine = line.Split(new char[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (splittedLine.Count() == 0)
+                    {
+                        throw new InvalidDataException("Blank line not at the end of the file is not allowed.");
+                    }
+                    QHTick tick = new QHTick();
+                    var dateAndPartStr = splittedLine[1].Split('-');
+                    if (dateAndPartStr.Count() == 2)
+                    {
+                        tick.Part = int.Parse(dateAndPartStr[1]);
+                        splittedLine[1] = dateAndPartStr[0];
+                    }
+                    tick.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
+                    tick.Bid = decimal.Parse(splittedLine[2], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+                    tick.BidVolume = decimal.Parse(splittedLine[3], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+                    tick.Ask = decimal.Parse(splittedLine[4], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+                    tick.AskVolume = decimal.Parse(splittedLine[5], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+                    res.Add(tick);
                 }
-                QHTick tick = new QHTick();
-                var dateAndPartStr = splittedLine[1].Split('-');
-                if (dateAndPartStr.Count() == 2)
-                {
-                    tick.Part = int.Parse(dateAndPartStr[1]);
-                    splittedLine[1] = dateAndPartStr[0];
-                }
-                tick.Time = DateTime.Parse(splittedLine[0] + " " + splittedLine[1], CultureInfo.InvariantCulture);
-                tick.Bid = decimal.Parse(splittedLine[2], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
-                tick.BidVolume = decimal.Parse(splittedLine[3], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
-                tick.Ask = decimal.Parse(splittedLine[4], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
-                tick.AskVolume = decimal.Parse(splittedLine[5], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
-                res.Add(tick);
+            }
+            catch (FormatException ex)
+            {
+                throw new FormatException("Line " + line + " caused " + ex);
             }
             return res;
         }
@@ -213,7 +232,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
                  res[(int)index] = tick;
              });
-            
+
             return res;
         }
 
@@ -227,6 +246,6 @@ namespace QuoteHistoryGUI.HistoryTools
             return res.ToArray();
         }
 
-        
+
     }
 }
