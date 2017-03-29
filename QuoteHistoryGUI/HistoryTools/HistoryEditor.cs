@@ -70,7 +70,7 @@ namespace QuoteHistoryGUI.HistoryTools
             if (f as ChunkFile != null)
             {
                 var cnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
-                if (cnt[0] == 'P' && cnt[1] == 'K')
+                if (cnt.Length>=2 && cnt[0] == 'P' && cnt[1] == 'K')
                     isZip = true;
                 if (!isZip)
                 {
@@ -157,7 +157,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     {
                         var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", f.Period, dateTime[0], dateTime[1], day, hour, i));
 
-                        if (cntnt != null && !(cntnt[0] == 'P' && cntnt[1] == 'K'))
+                        if (cntnt != null && !(cntnt.Length>=2 && cntnt[0] == 'P' && cntnt[1] == 'K'))
                         {
                             var cntList = new List<byte>(cntnt);
                             var flushPart = 1;
@@ -224,7 +224,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     {
                         var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, day, hour, i));
 
-                        if (cntnt != null && !(cntnt[0] == 'P' && cntnt[1] == 'K'))
+                        if (cntnt != null && !(cntnt.Length>=2 && cntnt[0] == 'P' && cntnt[1] == 'K'))
                         {
                             var cntList = new List<byte>(cntnt);
                             var flushPart = 1;
