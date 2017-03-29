@@ -105,7 +105,7 @@ namespace QuoteHistoryGUI.Dialogs
                 {
                     isMove = OperationTypeBox.SelectedIndex == 1;
                     CopyWorker = new BackgroundWorker();
-                    
+
 
                     if (!Directory.Exists(SourceBox.Text + "\\HistoryDB"))
                         Directory.CreateDirectory(SourceBox.Text + "\\HistoryDB");
@@ -155,7 +155,7 @@ namespace QuoteHistoryGUI.Dialogs
                 else
                 {
 
-                    
+
 
                     isMove = OperationTypeBox.SelectedIndex == 1;
                     CopyWorker = new BackgroundWorker();
@@ -193,7 +193,7 @@ namespace QuoteHistoryGUI.Dialogs
         public void DoConsoleImport(StorageInstanceModel destination, StorageInstanceModel source, string templateStr)
         {
             StringBuilder templText = new StringBuilder();
-            foreach(var ch in templateStr)
+            foreach (var ch in templateStr)
             {
                 templText.Append(ch);
                 if (ch == ';')
@@ -264,28 +264,20 @@ namespace QuoteHistoryGUI.Dialogs
         {
             BackgroundWorker worker = e.Argument as BackgroundWorker;
             var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
-            if (isMetaMatching)
+
+            foreach (var templ in templates)
             {
-                var templList = new List<string>(templates);
-                var matchEnum = temW.GetFromMetaByMatch(templList, _source, worker);
-                _interactor.Copy(matchEnum, worker);
-                _interactor.Copy(matchEnum, worker, true);
-            }
-            else
-            {
-                foreach (var templ in templates)
+                worker.ReportProgress(1, "Template: " + templ);
+                var matched = temW.GetByMatch(templ, worker);
+                _interactor.Copy(worker, matched, periods, (message) =>
                 {
-                    worker.ReportProgress(1, "Template: " + templ);
-                    var matched = temW.GetByMatch(templ, worker);
-                    _interactor.Copy(worker, matched, periods, (message) => {
-                            worker.ReportProgress(1, message);
-                    });
-                    if (isMove)
-                    {
-                        _interactor.Dispatcher = Dispatcher;
-                        _interactor.Delete(matched, worker,true);
-                        _interactor.Dispatcher = null;
-                    }
+                    worker.ReportProgress(1, message);
+                });
+                if (isMove)
+                {
+                    _interactor.Dispatcher = Dispatcher;
+                    _interactor.Delete(matched, worker, true);
+                    _interactor.Dispatcher = null;
                 }
             }
             _interactor.Destination.Refresh();
@@ -294,9 +286,10 @@ namespace QuoteHistoryGUI.Dialogs
         private void worker_Import(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = e.Argument as BackgroundWorker;
-            _interactor.Import(true, worker, (key, copiedCnt) => {
-                    var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
-                    worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+            _interactor.Import(true, worker, (key, copiedCnt) =>
+            {
+                var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
+                worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
             });
             _interactor.Destination.Refresh();
         }
@@ -337,7 +330,7 @@ namespace QuoteHistoryGUI.Dialogs
                         _interactor.Destination.Refresh();
                 }
             }
-            
+
         }
         private void templateHelpButton_Click(object sender, RoutedEventArgs e)
         {
@@ -386,8 +379,8 @@ namespace QuoteHistoryGUI.Dialogs
 
         private void OperationTypeBox_Selected(object sender, RoutedEventArgs e)
         {
-            if(OperationTypeBox.SelectedIndex==1)
-            MessageBox.Show(this, "The move option will cause the execution of delete operations. It can lead to poor performance. It is recommended to do a compact operation after delete operations.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (OperationTypeBox.SelectedIndex == 1)
+                MessageBox.Show(this, "The move option will cause the execution of delete operations. It can lead to poor performance. It is recommended to do a compact operation after delete operations.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 }

@@ -92,38 +92,34 @@ namespace QuoteHistoryGUI.Dialogs
         {
             BackgroundWorker worker = e.Argument as BackgroundWorker;
             var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
-            if (isMetaMatching)
+            //if (isMetaMatching)
+            //{
+            //    var templList = new List<string>(templates);
+            //    var matchEnum = temW.GetFromMetaByMatch(templList, _source, worker).ToArray();
+            //    _interactor.Copy(matchEnum, worker);
+            //    _interactor.Copy(matchEnum, worker, true);
+            //}
+            //else
+            //{
+
+            foreach (var templ in templates)
             {
-                var templList = new List<string>(templates);
-                var matchEnum = temW.GetFromMetaByMatch(templList, _source, worker).ToArray();
-                _interactor.Copy(matchEnum, worker);
-                _interactor.Copy(matchEnum, worker, true);
-            }
-            else
+                worker.ReportProgress(1, "Template: " + templ);
+                var matched = temW.GetByMatch(templ, worker).ToArray();
+
+                _interactor.Copy(worker, matched, null, (message) =>
             {
 
-
-
-                foreach (var templ in templates)
+                worker.ReportProgress(1, message);
+            });
+                if (isMove)
                 {
-                    worker.ReportProgress(1, "Template: " + templ);
-                    var matched = temW.GetByMatch(templ, worker).ToArray();
-
-                    _interactor.Copy(worker, matched, null, (message) =>
-                {
-
-                    worker.ReportProgress(1, message);
-                });
-                    if (isMove)
-                    {
-                        _interactor.Dispatcher = Dispatcher;
-                        _interactor.Delete(matched);
-                        _interactor.Dispatcher = null;
-                    }
-
-
+                    _interactor.Dispatcher = Dispatcher;
+                    _interactor.Delete(matched);
+                    _interactor.Dispatcher = null;
                 }
             }
+            //}
             _interactor.Destination.Refresh();
         }
         private void CopyProgressChanged(object sender, ProgressChangedEventArgs e)

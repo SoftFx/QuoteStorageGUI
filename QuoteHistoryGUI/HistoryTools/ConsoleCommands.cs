@@ -154,6 +154,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
                             var matched = temW.GetByMatch(templ, null);
                             //var t = matched.ToArray();
+                            Console.WriteLine(DateTime.UtcNow + ": copying with template: " + templ);
                             Interactor.Copy(null, matched, types, (message) =>
                             {
                                 Console.WriteLine(DateTime.UtcNow + ": copying " + message);
@@ -168,6 +169,9 @@ namespace QuoteHistoryGUI.HistoryTools
 
                             var matched = temW.GetByMatch(templ, null);
                             //var t = matched.ToArray();
+
+                            Console.WriteLine(DateTime.UtcNow + ": copying with template: " + templ);
+
                             Interactor.NtfsExport(null, matched, destinationPath, types, (message) =>
                             {
                                 Console.WriteLine(DateTime.UtcNow + ": copying " + message);
