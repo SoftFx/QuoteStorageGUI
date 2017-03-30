@@ -21,10 +21,15 @@ The application supports console mode.
 ##### Examples
 
 `C:\QuoteStorageGUI.exe -import "C:\ToStorage" "C:\FromStorage"` - import all files from one storage to another
+
 `C:\QuoteStorageGUI.exe -import "C:\ToStorage" "C:\FromStorage" -type M1` - import M1 files from one storage to another
+
 `C:\QuoteStorageGUI.exe -import "C:\ToFolder" "C:\FromStorage" -type M1 -format Ntfs` - import M1 files from storage to folder in text format
+
 `C:\QuoteStorageGUI.exe -export "C:\FromStorage" "C:\ToStorage" -template (EUR*|AUD*)/2016` - export all files for EUR\* and AUD\* symbols for 2016 year from one storage to another.
+
 `C:\QuoteStorageGUI.exe -export "C:\FromStorage" "C:\ToStorage" -template (EUR*|AUD*)/2016 -type "ticks level2"` - export only level2 ticks files for EUR\* and AUD\* symbols for 2016 year from one storage to another.
+
 
 #### Upstream update 
 ```
@@ -42,5 +47,6 @@ Allow you to build higher periodicity file from lower.
 ##### Examples
 
 `C:\QuoteStorageGUI.exe -upstream "C:\Storage"` - upstream all files
+
 `C:\QuoteStorageGUI.exe -upstream "C:\Storage -type ticks"` - make only ticks->M1 update
 
