@@ -160,6 +160,8 @@ namespace QuoteHistoryGUI.Dialogs
                     {
                         if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
                             Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
+                        _destination = new StorageInstanceModel(DestinationBox.Text, _dispatcher, _interactor, StorageInstanceModel.OpenMode.ReadWrite, StorageInstanceModel.LoadingMode.None);
+                        _interactor.Destination = _destination;
                         if (_interactor.Destination.openMode == StorageInstanceModel.OpenMode.ReadOnly)
                             _destination = new StorageInstanceModel(DestinationBox.Text, _interactor.Dispatcher);
 

@@ -21,7 +21,7 @@ namespace QuoteHistoryGUI
             "-e[xport] <Source> <Destination> [-templates <templates> default:\"*\"] [-type <type> default:\"all\"] [-format <format> default:\"LevelDB\"] - import storage from Source to Destination.\n" +
             "Example:\n" +
             "QuoteHistoryGUI.exe -import \"C:\\Quotes History\" \"C:\\New Quotes History\" -templates \"(AUD*|EUR*)/2016;BTCUSD\" -type \"M1\" -format \"LevelDB\"\n"+
-            "-u[pstream] <Source> [-templates <templates> default:\"*\"] [-type <type> default:\"all\"] [-degree <format> default:\"8\"] - upstream storage.\n" +
+            "-u[pstream] <Source> [-templates <templates> default:\"*\"] [-type <type> default:\"all\"] [-degree <degree> default:\"8\"] - upstream storage.\n" +
             "Example:\n" +
             "QuoteHistoryGUI.exe -upstream \"C:\\Quotes History\" -templates \"(AUD*|EUR*)/2016;BTCUSD\" -type \"M1->H1\" -degree \"16\"\n";
 
