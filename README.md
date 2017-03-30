@@ -3,7 +3,7 @@ Basic Gui application to view/edit quote storage history.
 
 The application supports console mode.
 
-Commands
+##Commands
 
 Import and export files from one storage to another or to folder 
 ```
