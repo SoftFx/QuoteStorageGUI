@@ -6,8 +6,8 @@ The application supports console mode.
 ## Commands
 #### Import and export files from one storage to another or to folder 
 ```
--i[mport] <Destination> <Source> [-templates <templates> default:\"*\"] [-type <type> default:\"all\"] [-format <format> default:\"LevelDB\"]
--e[xport] <Source> <Destination> [-templates <templates> default:\"*\"] [-type <type> default:\"all\"] [-format <format> default:\"LevelDB\"]
+-i[mport] <Destination> <Source> [-templates <templates> default: "*"] [-type <type> default: "all"] [-format <format> default: "LevelDB"]
+-e[xport] <Source> <Destination> [-templates <templates> default: "*"] [-type <type> default: "all"] [-format <format> default: "LevelDB"]
 ```   
 
 `<Source>` and `<Destination>` are required parameters. Other optional.
@@ -33,7 +33,7 @@ The application supports console mode.
 
 #### Upstream update 
 ```
--u[pstream] <Source> [-templates <templates> default:\"*\"] [-type <type> default:\"all\"] [-degree <format> default:\"8\"] 
+-u[pstream] <Source> [-templates <templates> default: "*"] [-type <type> default: "all"] [-degree <format> default: "8"] 
 ```   
 Allow you to build higher periodicity file from lower.
 `<Source>` is required parameters. Other optional.
