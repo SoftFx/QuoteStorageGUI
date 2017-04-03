@@ -445,6 +445,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
             foreach (var templ in templates)
             {
+                reportAction.Invoke("upstreaming by template: " + templ);
                 templNum++;
                 var matched = temW.GetByMatch(templ, worker);
                 DateTime lastReport = DateTime.UtcNow.AddSeconds(-2);
@@ -511,6 +512,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                 FlushWork(worker, saveListBids, ref flushCnt, ref lastReport, reportAction);
                 FlushWork(worker, saveListAsks, ref flushCnt, ref lastReport, reportAction);
+                reportAction.Invoke(flushCnt + " files builded by upstream");
             }
         }
 

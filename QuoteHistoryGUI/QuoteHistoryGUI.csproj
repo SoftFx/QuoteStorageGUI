@@ -277,6 +277,7 @@
     <Content Include="HelpDocumentation.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="HelpFiles\format.png" />
     <Resource Include="Icons\compact.png" />
     <Resource Include="Icons\spin.gif" />
     <EmbeddedResource Include="HelpFiles\open.png">
