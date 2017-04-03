@@ -6,8 +6,8 @@ The application supports console mode.
 ## Commands
 #### Import and export files from one storage to another or to folder 
 ```
--i[mport] <Destination> <Source> [-templates <templates> default:\"*\"] [-type <type> default:\"all\"] [-format <format> default:\"LevelDB\"]
--e[xport] <Source> <Destination> [-templates <templates> default:\"*\"] [-type <type> default:\"all\"] [-format <format> default:\"LevelDB\"]
+-i[mport] <Destination> <Source> [-templates <templates> default: "*"] [-type <type> default: "all"] [-format <format> default: "LevelDB"]
+-e[xport] <Source> <Destination> [-templates <templates> default: "*"] [-type <type> default: "all"] [-format <format> default: "LevelDB"]
 ```   
 
 `<Source>` and `<Destination>` are required parameters. Other optional.
@@ -26,14 +26,14 @@ The application supports console mode.
 
 `C:\QuoteStorageGUI.exe -import "C:\ToFolder" "C:\FromStorage" -type M1 -format Ntfs` - import M1 files from storage to folder in text format
 
-`C:\QuoteStorageGUI.exe -export "C:\FromStorage" "C:\ToStorage" -template (EUR*|AUD*)/2016` - export all files for EUR\* and AUD\* symbols for 2016 year from one storage to another.
+`C:\QuoteStorageGUI.exe -export "C:\FromStorage" "C:\ToStorage" -template "(EUR*|AUD*)/2016"` - export all files for EUR\* and AUD\* symbols for 2016 year from one storage to another.
 
-`C:\QuoteStorageGUI.exe -export "C:\FromStorage" "C:\ToStorage" -template (EUR*|AUD*)/2016 -type "ticks level2"` - export only level2 ticks files for EUR\* and AUD\* symbols for 2016 year from one storage to another.
+`C:\QuoteStorageGUI.exe -export "C:\FromStorage" "C:\ToStorage" -template "(EUR*|AUD*)/2016" -type "ticks level2"` - export only level2 ticks files for EUR\* and AUD\* symbols for 2016 year from one storage to another.
 
 
 #### Upstream update 
 ```
--u[pstream] <Source> [-templates <templates> default:\"*\"] [-type <type> default:\"all\"] [-degree <format> default:\"8\"] 
+-u[pstream] <Source> [-templates <templates> default: "*"] [-type <type> default: "all"] [-degree <format> default: "8"] 
 ```   
 Allow you to build higher periodicity file from lower.
 `<Source>` is required parameters. Other optional.
@@ -48,5 +48,5 @@ Allow you to build higher periodicity file from lower.
 
 `C:\QuoteStorageGUI.exe -upstream "C:\Storage"` - upstream all files
 
-`C:\QuoteStorageGUI.exe -upstream "C:\Storage -type ticks"` - make only ticks->M1 update
+`C:\QuoteStorageGUI.exe -upstream "C:\Storage" -type "ticks"` - make only ticks->M1 update
 
