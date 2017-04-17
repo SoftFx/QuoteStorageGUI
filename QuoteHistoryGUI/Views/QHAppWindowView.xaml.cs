@@ -62,10 +62,11 @@ namespace QuoteHistoryGUI.Views
                                 this.Dispatcher.Invoke(delegate { _model.TryToAddStorage(tab); });
                             else this.Dispatcher.Invoke(delegate { MessageBox.Show(this, "Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None); });
                         }
-                        catch { }
+                        catch(Exception ex){
+                            this.Dispatcher.BeginInvoke(new Action(() => { this.IsEnabled = true; this.HideLoading(); }), DispatcherPriority.ContextIdle, null);
+                            this.Dispatcher.Invoke(delegate { MessageBox.Show(this, "Can't open storage\n\n" + ex, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None); });
+                        }
                     });
-                    
-
                 }
             }
         }
