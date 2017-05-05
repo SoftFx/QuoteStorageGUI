@@ -267,7 +267,11 @@ namespace QuoteHistoryGUI.Models
                                     this.Dispatcher.Invoke(delegate { MessageBox.Show(MainWindow, "Can't open storage\n\nMessage: " + tab.Status, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None); });
                             }
                         }
-                        catch { }
+                        catch(Exception ex)
+                        {
+                            this.Dispatcher.Invoke(delegate { MessageBox.Show("Can't open storage\n\n" + ex, "Hmm...", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK, MessageBoxOptions.None); });
+                            log.Error(ex.Message);
+                        }
                     });
 
                 }
