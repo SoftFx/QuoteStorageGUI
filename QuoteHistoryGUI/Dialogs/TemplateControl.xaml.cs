@@ -23,7 +23,9 @@ namespace QuoteHistoryGUI.Dialogs
         public SelectableItemSource Hours { get; set; }
         public SelectableItemSource Ticks { get; set; }
         public SelectableItemSource Templates { get; set; }
-
+        public SelectableItemSource Mapping { get; set; }
+        public String SymbolMapFrom { get; set; }
+        public String SymbolMapTo { get; set; }
         public TemplateControl()
         {
             Symbols = new SelectableItemSource();
@@ -44,6 +46,7 @@ namespace QuoteHistoryGUI.Dialogs
             Hours = new SelectableItemSource(hours);
             Ticks = new SelectableItemSource(new[] { "ticks*", "(ticks file|ticks meta)", "ticks level2*" });
             Templates = new SelectableItemSource();
+            Mapping = new SelectableItemSource();
 
             InitializeComponent();
 
@@ -56,7 +59,7 @@ namespace QuoteHistoryGUI.Dialogs
             {
                 foreach (string symbol in symbols)
                 {
-                    if(symbol!="Loading")
+                    if (symbol != "Loading")
                         Symbols.Add(new SelectableItem(symbol));
                 }
                 //OnPropertyChanged(nameof(Symbols));
@@ -125,12 +128,21 @@ namespace QuoteHistoryGUI.Dialogs
             else Templates.Add(new SelectableItem("*", null, true));
         }
 
+
+        private void AddMappingButtonClick(object sender, RoutedEventArgs e)
+        {
+            if (!(String.IsNullOrEmpty(SymbolMapFrom) && String.IsNullOrEmpty(SymbolMapFrom))){
+                Mapping.Add(new SelectableItem(SymbolMapFrom + " -> " + SymbolMapTo, null, true));
+            }
+        }
+
         private void RemoveButtonClick(object sender, RoutedEventArgs e)
         {
             SelectableItem item = (sender as Button)?.CommandParameter as SelectableItem;
             if (item == null)
                 return;
             Templates.Remove(item);
+            Mapping.Remove(item);
         }
 
         #region INotifyPropertyChanged

@@ -46,6 +46,8 @@
             <RowDefinition Height="28"/>
             <RowDefinition Height="28"/>
             <RowDefinition MinHeight="80"/>
+            <RowDefinition Height="28"/>
+            <RowDefinition MinHeight="40"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -70,5 +72,11 @@
         <ComboBox Grid.Column="5" Grid.Row="1" DataContext="{Binding Path=Ticks}" Style="{StaticResource ComboBoxWithCheckBoxesStyle}"/>
         <Button Content="Add" Grid.Column="6" Grid.Row="1" Margin="4,2" Click="AddButtonClick"/>
         <ListBox Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="7" DataContext="{Binding Path=Templates}" Style="{StaticResource ListBoxTemplatesStyle}"/>
+        <Label Grid.Column="0" Grid.Row="3" Content="Mapping"/>
+        <TextBox Grid.Column="1" Grid.Row="3" Grid.ColumnSpan="2" Margin="2" Text="{Binding Path=SymbolMapFrom}"/>
+        <Label Grid.Column="3" Grid.Row="3" Content="->" HorizontalAlignment="Center"/>
+        <TextBox Grid.Column="4" Grid.Row="3" Grid.ColumnSpan="2" Margin="2" Text="{Binding Path=SymbolMapTo}"/>
+        <Button Content="Add" Grid.Column="6" Grid.Row="3" Margin="4,2" Click="AddMappingButtonClick"/>
+        <ListBox Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="7" DataContext="{Binding Path=Mapping}" Style="{StaticResource ListBoxTemplatesStyle}"/>
     </Grid>
 </UserControl>

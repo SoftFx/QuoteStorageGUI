@@ -64,7 +64,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
 
 
-        public void Copy(BackgroundWorker worker = null, IEnumerable<Folder> selection = null, List<string> periods = null, Action<string> reportAction = null)
+        public void Copy(BackgroundWorker worker = null, IEnumerable<Folder> selection = null, List<string> periods = null, Action<string> reportAction = null, IEnumerable<KeyValuePair<string,string>> mapping = null)
         {
             List<byte[]> deleteList = new List<byte[]>();
             int copiedCnt = 0;
@@ -82,7 +82,19 @@ namespace QuoteHistoryGUI.HistoryTools
                     {
                         return;
                     }
-                    Destination.HistoryStoreDB.Put(file.Key, file.Value);
+                    if (mapping == null)
+                    {
+                        Destination.HistoryStoreDB.Put(file.Key, file.Value);
+                    }
+                    else
+                    {
+                        var dbentry = DeserealizeKey(file.Key);
+                        var currentMapping = mapping.Where(t => t.Key == dbentry.Symbol);
+                        foreach(var map in currentMapping)
+                        {
+                            Destination.HistoryStoreDB.Put(SerealizeKey(map.Value,dbentry.Type,dbentry.Period,dbentry.Time.Year, dbentry.Time.Month, dbentry.Time.Day, dbentry.Time.Hour, dbentry.Part, dbentry.FlushPart), file.Value);
+                        }
+                    }
                     copiedCnt++;
 
                     if (reportAction != null && (DateTime.UtcNow - lastReport).Seconds > 0.25)

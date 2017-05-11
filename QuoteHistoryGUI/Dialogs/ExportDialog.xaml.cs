@@ -35,6 +35,7 @@ namespace QuoteHistoryGUI.Dialogs
         SelectTemplateWorker temW;
         string destinationStr;
         string templateText;
+        string mappingText;
         int formatType = 0;
         bool isMove = false;
         bool canceled = false;
@@ -120,7 +121,7 @@ namespace QuoteHistoryGUI.Dialogs
                     }
                     temW = new SelectTemplateWorker(_interactor.Source.Folders, new HistoryLoader(Application.Current.MainWindow.Dispatcher, _interactor.Source.HistoryStoreDB));
                     templateText = string.Join(";\n", TemplateBox.Templates.Source.Select(t => t.Value));
-
+                    mappingText = string.Join(";\n", TemplateBox.Mapping.Source.Select(t => t.Value));
                     switch (FileTypeBox.SelectedIndex)
                     {
                         case 1:
@@ -197,6 +198,7 @@ namespace QuoteHistoryGUI.Dialogs
 
             BackgroundWorker worker = e.Argument as BackgroundWorker;
             var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
+            var mapping = mappingText.Split(new[] { ";\n" }, StringSplitOptions.None).Select(t=>new KeyValuePair<string, string>(t.Split(' ')[0], t.Split(' ')[2]));
             if (formatType == 0)
             {
                 foreach (var templ in templates)
@@ -206,7 +208,7 @@ namespace QuoteHistoryGUI.Dialogs
                     _interactor.Copy(worker, matched, periods, (message) =>
                     {
                         worker.ReportProgress(1, message);
-                    });
+                    }, mapping);
                     if (isMove)
                     {
                         _interactor.Dispatcher = Dispatcher;
