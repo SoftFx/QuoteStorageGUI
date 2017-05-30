@@ -429,7 +429,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 if (dbentry.Type == "Chunk")
                 {
                     string fileFormat = (sourceIter.Value().Length > 2 && sourceIter.Value()[0] == 'P' && sourceIter.Value()[1] == 'K') ? ".zip" : ".txt";
-                    string fileName = dbentry.Symbol + " " + dbentry.Period + " " + dbentry.Time.ToString("yyyy-MM-dd hh") + (dbentry.Part == 0 ? "" : "." + dbentry.Part.ToString());
+                    string fileName = dbentry.Symbol + " " + dbentry.Period + " " + dbentry.Time.ToString("yyyy-MM-dd HH") + (dbentry.Part == 0 ? "" : "." + dbentry.Part.ToString());
                     if (!Directory.Exists(NtfsPath))
                         Directory.CreateDirectory(NtfsPath);
                     File.WriteAllBytes(NtfsPath + "/" + fileName + fileFormat, sourceIter.Value());
