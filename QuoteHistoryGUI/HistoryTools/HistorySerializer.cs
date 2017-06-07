@@ -14,6 +14,7 @@ namespace QuoteHistoryGUI.HistoryTools
     {
         public DateTime Time;
         public abstract byte[] Serialize();
+        public abstract byte[] SerializeBinary();
     }
     public class QHBar : QHItem
     {
@@ -41,6 +42,22 @@ namespace QuoteHistoryGUI.HistoryTools
             return ASCIIEncoding.ASCII.GetBytes(barStr);
         }
 
+        public override byte[] SerializeBinary()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaryWriter bw = new BinaryWriter(ms);
+
+                bw.Write(Time.ToBinary());
+                bw.Write((double)Open);
+                bw.Write((double)High);
+                bw.Write((double)Low);
+                bw.Write((double)Close);
+                bw.Write((double)Volume);
+                bw.Flush();
+                return ms.ToArray();
+            }
+        }
     }
     public class QHTick : QHItem
     {
@@ -66,6 +83,23 @@ namespace QuoteHistoryGUI.HistoryTools
             tickStr += "\r\n";
             return ASCIIEncoding.ASCII.GetBytes(tickStr);
         }
+
+        public override byte[] SerializeBinary()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaryWriter bw = new BinaryWriter(ms);
+
+                bw.Write(this.Time.ToBinary());
+                bw.Write((byte)this.Part);
+                bw.Write((double)this.Bid);
+                bw.Write((double)this.BidVolume);
+                bw.Write((double)this.Ask);
+                bw.Write((double)this.AskVolume);
+                bw.Flush();
+                return ms.ToArray();
+            }
+        }
     }
 
     public class QHTickLevel2 : QHItem
@@ -78,6 +112,32 @@ namespace QuoteHistoryGUI.HistoryTools
         public override byte[] Serialize()
         {
             throw new NotImplementedException();
+        }
+
+        public override byte[] SerializeBinary()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaryWriter bw = new BinaryWriter(ms);
+
+                bw.Write(this.Time.ToBinary());
+                bw.Write((byte)this.Part);
+                
+                bw.Write((byte)Bids.Count());
+                for (int i = 0; i < Bids.Count(); i++)
+                {
+                    bw.Write((double)(Bids[i].Key));
+                    bw.Write((double)(Bids[i].Value));
+                }
+                bw.Write((byte)Asks.Count());
+                for (int i = 0; i < Asks.Count(); i++)
+                {
+                    bw.Write((double)(Asks[i].Key));
+                    bw.Write((double)(Asks[i].Value));
+                }
+                bw.Flush();
+                return ms.ToArray();
+            }
         }
     }
 
@@ -242,6 +302,16 @@ namespace QuoteHistoryGUI.HistoryTools
             foreach (var it in chunk)
             {
                 res.AddRange(it.Serialize());
+            }
+            return res.ToArray();
+        }
+
+        internal static byte[] SerializeBinary(IEnumerable<QHItem> chunk)
+        {
+            List<byte> res = new List<byte>();
+            foreach (var it in chunk)
+            {
+                res.AddRange(it.SerializeBinary());
             }
             return res.ToArray();
         }

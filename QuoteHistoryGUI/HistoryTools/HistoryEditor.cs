@@ -28,7 +28,7 @@ namespace QuoteHistoryGUI.HistoryTools
             _dbase = db;
         }
 
-        public byte[] GetOrUnzip(byte[] content)
+        public static byte[] GetOrUnzip(byte[] content)
         {
             if (content == null || content.Count() == 0) return new byte[] { };
             bool isZip = false;
@@ -333,7 +333,7 @@ namespace QuoteHistoryGUI.HistoryTools
             RebuildMeta(f, showMessages);
         }
 
-        public KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>> GetChunkMetaForDB(byte[] content, HistoryDatabaseFuncs.DBEntry entry)
+        public KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>> GetChunkMetaForDB(byte[] content, HistoryDatabaseFuncs.DBEntry entry, string fileExtension = "txt")
         {
             var meta = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Meta", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part));
             var key = HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, entry.Time.Day, entry.Time.Hour, entry.Part);
@@ -352,7 +352,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 zipStream.SetLevel(3); //0-9, 9 being the highest level of compression
 
-                ZipEntry newEntry = new ZipEntry(entry.Period + ".txt");
+                ZipEntry newEntry = new ZipEntry(entry.Period + "." + fileExtension);
                 newEntry.DateTime = DateTime.Now;
 
                 zipStream.PutNextEntry(newEntry);

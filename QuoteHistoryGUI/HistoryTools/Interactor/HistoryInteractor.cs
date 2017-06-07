@@ -64,7 +64,7 @@ namespace QuoteHistoryGUI.HistoryTools
 
 
 
-        public void Copy(BackgroundWorker worker = null, IEnumerable<Folder> selection = null, List<string> periods = null, Action<string> reportAction = null, IEnumerable<KeyValuePair<string,string>> mapping = null)
+        public void Copy(BackgroundWorker worker = null, IEnumerable<Folder> selection = null, List<string> periods = null, Action<string> reportAction = null, IEnumerable<KeyValuePair<string, string>> mapping = null)
         {
             List<byte[]> deleteList = new List<byte[]>();
             int copiedCnt = 0;
@@ -82,7 +82,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     {
                         return;
                     }
-                    if (mapping == null)
+                    if (mapping == null || mapping != null && mapping.Count() == 0)
                     {
                         Destination.HistoryStoreDB.Put(file.Key, file.Value);
                     }
@@ -90,9 +90,9 @@ namespace QuoteHistoryGUI.HistoryTools
                     {
                         var dbentry = DeserealizeKey(file.Key);
                         var currentMapping = mapping.Where(t => t.Key == dbentry.Symbol);
-                        foreach(var map in currentMapping)
+                        foreach (var map in currentMapping)
                         {
-                            Destination.HistoryStoreDB.Put(SerealizeKey(map.Value,dbentry.Type,dbentry.Period,dbentry.Time.Year, dbentry.Time.Month, dbentry.Time.Day, dbentry.Time.Hour, dbentry.Part, dbentry.FlushPart), file.Value);
+                            Destination.HistoryStoreDB.Put(SerealizeKey(map.Value, dbentry.Type, dbentry.Period, dbentry.Time.Year, dbentry.Time.Month, dbentry.Time.Day, dbentry.Time.Hour, dbentry.Part, dbentry.FlushPart), file.Value);
                         }
                     }
                     copiedCnt++;
@@ -105,7 +105,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                 }
             }
-            
+
             reportAction.Invoke("[" + copiedCnt + "] files copied");
         }
 
@@ -120,7 +120,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 selection = Selection;
             foreach (var fold in selection)
             {
-                var files = Source.Editor.EnumerateFilesInFolder(fold, periods, types:new List<string>() { "Chunk"});
+                var files = Source.Editor.EnumerateFilesInFolder(fold, periods, types: new List<string>() { "Chunk" });
                 foreach (var file in files)
                 {
                     if (worker?.CancellationPending == true)
@@ -129,13 +129,52 @@ namespace QuoteHistoryGUI.HistoryTools
                     }
                     DBEntry dbentry = DeserealizeKey(file.Key);
                     string fileFormat = (file.Value.Length > 2 && file.Value[0] == 'P' && file.Value[1] == 'K') ? ".zip" : ".txt";
-                    string fileName = dbentry.Symbol + " " + dbentry.Period + " " + dbentry.Time.ToString("yyyy-MM-dd hh") + (dbentry.Part == 0 ? "" : "."+dbentry.Part.ToString());
+                    string fileName = dbentry.Symbol + " " + dbentry.Period + " " + dbentry.Time.ToString("yyyy-MM-dd hh") + (dbentry.Part == 0 ? "" : "." + dbentry.Part.ToString());
 
                     if (!Directory.Exists(NtfsPath))
                         Directory.CreateDirectory(NtfsPath);
 
-                    File.WriteAllBytes(NtfsPath+"/"+fileName + fileFormat, file.Value);
+                    File.WriteAllBytes(NtfsPath + "/" + fileName + fileFormat, file.Value);
                     copiedCnt++;
+
+                    if (reportAction != null && (DateTime.UtcNow - lastReport).Seconds > 0.25)
+                    {
+                        dbentry = DeserealizeKey(file.Key);
+                        reportAction.Invoke("[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                        lastReport = DateTime.UtcNow;
+                    }
+                }
+            }
+
+            reportAction.Invoke("[" + copiedCnt + "] files copied");
+        }
+
+
+        public void BinaryExport(BackgroundWorker worker = null, IEnumerable<Folder> selection = null, string NtfsPath = "NtfsExport", List<string> periods = null, Action<string> reportAction = null)
+        {
+            List<byte[]> deleteList = new List<byte[]>();
+            int copiedCnt = 0;
+            DateTime lastReport = DateTime.UtcNow;
+            var editor = new HistoryEditor(Destination.HistoryStoreDB);
+
+            if (selection == null)
+                selection = Selection;
+            foreach (var fold in selection)
+            {
+                var files = Source.Editor.EnumerateFilesInFolder(fold, periods, types: new List<string>() { "Chunk" });
+                foreach (var file in files)
+                {
+                    if (worker?.CancellationPending == true)
+                    {
+                        return;
+                    }
+                    DBEntry dbentry = DeserealizeKey(file.Key);
+                    var content = HistoryEditor.GetOrUnzip(file.Value);
+                    var items = HistorySerializer.Deserialize(dbentry.Period, content);
+                    var binContent = HistorySerializer.SerializeBinary(items);
+                    var entries = editor.GetChunkMetaForDB(binContent, dbentry, "dat");
+                    Destination.HistoryStoreDB.Put(entries.Key.Key, entries.Key.Value);
+                    Destination.HistoryStoreDB.Put(entries.Value.Key, entries.Value.Value);
 
                     if (reportAction != null && (DateTime.UtcNow - lastReport).Seconds > 0.25)
                     {
@@ -409,6 +448,49 @@ namespace QuoteHistoryGUI.HistoryTools
             sourceIter.Dispose();
         }
 
+        public void ExportAllBinary(bool replace = true, BackgroundWorker worker = null, Action<byte[], int> reportAction = null)
+        {
+            var sourceIter = Source.HistoryStoreDB.CreateIterator();
+            sourceIter.SeekToFirst();
+            DateTime ReportTime = DateTime.UtcNow.AddSeconds(-2);
+            int cnt = 0;
+            var editor = new HistoryEditor(Destination.HistoryStoreDB);
+            while (sourceIter.Valid())
+            {
+                if (worker?.CancellationPending == true)
+                {
+                    sourceIter.Dispose();
+                    return;
+                }
+
+                cnt++;
+                if (replace)
+                {
+                    var dbEntry = DeserealizeKey(sourceIter.Key());
+                    if (dbEntry.Type == "Chunk")
+                    {
+                        var content = HistoryEditor.GetOrUnzip(sourceIter.Value());
+                        var items = HistorySerializer.Deserialize(dbEntry.Period, content);
+                        var binContent = HistorySerializer.SerializeBinary(items);
+                        
+                        var entries = editor.GetChunkMetaForDB(binContent, dbEntry, "dat");
+                        Destination.HistoryStoreDB.Put(entries.Key.Key, entries.Key.Value);
+                        Destination.HistoryStoreDB.Put(entries.Value.Key, entries.Value.Value);
+                    } 
+                }
+
+                if (reportAction != null && (DateTime.UtcNow - ReportTime).Seconds > 0.25)
+                {
+                    reportAction.Invoke(sourceIter.Key(), cnt);
+                    ReportTime = DateTime.UtcNow;
+                }
+
+                sourceIter.Next();
+            }
+            sourceIter.Dispose();
+        }
+
+
         public void ExportAllNtfs(bool replace = true, string NtfsPath = "NtfsExport", BackgroundWorker worker = null, Action<byte[], int> reportAction = null)
         {
             var sourceIter = Source.HistoryStoreDB.CreateIterator();
@@ -429,7 +511,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 if (dbentry.Type == "Chunk")
                 {
                     string fileFormat = (sourceIter.Value().Length > 2 && sourceIter.Value()[0] == 'P' && sourceIter.Value()[1] == 'K') ? ".zip" : ".txt";
-                    string fileName = dbentry.Symbol + " " + dbentry.Period + " " + dbentry.Time.ToString("yyyy-MM-dd HH") + (dbentry.Part == 0 ? "" : "." + dbentry.Part.ToString());
+                    string fileName = dbentry.Symbol + " " + dbentry.Period + " " + dbentry.Time.ToString("yyyy-MM-dd HH") + (dbentry.Part == 0 ? "" : "." + dbentry.Part.ToString()) + (dbentry.FlushPart == 0 ? "" :( "[" + dbentry.FlushPart.ToString()+"]"));
                     if (!Directory.Exists(NtfsPath))
                         Directory.CreateDirectory(NtfsPath);
                     File.WriteAllBytes(NtfsPath + "/" + fileName + fileFormat, sourceIter.Value());
@@ -545,7 +627,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     lastReport = DateTime.UtcNow;
                 }
 
-                var items = HistorySerializer.Deserialize("ticks level2", this.Source.Editor.GetOrUnzip(file.Value), degreeOfParallelism);
+                var items = HistorySerializer.Deserialize("ticks level2", HistoryEditor.GetOrUnzip(file.Value), degreeOfParallelism);
                 var itemsList = new List<QHItem>();
                 var ticksLevel2 = items as IEnumerable<QHTickLevel2>;
                 var ticks = this.Source.Editor.GetTicksFromLevel2(ticksLevel2);
@@ -608,7 +690,7 @@ namespace QuoteHistoryGUI.HistoryTools
             }
         }
 
-        void M1ToH1Work(BackgroundWorker worker,  IEnumerable<HistoryDatabaseFuncs.DBEntry> entriesForH1Update, ref int upstramCnt, ref int flushCnt, ref DateTime lastReport,
+        void M1ToH1Work(BackgroundWorker worker, IEnumerable<HistoryDatabaseFuncs.DBEntry> entriesForH1Update, ref int upstramCnt, ref int flushCnt, ref DateTime lastReport,
             List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveList, Action<string> reportAction)
         {
 
@@ -636,12 +718,12 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 if (saveList.Count > 1024)
                 {
-                    FlushWork(worker,  saveList, ref flushCnt, ref lastReport, reportAction);
+                    FlushWork(worker, saveList, ref flushCnt, ref lastReport, reportAction);
                 }
             }
         }
 
-        void FlushWork(BackgroundWorker worker,  List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveList, ref int flushCnt, ref DateTime lastReport, Action<string> reportAction)
+        void FlushWork(BackgroundWorker worker, List<KeyValuePair<KeyValuePair<byte[], byte[]>, KeyValuePair<byte[], byte[]>>> saveList, ref int flushCnt, ref DateTime lastReport, Action<string> reportAction)
         {
             foreach (var pairForChunk in saveList)
             {

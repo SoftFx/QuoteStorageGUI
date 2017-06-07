@@ -103,7 +103,7 @@ namespace QuoteHistoryGUI.Dialogs
                     isMove = OperationTypeBox.SelectedIndex == 1;
                     CopyWorker = new BackgroundWorker();
                     _interactor.Source = _source;
-                    if (formatType == 0)
+                    if (formatType == 0 || formatType == 2)
                     {
                         if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
                             Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
@@ -157,7 +157,7 @@ namespace QuoteHistoryGUI.Dialogs
                     _interactor.Source = _source;
 
 
-                    if (formatType == 0)
+                    if (formatType == 0 || formatType == 2)
                     {
                         if (!Directory.Exists(DestinationBox.Text + "\\HistoryDB"))
                             Directory.CreateDirectory(DestinationBox.Text + "\\HistoryDB");
@@ -217,13 +217,31 @@ namespace QuoteHistoryGUI.Dialogs
                     }
                 }
             }
-            else
+            if (formatType == 1)
             {
                 foreach (var templ in templates)
                 {
                     worker.ReportProgress(1, "Template: " + templ);
                     var matched = temW.GetByMatch(templ, worker);
                     _interactor.NtfsExport(worker, matched, destinationStr, periods, (message) =>
+                    {
+                        worker.ReportProgress(1, message);
+                    });
+                    if (isMove)
+                    {
+                        _interactor.Dispatcher = Dispatcher;
+                        _interactor.Delete(matched, worker, true);
+                        _interactor.Dispatcher = null;
+                    }
+                }
+            }
+            if (formatType == 2)
+            {
+                foreach (var templ in templates)
+                {
+                    worker.ReportProgress(1, "Template: " + templ);
+                    var matched = temW.GetByMatch(templ, worker);
+                    _interactor.BinaryExport(worker, matched, destinationStr, periods, (message) =>
                     {
                         worker.ReportProgress(1, message);
                     });
@@ -251,9 +269,17 @@ namespace QuoteHistoryGUI.Dialogs
                     worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
                 });
             }
-            else
+            if (formatType == 1)
             {
                 _interactor.ExportAllNtfs(true, destinationStr, worker, (key, copiedCnt) =>
+                {
+                    var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
+                    worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
+                });
+            }
+            if (formatType == 2)
+            {
+                _interactor.ExportAllBinary(true, worker, (key, copiedCnt) =>
                 {
                     var dbentry = HistoryDatabaseFuncs.DeserealizeKey(key);
                     worker.ReportProgress(1, "[" + copiedCnt + "] " + dbentry.Symbol + ": " + dbentry.Time + " - " + dbentry.Period);
