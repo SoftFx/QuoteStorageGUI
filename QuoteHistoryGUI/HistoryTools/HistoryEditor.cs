@@ -30,13 +30,14 @@ namespace QuoteHistoryGUI.HistoryTools
 
         public static byte[] GetOrUnzip(byte[] content)
         {
+            string serilizer = "Binary";
             if (content == null || content.Count() == 0) return new byte[] { };
-            bool isZip = false;
             if (content[0] == 'P' && content[1] == 'K')
-                isZip = true;
-            if (!isZip)
-                return content;
-            else
+                serilizer = "Zip";
+            else if (content[0] == 'B' && content[1] == 'Z')
+                serilizer = "BZip";
+
+            if (serilizer == "Zip")
             {
                 MemoryStream data = new MemoryStream(content);
                 ZipFile zip = new ZipFile(data);
@@ -57,6 +58,34 @@ namespace QuoteHistoryGUI.HistoryTools
                 }
                 return content;
             }
+
+            if (serilizer == "BZip")
+            {
+                using (var source = new MemoryStream(content))
+                {
+
+                    using (Bzip2.BZip2InputStream bzipInputStream = new Bzip2.BZip2InputStream(source, false))
+                    {
+
+                        byte[] outContent;
+
+                        using (var binaryReader = new BinaryReader(bzipInputStream))
+                        {
+                            const int bufferSize = 4096;
+                            using (var ms = new MemoryStream())
+                            {
+                                byte[] buffer = new byte[bufferSize];
+                                int count;
+                                while ((count = binaryReader.Read(buffer, 0, buffer.Length)) != 0)
+                                    ms.Write(buffer, 0, count);
+                                outContent = ms.ToArray();
+                            }
+                        }
+                        return outContent;
+                    }
+                }
+            }
+            return content;
         }
         public KeyValuePair<string, byte[]> ReadFromDB(HistoryFile f)
         {
@@ -66,13 +95,16 @@ namespace QuoteHistoryGUI.HistoryTools
 
             string period = f.Period;
             byte[] content = { };
-            bool isZip = false;
+            string serilizer = "Binary";
             if (f as ChunkFile != null)
             {
                 var cnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", period, dateTime[0], dateTime[1], dateTime[2], dateTime[3], f.Part));
-                if (cnt.Length>=2 && cnt[0] == 'P' && cnt[1] == 'K')
-                    isZip = true;
-                if (!isZip)
+                if (cnt.Length >= 2 && cnt[0] == 'P' && cnt[1] == 'K')
+                    serilizer = "Zip";
+                else
+                if (cnt.Length >= 2 && cnt[0] == 'B' && cnt[1] == 'Z')
+                    serilizer = "BZip";
+                else
                 {
                     List<byte> res = new List<byte>(cnt);
                     int flushPart = 1;
@@ -84,9 +116,14 @@ namespace QuoteHistoryGUI.HistoryTools
                         flushPart++;
                     }
                     cnt = res.ToArray();
+                    var cntForSerializer = cnt.Take(23);
+                    DateTime dt;
+                    DateTime.TryParse(ASCIIEncoding.ASCII.GetString(cnt),out dt);
+                    if (dt != new DateTime())
+                        serilizer = "Text";
                 }
                 var Text = GetOrUnzip(cnt);
-                return new KeyValuePair<string, byte[]>(isZip ? "Zip" : "Text", Text);
+                return new KeyValuePair<string, byte[]>(serilizer, Text);
             }
             else
             {
@@ -100,6 +137,10 @@ namespace QuoteHistoryGUI.HistoryTools
                     contStr += "Zip";
                 if (meta[4] == 2)
                     contStr += "Text";
+                if (meta[4] == 3)
+                    contStr += "Binary";
+                if (meta[4] == 4)
+                    contStr += "BZip";
                 return new KeyValuePair<string, byte[]>("Meta", ASCIIEncoding.ASCII.GetBytes(contStr));
 
             }
@@ -157,7 +198,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     {
                         var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(path[0].Name, "Chunk", f.Period, dateTime[0], dateTime[1], day, hour, i));
 
-                        if (cntnt != null && !(cntnt.Length>=2 && cntnt[0] == 'P' && cntnt[1] == 'K'))
+                        if (cntnt != null && !(cntnt.Length >= 2 && cntnt[0] == 'P' && cntnt[1] == 'K'))
                         {
                             var cntList = new List<byte>(cntnt);
                             var flushPart = 1;
@@ -224,7 +265,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     {
                         var cntnt = _dbase.Get(HistoryDatabaseFuncs.SerealizeKey(entry.Symbol, "Chunk", entry.Period, entry.Time.Year, entry.Time.Month, day, hour, i));
 
-                        if (cntnt != null && !(cntnt.Length>=2 && cntnt[0] == 'P' && cntnt[1] == 'K'))
+                        if (cntnt != null && !(cntnt.Length >= 2 && cntnt[0] == 'P' && cntnt[1] == 'K'))
                         {
                             var cntList = new List<byte>(cntnt);
                             var flushPart = 1;
@@ -345,10 +386,36 @@ namespace QuoteHistoryGUI.HistoryTools
                 value = content;
             }
             else
+            if (meta?[4] == 3)
+            {
+                type = "Binary";
+                value = content;
+            }
+            if (meta?[4] == 4)
+            {
+                type = "BZip";
+                value = content;
+            }
+            else
             {
                 MemoryStream contentMemStream = new MemoryStream(content);
                 MemoryStream outputMemStream = new MemoryStream();
-                ZipOutputStream zipStream = new ZipOutputStream(outputMemStream);
+
+                Bzip2.BZip2OutputStream bzipStream = new Bzip2.BZip2OutputStream(outputMemStream);
+                int bufSize = 4096;
+                byte[] buffer = new byte[bufSize];
+                int cnt = 0;
+                while (true)
+                {
+                    cnt = contentMemStream.Read(buffer, 0, bufSize);
+                    bzipStream.Write(buffer, 0, cnt);
+                    if (cnt < bufSize)
+                        break;
+                }
+                //StreamUtils.Copy(contentMemStream, bzipStream, new byte[4096]);
+                bzipStream.Close();
+
+                /*ZipOutputStream zipStream = new ZipOutputStream(outputMemStream);
 
                 zipStream.SetLevel(3); //0-9, 9 being the highest level of compression
 
@@ -362,8 +429,8 @@ namespace QuoteHistoryGUI.HistoryTools
 
                 zipStream.IsStreamOwner = false;    // False stops the Close also Closing the underlying stream.
                 zipStream.Close();          // Must finish the ZipOutputStream before using outputMemStream.
-
-                outputMemStream.Position = 0;
+                */
+                //outputMemStream.Position = 0;
                 value = outputMemStream.ToArray();
             }
             var metaPair = GetRebuildedMeta(content, type, entry);
@@ -407,6 +474,10 @@ namespace QuoteHistoryGUI.HistoryTools
                 GettedEntry[4] = 1;
             if (Type == "Text")
                 GettedEntry[4] = 2;
+            if (Type == "Binary")
+                GettedEntry[4] = 3;
+            if (Type == "Text")
+                GettedEntry[4] = 4;
             if (showMessages)
             {
                 if (!it.Valid() || (!HistoryDatabaseFuncs.ValidateKeyByKey(it.Key(), metaKey, true, 4, true, true, true)))
@@ -433,7 +504,10 @@ namespace QuoteHistoryGUI.HistoryTools
                         metaStr += "Zip";
                     if (metaEntry[4] == 2)
                         metaStr += "Text";
-
+                    if (metaEntry[4] == 3)
+                        metaStr += "Binary";
+                    if (metaEntry[4] == 4)
+                        metaStr += "Bzip";
 
                     var contStr = hash.Value.ToString("X8", CultureInfo.InvariantCulture);
                     contStr += ('\t' + Type);
