@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using static QuoteHistoryGUI.HistoryTools.HistorySerializer;
 
 namespace QuoteHistoryGUI.Models
 {
@@ -255,8 +256,19 @@ namespace QuoteHistoryGUI.Models
             {
                 log.Info("Chunk opening... " + f.Name);
                 _currentFile = f;
-                var content = (Editor.ReadFromDB(_currentFile)).Value;
-                var strContent = ASCIIEncoding.ASCII.GetString(content);
+                string strContent;
+                var data = (Editor.ReadFromDB(_currentFile));
+                if (data.Key == SerializationMethod.BZip || data.Key == SerializationMethod.Binary)
+                {
+                    StringBuilder builder = new StringBuilder();
+                    foreach(var item in HistorySerializer.DeserializeBinary(f.Period, data.Value))
+                    {
+                        builder.Append(item.ToString());
+                        builder.Append("\n");
+                    }
+                    strContent = builder.ToString();
+                }
+                else strContent = ASCIIEncoding.ASCII.GetString(data.Value);
                 StringReader reader = new StringReader(strContent);
                 var contentResult = new ObservableCollection<chunkLine>();
                

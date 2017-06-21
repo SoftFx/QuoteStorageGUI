@@ -172,7 +172,7 @@ namespace QuoteHistoryGUI.HistoryTools
                     var content = HistoryEditor.GetOrUnzip(file.Value);
                     var items = HistorySerializer.Deserialize(dbentry.Period, content);
                     var binContent = HistorySerializer.SerializeBinary(items);
-                    var entries = editor.GetChunkMetaForDB(binContent, dbentry, "dat");
+                    var entries = editor.GetChunkMetaForDB(binContent, dbentry, true);
                     Destination.HistoryStoreDB.Put(entries.Key.Key, entries.Key.Value);
                     Destination.HistoryStoreDB.Put(entries.Value.Key, entries.Value.Value);
 
@@ -473,7 +473,7 @@ namespace QuoteHistoryGUI.HistoryTools
                         var items = HistorySerializer.Deserialize(dbEntry.Period, content);
                         var binContent = HistorySerializer.SerializeBinary(items);
                         
-                        var entries = editor.GetChunkMetaForDB(binContent, dbEntry, "dat");
+                        var entries = editor.GetChunkMetaForDB(binContent, dbEntry, true);
                         Destination.HistoryStoreDB.Put(entries.Key.Key, entries.Key.Value);
                         Destination.HistoryStoreDB.Put(entries.Value.Key, entries.Value.Value);
                     } 
@@ -675,8 +675,8 @@ namespace QuoteHistoryGUI.HistoryTools
                 var contentAsk = HistorySerializer.Serialize(bars.Value);
                 var bidEntry = new HistoryDatabaseFuncs.DBEntry(entry.Symbol, entry.Time, "M1 bid", "Chunk", 0);
                 var askEntry = new HistoryDatabaseFuncs.DBEntry(entry.Symbol, entry.Time, "M1 ask", "Chunk", 0);
-                saveListBids.Add(this.Source.Editor.GetChunkMetaForDB(contentBid, bidEntry));
-                saveListAsks.Add(this.Source.Editor.GetChunkMetaForDB(contentAsk, askEntry));
+                saveListBids.Add(this.Source.Editor.GetChunkMetaForDB(contentBid, bidEntry, true));
+                saveListAsks.Add(this.Source.Editor.GetChunkMetaForDB(contentAsk, askEntry, true));
 
                 if (saveListBids.Count > 1024)
                 {
@@ -714,7 +714,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 var bars = this.Source.Editor.GetH1FromM1(m1Bars);
                 var content = HistorySerializer.Serialize(bars);
                 var Entry = new HistoryDatabaseFuncs.DBEntry(entry.Symbol, entry.Time, entry.Period == "M1 bid" ? "H1 bid" : "H1 ask", "Chunk", 0);
-                saveList.Add(this.Source.Editor.GetChunkMetaForDB(content, Entry));
+                saveList.Add(this.Source.Editor.GetChunkMetaForDB(content, Entry, true));
 
                 if (saveList.Count > 1024)
                 {

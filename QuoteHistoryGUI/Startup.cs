@@ -81,7 +81,6 @@ namespace QuoteHistoryGUI
                             log.Error("Check pathes and close storages!\r\nError: " + e.Message + "\r\n" + e.StackTrace);
                             return -1;
                         }
-                        break;
                     case "-u":
                     case "-upstream":
                         try

@@ -24,6 +24,23 @@ namespace QuoteHistoryGUI.HistoryTools
         public decimal Close;
         public decimal Volume;
 
+        public override string ToString()
+        {
+            string barStr = "";
+            barStr += Time.ToString("yyyy.MM.dd HH:mm:ss");
+            barStr += "\t";
+            barStr += Open.ToString(CultureInfo.InvariantCulture);
+            barStr += "\t";
+            barStr += High.ToString(CultureInfo.InvariantCulture);
+            barStr += "\t";
+            barStr += Low.ToString(CultureInfo.InvariantCulture);
+            barStr += "\t";
+            barStr += Close.ToString(CultureInfo.InvariantCulture);
+            barStr += "\t";
+            barStr += Volume.ToString(CultureInfo.InvariantCulture);
+            return barStr;
+        }
+
         public override byte[] Serialize()
         {
             string barStr = "";
@@ -66,6 +83,24 @@ namespace QuoteHistoryGUI.HistoryTools
         public decimal Ask;
         public decimal AskVolume;
         public int Part = 0;
+
+        public override string ToString()
+        {
+            string tickStr = "";
+            tickStr += Time.ToString("yyyy.MM.dd HH:mm:ss.fff");
+            if (Part > 0)
+                tickStr = tickStr + "-" + Part;
+            tickStr += "\t";
+            tickStr += Bid.ToString(CultureInfo.InvariantCulture);
+            tickStr += "\t";
+            tickStr += BidVolume.ToString(CultureInfo.InvariantCulture);
+            tickStr += "\t";
+            tickStr += Ask.ToString(CultureInfo.InvariantCulture);
+            tickStr += "\t";
+            tickStr += AskVolume.ToString(CultureInfo.InvariantCulture);
+            return tickStr;
+        }
+
         public override byte[] Serialize()
         {
             string tickStr = "";
@@ -109,6 +144,22 @@ namespace QuoteHistoryGUI.HistoryTools
         public KeyValuePair<decimal, decimal> BestBid { get { return Bids.Count() > 0 ? Bids.Last() : new KeyValuePair<decimal, decimal>(); } }
         public KeyValuePair<decimal, decimal> BestAsk { get { return Asks.Count() > 0 ? Asks.First() : new KeyValuePair<decimal, decimal>(); } }
         public int Part = 0;
+
+        public override string ToString()
+        {
+            string tickStr = "";
+            tickStr += Time.ToString("yyyy.MM.dd HH:mm:ss.fff");
+            if (Part > 0)
+                tickStr = tickStr + "-" + Part;
+            tickStr += "\tbid";
+            foreach(var bid in Bids)
+                tickStr += ("\t"+bid.Key+"\t"+bid.Value);
+            tickStr += "\task";
+            foreach (var ask in Asks)
+                tickStr += ("\t" + ask.Key + "\t" + ask.Value);
+            return tickStr;
+        }
+
         public override byte[] Serialize()
         {
             throw new NotImplementedException();
@@ -119,7 +170,6 @@ namespace QuoteHistoryGUI.HistoryTools
             using (MemoryStream ms = new MemoryStream())
             {
                 BinaryWriter bw = new BinaryWriter(ms);
-
                 bw.Write(this.Time.ToBinary());
                 bw.Write((byte)this.Part);
                 
@@ -141,8 +191,16 @@ namespace QuoteHistoryGUI.HistoryTools
         }
     }
 
-    class HistorySerializer
+    public class HistorySerializer
     {
+        public enum SerializationMethod
+        {
+            Unknown,
+            Zip,
+            Text,
+            Binary,
+            BZip
+        }
         public static IEnumerable<QHItem> Deserialize(string period, byte[] content, int degreeOfParallelism = 4)
         {
             if (content == null)
@@ -160,6 +218,25 @@ namespace QuoteHistoryGUI.HistoryTools
                 return DeserializeBars(content);
             }
 
+            return null;
+        }
+
+        public static IEnumerable<QHItem> DeserializeBinary(string period, byte[] content, int degreeOfParallelism = 4)
+        {
+            if (content == null)
+                return new List<QHItem>();
+            if (period == "ticks")
+            {
+                return DeserializeTicksBinary(content);
+            }
+            else if (period == "ticks level2")
+            {
+                return DeserializeTicksLevel2Binary(content, degreeOfParallelism);
+            }
+            else if (period == "M1 ask" || period == "M1 bid" || period == "H1 ask" || period == "H1 bid")
+            {
+                return DeserializeBarsBinary(content);
+            }
             return null;
         }
 
@@ -197,6 +274,52 @@ namespace QuoteHistoryGUI.HistoryTools
             return res;
         }
 
+        public static IEnumerable<QHBar> DeserializeBarsBinary(byte[] content)
+        {
+            List<QHBar> res = new List<QHBar>();
+            StreamReader reader = new StreamReader(new MemoryStream(content));
+            string line = "";
+            try
+            {
+                QHBar bar;
+                int contentIndex = 0;
+
+                while (contentIndex < content.Count())
+                {
+
+                    DateTime time = DateTime.FromBinary(BitConverter.ToInt64(content, contentIndex));
+                    contentIndex += sizeof(Int64);
+                    decimal open = (decimal)BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    decimal high = (decimal)BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    decimal low = (decimal)BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    decimal close = (decimal)BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    double volume = BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    bar = new QHBar()
+                    {
+                        Time = time,
+                        Open = open,
+                        High = high,
+                        Low = low,
+                        Close = close,
+                        Volume = (decimal)volume
+                    };
+
+                    res.Add(bar);
+                }
+                
+            }
+            catch (FormatException ex)
+            {
+                throw new FormatException("Line " + line + " caused " + ex);
+            }
+            return res;
+        }
+
 
         public static IEnumerable<QHTick> DeserializeTicks(byte[] content)
         {
@@ -225,6 +348,41 @@ namespace QuoteHistoryGUI.HistoryTools
                     tick.BidVolume = decimal.Parse(splittedLine[3], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
                     tick.Ask = decimal.Parse(splittedLine[4], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
                     tick.AskVolume = decimal.Parse(splittedLine[5], System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture);
+                    res.Add(tick);
+                }
+            }
+            catch (FormatException ex)
+            {
+                throw new FormatException("Line " + line + " caused " + ex);
+            }
+            return res;
+        }
+
+        public static IEnumerable<QHTick> DeserializeTicksBinary(byte[] content)
+        {
+            List<QHTick> res = new List<QHTick>();
+            string line = "";
+            try
+            {
+                QHTick tick;
+                int contentIndex = 0;
+
+                while (contentIndex < content.Count())
+                {
+                    tick = new QHTick();
+                    tick.Time = DateTime.FromBinary(BitConverter.ToInt64(content, contentIndex));
+                    contentIndex += sizeof(Int64);
+                    tick.Part = content[contentIndex];
+                    contentIndex += 1;
+                    tick.Bid = (decimal)BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    tick.BidVolume = (decimal)BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    tick.Ask = (decimal)BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    tick.AskVolume = (decimal)BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    
                     res.Add(tick);
                 }
             }
@@ -296,6 +454,51 @@ namespace QuoteHistoryGUI.HistoryTools
             return res;
         }
 
+        public static IEnumerable<QHTickLevel2> DeserializeTicksLevel2Binary(byte[] content, int degreeOfParallelism = 4)
+        {
+            List<QHTickLevel2> res = new List<QHTickLevel2>();
+            QHTickLevel2 tick;
+            int contentIndex = 0;
+
+            while (contentIndex < content.Count())
+            {
+                tick = new QHTickLevel2();
+                tick.Time = DateTime.FromBinary(BitConverter.ToInt64(content, contentIndex));
+                contentIndex += sizeof(Int64);
+                tick.Part = content[contentIndex];
+                contentIndex += 1;
+
+                List<KeyValuePair<decimal, decimal>> level2Collection = new List<KeyValuePair<decimal, decimal>>();
+
+                byte bidCnt = content[contentIndex];
+                contentIndex += 1;
+                tick.Bids = new KeyValuePair<decimal, decimal>[bidCnt];
+                for (int i = 0; i < bidCnt; i++)
+                {
+                    decimal price = (decimal)BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    double volume = BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    tick.Bids[i] = new KeyValuePair<decimal, decimal>(price, (decimal)volume);
+                }
+                byte askCnt = content[contentIndex];
+                contentIndex += 1;
+                tick.Asks = new KeyValuePair<decimal, decimal>[askCnt];
+                for (int i = 0; i < askCnt; i++)
+                {
+                    decimal price = (decimal)BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    double volume = BitConverter.ToDouble(content, contentIndex);
+                    contentIndex += sizeof(double);
+                    tick.Asks[i] = new KeyValuePair<decimal, decimal>(price, (decimal)volume);
+                }
+                
+                res.Add(tick);
+            }
+
+            return res;
+        }
+
         internal static byte[] Serialize(IEnumerable<QHItem> chunk)
         {
             List<byte> res = new List<byte>();
@@ -309,6 +512,7 @@ namespace QuoteHistoryGUI.HistoryTools
         internal static byte[] SerializeBinary(IEnumerable<QHItem> chunk)
         {
             List<byte> res = new List<byte>();
+            res.AddRange(ASCIIEncoding.ASCII.GetBytes("BQH"));
             foreach (var it in chunk)
             {
                 res.AddRange(it.SerializeBinary());
