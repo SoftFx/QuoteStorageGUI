@@ -39,7 +39,7 @@
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -58,17 +58,14 @@
     <StartupObject>QuoteHistoryGUI.Startup</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Bzip2, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\BZip\Bzip2.dll</HintPath>
-    </Reference>
     <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\lib\ZipLib\ICSharpCode.SharpZipLib.dll</HintPath>
+      <HintPath>..\..\..\lib\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="LevelDB.NET">
-      <HintPath>..\lib\LevelDB\LevelDB.NET.dll</HintPath>
+      <HintPath>..\..\..\lib\LevelDB\LevelDB.NET.dll</HintPath>
     </Reference>
-    <Reference Include="log4net">
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\Log4Net\log4net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -84,11 +81,20 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="TickTrader.BusinessObjects">
+      <HintPath>..\lib\TickTrader\TickTrader.BusinessObjects.dll</HintPath>
+    </Reference>
+    <Reference Include="TickTrader.Common">
+      <HintPath>..\lib\TickTrader\TickTrader.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="TickTrader.Server.QuoteHistory">
+      <HintPath>..\lib\TickTrader\TickTrader.Server.QuoteHistory.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="WpfAnimatedGif">
-      <HintPath>..\lib\WpfAnimatedGif\WpfAnimatedGif.dll</HintPath>
+      <HintPath>..\..\..\lib\WpfAnimatedGif.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -281,7 +287,9 @@
     <Content Include="HelpDocumentation.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Resource Include="HelpFiles\format.png" />
+    <EmbeddedResource Include="HelpFiles\format.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <Resource Include="Icons\compact.png" />
     <Resource Include="Icons\spin.gif" />
     <EmbeddedResource Include="HelpFiles\open.png">

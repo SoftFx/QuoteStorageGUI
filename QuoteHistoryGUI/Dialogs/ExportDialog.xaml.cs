@@ -198,7 +198,9 @@ namespace QuoteHistoryGUI.Dialogs
 
             BackgroundWorker worker = e.Argument as BackgroundWorker;
             var templates = templateText.Split(new[] { ";\n" }, StringSplitOptions.None);
-            var mapping = mappingText.Split(new[] { ";\n" }, StringSplitOptions.None).Select(t=>new KeyValuePair<string, string>(t.Split(' ')[0], t.Split(' ')[2]));
+            IEnumerable<KeyValuePair<string, string>> mapping = null;
+            if(mappingText!=null&& mappingText!="")
+                mapping = mappingText.Split(new[] { ";\n" }, StringSplitOptions.None).Select(t=>new KeyValuePair<string, string>(t.Split(' ')[0], t.Split(' ')[2]));
             if (formatType == 0)
             {
                 foreach (var templ in templates)

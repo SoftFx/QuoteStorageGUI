@@ -1,4 +1,5 @@
-﻿using LevelDB;
+﻿using ICSharpCode.SharpZipLib.Checksums;
+using LevelDB;
 using log4net;
 using QuoteHistoryGUI.Dialogs;
 using QuoteHistoryGUI.HistoryTools;
@@ -8,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,6 +17,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using TickTrader.BusinessObjects.QuoteHistory.Store;
 using static QuoteHistoryGUI.HistoryTools.HistorySerializer;
 
 namespace QuoteHistoryGUI.Models
@@ -82,6 +85,7 @@ namespace QuoteHistoryGUI.Models
         private DB _historyStoreDB;
 
         private HistoryFile _currentFile;
+        private ChunkMetaInfo.SerializationMethod _currentSerialisationMethod;
         private ObservableCollection<Folder> _folders;
 
         public MetaStorage MetaStorage;
@@ -227,6 +231,7 @@ namespace QuoteHistoryGUI.Models
             }
             catch (Exception ex)
             {
+                _historyStoreDB.Dispose();
                 Status = ex.Message;
                 log.Warn(Status);
                 throw ex;
@@ -257,18 +262,10 @@ namespace QuoteHistoryGUI.Models
                 log.Info("Chunk opening... " + f.Name);
                 _currentFile = f;
                 string strContent;
-                var data = (Editor.ReadFromDB(_currentFile));
-                if (data.Key == SerializationMethod.BZip || data.Key == SerializationMethod.Binary)
-                {
-                    StringBuilder builder = new StringBuilder();
-                    foreach(var item in HistorySerializer.DeserializeBinary(f.Period, data.Value))
-                    {
-                        builder.Append(item.ToString());
-                        builder.Append("\n");
-                    }
-                    strContent = builder.ToString();
-                }
-                else strContent = ASCIIEncoding.ASCII.GetString(data.Value);
+                var typeAndContent = (Editor.GetSerTypeAndFlushContent(_currentFile));
+                _currentSerialisationMethod = typeAndContent.Key;
+                strContent = Editor.GetText(f.Period, typeAndContent.Key, typeAndContent.Value);
+
                 StringReader reader = new StringReader(strContent);
                 var contentResult = new ObservableCollection<chunkLine>();
                
@@ -306,18 +303,16 @@ namespace QuoteHistoryGUI.Models
                 log.Info("Meta opening... " + f.Name);
                 var wind = Application.Current.MainWindow as QHAppWindowView;
                 _currentFile = f;
-                var content = Editor.ReadFromDB(_currentFile).Value;
-                var strContent = ASCIIEncoding.ASCII.GetString(content);
-                StringReader reader = new StringReader(strContent);
-                var contentResult = new ObservableCollection<chunkLine>();
+                var content = Editor.GetSerTypeAndFlushContent(_currentFile).Value;
 
-                while (true)
-                {
-                    var line = reader.ReadLine();
-                    if (line == null)
-                        break;
-                    contentResult.Add(new chunkLine(line));
-                }
+                Crc32 hash = new Crc32();
+                hash.Value = (BitConverter.ToUInt32(content, 0));
+                var contStr = hash.Value.ToString("X8", CultureInfo.InvariantCulture);
+                contStr += '\t';
+                contStr += ((ChunkMetaInfo.SerializationMethod)(content[4]));
+
+                var contentResult = new ObservableCollection<chunkLine>() { new chunkLine(contStr) };
+
                 FileContent = contentResult;
                 string path = f.Name;
                 var par = f.Parent;
@@ -356,7 +351,7 @@ namespace QuoteHistoryGUI.Models
                     {
                         builder.Append(line.Text+"\r\n");
                     }
-                    Editor.SaveToDB(ASCIIEncoding.ASCII.GetBytes(builder.ToString()), _currentFile as ChunkFile);
+                    Editor.SaveFromText(_currentSerialisationMethod, _currentFile as ChunkFile, builder.ToString());
                 }
                 else MessageBox.Show("Meta file editing is not possible!", "hmm...", MessageBoxButton.OK, MessageBoxImage.Asterisk);
                 Application.Current.MainWindow.Activate();

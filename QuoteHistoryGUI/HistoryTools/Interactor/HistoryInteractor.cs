@@ -90,10 +90,12 @@ namespace QuoteHistoryGUI.HistoryTools
                     {
                         var dbentry = DeserealizeKey(file.Key);
                         var currentMapping = mapping.Where(t => t.Key == dbentry.Symbol);
-                        foreach (var map in currentMapping)
-                        {
-                            Destination.HistoryStoreDB.Put(SerealizeKey(map.Value, dbentry.Type, dbentry.Period, dbentry.Time.Year, dbentry.Time.Month, dbentry.Time.Day, dbentry.Time.Hour, dbentry.Part, dbentry.FlushPart), file.Value);
-                        }
+                        if (currentMapping.Count() > 0)
+                            foreach (var map in currentMapping)
+                            {
+                                Destination.HistoryStoreDB.Put(SerealizeKey(map.Value, dbentry.Type, dbentry.Period, dbentry.Time.Year, dbentry.Time.Month, dbentry.Time.Day, dbentry.Time.Hour, dbentry.Part, dbentry.FlushPart), file.Value);
+                            }
+                        else Destination.HistoryStoreDB.Put(file.Key, file.Value);
                     }
                     copiedCnt++;
 
@@ -472,11 +474,11 @@ namespace QuoteHistoryGUI.HistoryTools
                         var content = HistoryEditor.GetOrUnzip(sourceIter.Value());
                         var items = HistorySerializer.Deserialize(dbEntry.Period, content);
                         var binContent = HistorySerializer.SerializeBinary(items);
-                        
+
                         var entries = editor.GetChunkMetaForDB(binContent, dbEntry, true);
                         Destination.HistoryStoreDB.Put(entries.Key.Key, entries.Key.Value);
                         Destination.HistoryStoreDB.Put(entries.Value.Key, entries.Value.Value);
-                    } 
+                    }
                 }
 
                 if (reportAction != null && (DateTime.UtcNow - ReportTime).Seconds > 0.25)
@@ -511,7 +513,7 @@ namespace QuoteHistoryGUI.HistoryTools
                 if (dbentry.Type == "Chunk")
                 {
                     string fileFormat = (sourceIter.Value().Length > 2 && sourceIter.Value()[0] == 'P' && sourceIter.Value()[1] == 'K') ? ".zip" : ".txt";
-                    string fileName = dbentry.Symbol + " " + dbentry.Period + " " + dbentry.Time.ToString("yyyy-MM-dd HH") + (dbentry.Part == 0 ? "" : "." + dbentry.Part.ToString()) + (dbentry.FlushPart == 0 ? "" :( "[" + dbentry.FlushPart.ToString()+"]"));
+                    string fileName = dbentry.Symbol + " " + dbentry.Period + " " + dbentry.Time.ToString("yyyy-MM-dd HH") + (dbentry.Part == 0 ? "" : "." + dbentry.Part.ToString()) + (dbentry.FlushPart == 0 ? "" : ("[" + dbentry.FlushPart.ToString() + "]"));
                     if (!Directory.Exists(NtfsPath))
                         Directory.CreateDirectory(NtfsPath);
                     File.WriteAllBytes(NtfsPath + "/" + fileName + fileFormat, sourceIter.Value());

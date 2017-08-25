@@ -193,14 +193,6 @@ namespace QuoteHistoryGUI.HistoryTools
 
     public class HistorySerializer
     {
-        public enum SerializationMethod
-        {
-            Unknown,
-            Zip,
-            Text,
-            Binary,
-            BZip
-        }
         public static IEnumerable<QHItem> Deserialize(string period, byte[] content, int degreeOfParallelism = 4)
         {
             if (content == null)
